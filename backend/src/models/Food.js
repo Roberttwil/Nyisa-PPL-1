@@ -39,3 +39,5 @@ const Food = sequelize.define(
         timestamps: false
     }
 )
+
+module.exports = Food;
