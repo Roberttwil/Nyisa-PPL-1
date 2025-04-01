@@ -4,7 +4,7 @@ const sequelize = require('../config/db');
 const Food = sequelize.define(
     "Food",
     {
-        id: {
+        food_id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
@@ -18,7 +18,7 @@ const Food = sequelize.define(
             allowNull: false
         },
         price: {
-            type: DataTypes.FLOAT,
+            type: DataTypes.INTEGER,
             allowNull: false
         },
         photo: {

@@ -4,7 +4,7 @@ const sequelize = require('../config/db');
 const Transaction = sequelize.define(
     "Transaction",
     {
-        id: {
+        trainsaction_id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
