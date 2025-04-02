@@ -1,39 +1,43 @@
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql2");
-const cors = require("cors");
-
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
 const app = express();
+
+const sequelize = require('./src/config/db');
+const authRoutes = require('./src/routes/authRoutes');
+const authenticate = require('./src/middleware/authMiddleware');
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// MySQL Connection
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+// Routes
+app.use('/api/auth', authRoutes);
+
+app.get('/api/protected', authenticate, (req, res) => {
+    res.json({ message: `Welcome, ${req.user.username}! You have access.` });
 });
 
-db.connect(err => {
-    if (err) {
-        console.error("Database connection failed:", err);
-        return;
+
+(async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connected to the database');
+
+        await sequelize.sync();
+        console.log('Models synchronized');
+
+        const PORT = process.env.PORT || 5000;
+        app.listen(PORT, () => {
+            console.log(`Server running at http://localhost:${PORT}`);
+        }).on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`Port ${PORT} is already in use.`);
+            } else {
+                throw err;
+            }
+        });
+    } catch (error) {
+        console.error('Database connection failed:', error);
     }
-    console.log("Connected to MySQL database");
-});
-
-// Sample API route
-app.get("/users", (req, res) => {
-    db.query("SELECT * FROM users", (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(results);
-    });
-});
-
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+})();
