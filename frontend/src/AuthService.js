@@ -1,29 +1,28 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = "/api/auth";
+const API_URL = 'http://localhost:5000/api/auth';
 
-// Fungsi untuk melakukan registrasi
 export const register = async (username, email, password) => {
   try {
-    const response = await axios.post(`${API_URL}/register`, {
-      username,
-      email,
-      password,
-    });
+    const response = await axios.post(`${API_URL}/register`, { username, email, password });
+
+    localStorage.setItem("registeredUsername", username);
+    localStorage.setItem("registeredEmail", email);
+
     return response.data;
   } catch (error) {
-    // Menangani error jika ada
-    throw new Error(error.response?.data?.message || "Registration failed");
+    throw error;
   }
 };
 
 // Fungsi untuk login
-export const login = async (email, password) => {
+export const login = async (username, password) => {
   try {
     const response = await axios.post(`${API_URL}/login`, {
-      email,
+      username,
       password,
     });
+
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
     }
@@ -47,4 +46,16 @@ export const getToken = () => {
 // Mengecek apakah user sudah login
 export const isAuthenticated = () => {
   return !!getToken();
+};
+
+export const verifyOtp = async (username, otp) => {
+  try {
+    const response = await axios.post(`${API_URL}/verify-otp`, { username, otp });
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token); // Simpan token di localStorage
+    }
+    return response.data; // Return token atau data lainnya
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "OTP verification failed");
+  }
 };

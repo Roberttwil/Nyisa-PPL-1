@@ -1,8 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { verifyOtp } from "./AuthService";
 import "./OTP.css";
 
 const OTP = () => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const storedUsername = localStorage.getItem("registeredUsername");
+        const storedEmail = localStorage.getItem("registeredEmail");
+
+        if (storedUsername) setUsername(storedUsername);
+        if (storedEmail) setEmail(storedEmail);
+
+        if (!storedUsername || !storedEmail) {
+            setErrorMessage("No account data found. Please register first.");
+        }
+    }, []);
 
     const handleChange = (index, value) => {
         if (/^[0-9]?$/.test(value)) {
@@ -16,9 +36,25 @@ const OTP = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("OTP Submitted: ", otp.join(""));
+        setLoading(true);
+        setErrorMessage("");
+        setSuccessMessage("");
+
+        const enteredOtp = otp.join("");
+
+        try {
+            await verifyOtp(username, enteredOtp);
+            setSuccessMessage("Verification successful! Redirecting...");
+            setTimeout(() => {
+                navigate("/login");
+            }, 3000);
+        } catch (error) {
+            setErrorMessage("Incorrect OTP. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -27,7 +63,7 @@ const OTP = () => {
 
             <h2 className="form-title">OTP Verify</h2>
             <p className="form-subtitle">
-                We have sent OTP code to <span className="highlight">nyisa@gmail.com</span>. 
+                We have sent an OTP code to <span className="highlight">{email}</span>.
                 Please enter your 6-digit OTP code.
             </p>
 
@@ -46,7 +82,12 @@ const OTP = () => {
                     ))}
                 </div>
 
-                <button type="submit" className="submit-button">Enter code</button>
+                <button type="submit" className="submit-button" disabled={loading}>
+                    {loading ? "Verifying..." : "Enter code"}
+                </button>
+
+                {errorMessage && <p className="error-message">{errorMessage}</p>}
+                {successMessage && <p className="success-message">{successMessage}</p>}
             </form>
         </div>
     );

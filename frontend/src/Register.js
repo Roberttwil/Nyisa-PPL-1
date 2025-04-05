@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { register } from "./AuthService";
+import { register } from "./AuthService"; // Mengimpor fungsi register dari AuthService
 import "./Register.css";
 
 const InputField = ({ type, placeholder, name, value, onChange }) => {
@@ -11,10 +11,10 @@ const InputField = ({ type, placeholder, name, value, onChange }) => {
       <input
         type={isPasswordShown ? "text" : type}
         placeholder={placeholder}
-        name={name} // Tambahkan name
+        name={name}
         className="input-field"
         value={value}
-        onChange={onChange} // Pastikan menangani perubahan dengan benar
+        onChange={onChange}
         required
       />
       {type === "password" && (
@@ -62,10 +62,14 @@ const Register = () => {
 
     try {
       const response = await register(formData.username, formData.email, formData.password);
-      setMessage(response.message);
-      setTimeout(() => navigate("/verif-otp"), 1500);
+      setMessage(response.message); // Menampilkan pesan response dari API
+      setTimeout(() => {
+        // Navigasi ke halaman verifikasi OTP setelah sukses sign up
+        navigate("/verif-otp");
+      }, 1500);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Registration failed. Please try again.");
+      const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,7 @@ const Register = () => {
   return (
     <div className="register-container">
       <img src="/images/logo-nyisa.png" alt="Logo" className="logo" />
-
+      
       <h2 className="form-title">Sign Up</h2>
       <p className="form-subtitle">Hello, please enter your details to create your account</p>
 

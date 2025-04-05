@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "./AuthService";  // Import login from AuthService
 import "./Login.css";
 
-const InputField = ({ type, placeholder }) => {
+const InputField = ({ type, placeholder, value, onChange }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false);
 
   return (
@@ -11,6 +12,8 @@ const InputField = ({ type, placeholder }) => {
         type={isPasswordShown ? "text" : type}
         placeholder={placeholder}
         className="input-field"
+        value={value}  // Bind value to the state
+        onChange={onChange}  // Bind onChange to update the state
         required
       />
       {type === "password" && (
@@ -41,6 +44,62 @@ const SocialLogin = () => {
 };
 
 const Login = () => {
+  const [username, setUsername] = useState("");  // Changed to username
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");  // State for error handling
+  const [rememberMe, setRememberMe] = useState(false);  // State for "Remember me"
+  const [loading, setLoading] = useState(false);  // State for loading
+  const navigate = useNavigate();  // Hook for navigation after login
+
+  // Load username and rememberMe from localStorage if it exists
+  useEffect(() => {
+    const savedUsername = localStorage.getItem("username");
+    const savedRememberMe = localStorage.getItem("rememberMe") === "true";
+    
+    if (savedUsername && savedRememberMe) {
+      setUsername(savedUsername);
+      setRememberMe(true);  // Set rememberMe to true if it's stored
+    }
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);  // Start loading
+    try {
+      // Simulate a delay before making the login request
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      // Call login function from AuthService with username and password
+      const response = await login(username, password);
+
+      // If login is successful, store rememberMe and username in localStorage
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+        localStorage.setItem("username", username);  // Store username in localStorage
+      } else {
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("username");  // Remove username from localStorage if "Remember me" is not checked
+      }
+
+      navigate("/");  // Navigate to the main page ('/')
+
+    } catch (err) {
+      // Handle error if login fails
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);  // End loading
+    }
+  };
+
+  // // Handle logout
+  // const handleLogout = () => {
+  //   localStorage.removeItem("rememberMe");
+  //   localStorage.removeItem("username");  // Remove username and rememberMe when logging out
+  //   setUsername("");  // Clear username state
+  //   setRememberMe(false);  // Uncheck rememberMe state
+  //   navigate("/login");  // Navigate back to login page
+  // };
+
   return (
     <div className="login-container">
       <img src="/images/logo-nyisa.png" alt="Logo" className="logo" />
@@ -50,21 +109,48 @@ const Login = () => {
         Hello, please enter your details to get sign in to your account
       </p>
 
-      <form className="login-form">
-        <InputField type="email" placeholder="Enter your email" />
-        <InputField type="password" placeholder="Password" />
+      <form className="login-form" onSubmit={handleLogin}>
+        {/* Input for username */}
+        <InputField 
+          type="text" 
+          placeholder="Enter your username" 
+          value={username} 
+          onChange={(e) => setUsername(e.target.value)} 
+        />
+        
+        {/* Input for password */}
+        <InputField 
+          type="password" 
+          placeholder="Password" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+        />
 
+        {/* Show error if any */}
+        {error && <p className="error-message">{error}</p>}
+
+        {/* "Remember me" option */}
         <div className="options">
           <label>
-            <input type="checkbox" /> Remember me
+            <input 
+              type="checkbox" 
+              checked={rememberMe} 
+              onChange={() => setRememberMe(!rememberMe)} 
+            /> Remember me
           </label>
           <Link to="/forgot" className="forgot-password-link">
             Forgot password?
           </Link>
         </div>
 
-        <button type="submit" className="login-button">Sign In</button>
+        {/* Login button */}
+        <button type="submit" className="login-button" disabled={loading}>
+          {loading ? "Logging in..." : "Sign In"} {/* Show loading text while processing */}
+        </button>
       </form>
+
+      {/* Show loading spinner */}
+      {loading && <div className="loading-spinner">Loading...</div>}
 
       <p className="separator">Or Sign In with</p>
 
@@ -73,6 +159,9 @@ const Login = () => {
       <p className="signup-prompt">
         Don't have an account? <Link to="/register" className="signup-link">Sign Up here</Link>
       </p>
+
+      {/* Add logout button
+      <button onClick={handleLogout} className="logout-button">Logout</button> */}
     </div>
   );
 };
