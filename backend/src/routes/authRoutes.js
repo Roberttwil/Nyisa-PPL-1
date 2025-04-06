@@ -1,73 +1,196 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const sendOTP = require('../utils/mailer');
 const { Users } = require('../models');
+const sendOTP = require('../utils/mailer');
+
 const router = express.Router();
 
+// REGISTER
 router.post('/register', async (req, res) => {
     try {
         const { username, password, email } = req.body;
 
-        const exists = await Users.findByPk(username);
-        if (exists) return res.status(400).json({ message: 'User exists' });
-
+        const existing = await Users.findByPk(username);
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-        const newUser = await Users.create({
+        // If username is already used and verified → block registration
+        if (existing && existing.is_verified) {
+            return res.status(400).json({ message: 'Username is already taken' });
+        }
+
+        // If user exists but is not verified → resend OTP, update password
+        if (existing && !existing.is_verified) {
+            existing.password = password; // will be hashed by hook
+            existing.otp = otp;
+            existing.otp_expires_at = otpExpires;
+            await existing.save();
+
+            await sendOTP(email, otp);
+
+            return res.status(200).json({
+                message: "You already registered but haven't verified. A new OTP has been sent to your email."
+            });
+        }
+
+        // New registration
+        await Users.create({
             username,
             password,
             otp,
-            otp_expires_at: otpExpires
+            otp_expires_at: otpExpires,
+            is_verified: false
         });
 
-        await sendOTP(email, otp); // Send OTP to user's email
+        await sendOTP(email, otp);
 
         res.status(201).json({
             message: 'OTP sent to your email. Please verify to complete registration.'
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Registration error:', err);
+        res.status(500).json({ error: 'Registration failed. Please try again.' });
     }
 });
 
-
+// LOGIN
 router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    const user = await Users.findByPk(username);
+    try {
+        const { username, password } = req.body;
+        const user = await Users.findByPk(username);
+        if (!user || !bcrypt.compareSync(password, user.password)) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
 
-    if (!user || !bcrypt.compareSync(password, user.password)) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        if (!user.is_verified) {
+            return res.status(403).json({ message: 'Account not verified. Please check your email for OTP.' });
+        }
+
+        const token = jwt.sign(
+            { username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token });
+    } catch (err) {
+        res.status(500).json({ error: 'Login failed' });
     }
-
-    const token = jwt.sign(
-        { username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-    );
-
-    res.json({ token });
 });
 
-
+// VERIFY REGISTRATION OTP
 router.post('/verify-otp', async (req, res) => {
-    const { username, otp } = req.body;
+    try {
+        const { username, otp } = req.body;
+        const user = await Users.findByPk(username);
 
-    const user = await Users.findByPk(username);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user || !user.otp || !user.otp_expires_at) {
+            return res.status(404).json({ message: 'OTP not found or already used' });
+        }
 
-    if (user.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
-    if (new Date() > user.otp_expires_at) return res.status(400).json({ message: 'OTP expired' });
+        if (user.otp !== otp.toString()) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
 
-    // Clear OTP after use
-    user.otp = null;
-    user.otp_expires_at = null;
-    await user.save();
+        if (new Date() > user.otp_expires_at) {
+            return res.status(400).json({ message: 'OTP expired' });
+        }
 
-    const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
+        user.otp = null;
+        user.otp_expires_at = null;
+        user.is_verified = true;
+        await user.save();
+
+        const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token });
+    } catch (err) {
+        res.status(500).json({ error: 'OTP verification failed' });
+    }
 });
 
+// RESEND OTP
+router.post('/resend-otp', async (req, res) => {
+    try {
+        const { username, email } = req.body;
+        const user = await Users.findByPk(username);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 5 * 60 * 1000);
+
+        user.otp = otp;
+        user.otp_expires_at = expires;
+        await user.save();
+
+        await sendOTP(email, otp);
+        res.json({ message: 'OTP resent to your email' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to resend OTP' });
+    }
+});
+
+// FORGOT PASSWORD - SEND OTP
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { username, email } = req.body;
+        const user = await Users.findByPk(username);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 5 * 60 * 1000);
+
+        user.otp = otp;
+        user.otp_expires_at = expires;
+        await user.save();
+
+        await sendOTP(email, otp);
+        res.json({ message: 'Password reset OTP sent to your email.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to send reset OTP' });
+    }
+});
+
+// VERIFY RESET OTP
+router.post('/verify-reset-otp', async (req, res) => {
+    try {
+        const { username, otp } = req.body;
+        const user = await Users.findByPk(username);
+
+        if (!user || !user.otp || !user.otp_expires_at) {
+            return res.status(404).json({ message: 'OTP not found' });
+        }
+
+        if (user.otp !== otp.toString()) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        if (new Date() > user.otp_expires_at) {
+            return res.status(400).json({ message: 'OTP expired' });
+        }
+
+        res.json({ message: 'OTP verified. You may now reset your password.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to verify reset OTP' });
+    }
+});
+
+// RESET PASSWORD
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { username, newPassword } = req.body;
+        const user = await Users.findByPk(username);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.password = newPassword; // will be hashed by model hook
+        user.otp = null;
+        user.otp_expires_at = null;
+        await user.save();
+
+        res.json({ message: 'Password successfully reset.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to reset password' });
+    }
+});
 
 module.exports = router;

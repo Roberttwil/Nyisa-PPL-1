@@ -11,7 +11,7 @@ const Users = sequelize.define(
         },
         password: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
         },
         otp: {
             type: DataTypes.STRING,
@@ -20,6 +20,10 @@ const Users = sequelize.define(
         otp_expires_at: {
             type: DataTypes.DATE,
             allowNull: true
+        },
+        is_verified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
     },
     {
