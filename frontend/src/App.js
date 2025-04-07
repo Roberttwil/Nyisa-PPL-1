@@ -12,24 +12,20 @@ import Register from "./Register";
 import Forgot from "./Forgot";
 import OTP from "./OTP";
 import VerifOTP from "./Verif-OTP";
-import RequireAuth from "./RequireAuth";
+import NotFound from "./NotFound"; // Tambahkan komponen NotFound
 
 function App() {
   const location = useLocation();
-
   const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp"];
+  const isNotFound = location.pathname !== "/" && !noNavbarFooter.includes(location.pathname);
 
   return (
     <>
-      {!noNavbarFooter.includes(location.pathname) && <Navbar />}
+      {!noNavbarFooter.includes(location.pathname) && !isNotFound && <Navbar />}
 
       <div className="content">
         <Routes>
-          <Route path="/" element={
-            <RequireAuth>
-              <Home />
-            </RequireAuth>
-          } />
+          <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/location" element={<Location />} />
           <Route path="/cart" element={<Cart />} />
@@ -39,10 +35,11 @@ function App() {
           <Route path="/forgot" element={<Forgot />} />
           <Route path="/otp" element={<OTP />} />
           <Route path="/verif-otp" element={<VerifOTP />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
 
-      {!noNavbarFooter.includes(location.pathname) && <Footer />}
+      {!noNavbarFooter.includes(location.pathname) && !isNotFound && <Footer />}
     </>
   );
 }

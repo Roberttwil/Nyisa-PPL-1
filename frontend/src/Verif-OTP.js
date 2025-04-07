@@ -36,6 +36,18 @@ const OTP = () => {
         }
     };
 
+    const handleKeyDown = (index, e) => {
+        if (e.key === "Backspace") {
+            if (otp[index] === "" && index > 0) {
+                document.getElementById(`otp-${index - 1}`).focus();
+            }
+
+            const newOtp = [...otp];
+            newOtp[index] = "";
+            setOtp(newOtp);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -78,6 +90,7 @@ const OTP = () => {
                             className="otp-input"
                             value={digit}
                             onChange={(e) => handleChange(index, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(index, e)}
                         />
                     ))}
                 </div>
@@ -90,7 +103,7 @@ const OTP = () => {
                 {successMessage && <p className="success-message">{successMessage}</p>}
             </form>
         </div>
-    );
+    );  
 };
 
 export default OTP;

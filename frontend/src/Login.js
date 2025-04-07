@@ -55,7 +55,7 @@ const Login = () => {
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
     const savedRememberMe = localStorage.getItem("rememberMe") === "true";
-    
+
     if (savedUsername && savedRememberMe) {
       setUsername(savedUsername);
       setRememberMe(true);  // Set rememberMe to true if it's stored
@@ -64,32 +64,34 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);  // Start loading
+    setLoading(true);
+    setError("");  
+  
     try {
-      // Simulate a delay before making the login request
       await new Promise((resolve) => setTimeout(resolve, 2500));
-
-      // Call login function from AuthService with username and password
+      
       const response = await login(username, password);
-
-      // If login is successful, store rememberMe and username in localStorage
+      console.log("Login Response:", response); // Debugging
+  
+      if (!response.isVerified) {
+        throw new Error("Your account is not verified. Please check your email for the OTP verification.");
+      }
+  
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
-        localStorage.setItem("username", username);  // Store username in localStorage
+        localStorage.setItem("username", username);
       } else {
         localStorage.removeItem("rememberMe");
-        localStorage.removeItem("username");  // Remove username from localStorage if "Remember me" is not checked
+        localStorage.removeItem("username");
       }
-
-      navigate("/");  // Navigate to the main page ('/')
-
+  
+      navigate("/");
     } catch (err) {
-      // Handle error if login fails
       setError(err.message || "Login failed");
     } finally {
-      setLoading(false);  // End loading
+      setLoading(false);
     }
-  };
+  };  
 
   // // Handle logout
   // const handleLogout = () => {
@@ -103,7 +105,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <img src="/images/logo-nyisa.png" alt="Logo" className="logo" />
-      
+
       <h2 className="form-title">Sign In</h2>
       <p className="form-subtitle">
         Hello, please enter your details to get sign in to your account
@@ -111,19 +113,19 @@ const Login = () => {
 
       <form className="login-form" onSubmit={handleLogin}>
         {/* Input for username */}
-        <InputField 
-          type="text" 
-          placeholder="Enter your username" 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)} 
+        <InputField
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
-        
+
         {/* Input for password */}
-        <InputField 
-          type="password" 
-          placeholder="Password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
+        <InputField
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
 
         {/* Show error if any */}
@@ -132,10 +134,10 @@ const Login = () => {
         {/* "Remember me" option */}
         <div className="options">
           <label>
-            <input 
-              type="checkbox" 
-              checked={rememberMe} 
-              onChange={() => setRememberMe(!rememberMe)} 
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={() => setRememberMe(!rememberMe)}
             /> Remember me
           </label>
           <Link to="/forgot" className="forgot-password-link">
