@@ -1,5 +1,5 @@
 const { faker } = require('@faker-js/faker');
-const { User, Users, Restaurant, Food, Transaction } = require('../models');
+const { User, Users, Restaurant, Food, Transaction, Cart } = require('../models');
 const sequelize = require('../config/db');
 
 async function seed() {
@@ -9,7 +9,7 @@ async function seed() {
         // Seed Users + Credentials
         const userList = [];
         for (let i = 0; i < 5; i++) {
-            const username = faker.internet.userName();
+            const username = faker.internet.username();
             const user = await User.create({
                 name: faker.person.fullName(),
                 phone: faker.phone.number('08##########'),
@@ -52,22 +52,34 @@ async function seed() {
                 price: faker.number.float({ min: 10_000, max: 100_000 }),
                 photo: faker.image.url(),
                 quantity: faker.number.int({ min: 1, max: 50 }),
-                restaurant_id: restaurant.id
+                restaurant_id: restaurant.restaurant_id
             });
             foodList.push(food);
+        }
+
+        // Seed Cart
+        for (let i = 0; i < 10; i++) {
+            const user = faker.helpers.arrayElement(userList);
+            const food = faker.helpers.arrayElement(foodList);
+
+            await Cart.create({
+                booking_code: faker.string.alphanumeric(10),
+                user_id: user.user_id,
+                restaurant_id: food.restaurant_id,
+                food_id: food.food_id,
+            });
         }
 
         // Seed Transactions
         for (let i = 0; i < 10; i++) {
             const user = faker.helpers.arrayElement(userList);
             const food = faker.helpers.arrayElement(foodList);
-            const restaurant = restaurantList.find(r => r.id === food.restaurant_id);
 
             await Transaction.create({
                 booking_code: faker.string.alphanumeric(10),
-                user_id: user.id,
-                restaurant_id: restaurant.id,
-                food_id: food.id,
+                user_id: user.user_id,
+                restaurant_id: food.restaurant_id,
+                food_id: food.food_id,
                 total: food.price * faker.number.int({ min: 1, max: 3 }),
                 status: faker.number.int({ min: 0, max: 1 }),
                 date: faker.date.recent()

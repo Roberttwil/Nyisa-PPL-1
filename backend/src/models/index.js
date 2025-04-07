@@ -3,6 +3,7 @@ const Users = require('./Users');
 const Restaurant = require('./Restaurant');
 const Food = require('./Food');
 const Transaction = require('./Transaction');
+const Cart = require('./Cart');
 
 User.hasOne(Users, { foreignKey: 'username' , sourceKey: 'username' , as: 'user' });
 Users.belongsTo(User, { foreignKey: 'username', targetKey: 'username', as: 'user' });
@@ -24,5 +25,6 @@ module.exports = {
     Users,
     Restaurant,
     Food,
-    Transaction
+    Transaction,
+    Cart
 }
