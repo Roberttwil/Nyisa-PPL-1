@@ -1,10 +1,10 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-const Transaction = sequelize.define(
-    "Transaction",
+const Cart = sequelize.define(
+    "Cart",
     {
-        transaction_id: {
+        cart_id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true
@@ -25,23 +25,11 @@ const Transaction = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        total: {
-            type: DataTypes.FLOAT,
-            allowNull: false
-        },
-        status: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        date: {
-            type: DataTypes.DATE,
-            allowNull: false
-        }
     },
     {
-        tableName: "transaction",
+        tableName: "cart",
         timestamps: false
     }
 )
 
-module.exports = Transaction;
+module.exports = Cart;
