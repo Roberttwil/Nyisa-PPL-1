@@ -2,27 +2,33 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Users } = require('../models');
+const { User } = require('../models');
 const sendOTP = require('../utils/mailer');
+const { verifyResetToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // REGISTER
 router.post('/register', async (req, res) => {
     try {
-        const { username, password, email } = req.body;
+        const { username, password, email, phone } = req.body;
+
+        if (!username || !password || !email || !phone) {
+            return res.status(400).json({ message: 'All fields are required: username, password, email, phone.' });
+        }
 
         const existing = await Users.findByPk(username);
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-        // If username is already used and verified → block registration
+        // If user is verified → block registration
         if (existing && existing.is_verified) {
             return res.status(400).json({ message: 'Username is already taken' });
         }
 
-        // If user exists but is not verified → resend OTP, update password
+        // If user exists but not verified → resend OTP and update password
         if (existing && !existing.is_verified) {
-            existing.password = password; // will be hashed by hook
+            existing.password = password; 
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -34,7 +40,7 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // New registration
+        // New user registration
         await Users.create({
             username,
             password,
@@ -43,13 +49,22 @@ router.post('/register', async (req, res) => {
             is_verified: false
         });
 
+        await User.create({
+            username,
+            name: username,  // autofill name
+            phone,
+            email,
+            address: '',     // placeholder, update later
+            status: 0        // default status 0 is for normal user, while 1 is for restaurant owner
+        });
+
         await sendOTP(email, otp);
 
         res.status(201).json({
             message: 'OTP sent to your email. Please verify to complete registration.'
         });
     } catch (err) {
-        console.error('Registration error:', err);
+        console.error('❌ Registration error:', err);
         res.status(500).json({ error: 'Registration failed. Please try again.' });
     }
 });

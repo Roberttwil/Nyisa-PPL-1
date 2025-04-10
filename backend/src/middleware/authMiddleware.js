@@ -29,4 +29,7 @@ const verifyResetToken = (req, res, next) => {
     }
 };
 
-module.exports = authenticate;
+module.exports = {
+    authenticate,
+    verifyResetToken
+};
