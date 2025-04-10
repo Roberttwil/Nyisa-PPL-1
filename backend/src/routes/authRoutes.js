@@ -169,20 +169,31 @@ router.post('/verify-reset-otp', async (req, res) => {
             return res.status(400).json({ message: 'OTP expired' });
         }
 
-        res.json({ message: 'OTP verified. You may now reset your password.' });
+        // JWT for token
+        const token = jwt.sign(
+            { username: user.username, purpose: 'password-reset' },
+            process.env.JWT_SECRET,
+            { expiresIn: '10m' }
+        );
+
+        res.json({
+            message: 'OTP verified. You may now reset your password.',
+            token
+        });
     } catch (err) {
+        console.error('OTP verification error:', err);
         res.status(500).json({ error: 'Failed to verify reset OTP' });
     }
 });
 
 // RESET PASSWORD
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', verifyResetToken, async (req, res) => {
     try {
-        const { username, newPassword } = req.body;
-        const user = await Users.findByPk(username);
+        const { newPassword } = req.body;
+        const user = await Users.findByPk(req.username);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        user.password = newPassword; // will be hashed by model hook
+        user.password = newPassword;
         user.otp = null;
         user.otp_expires_at = null;
         await user.save();
@@ -192,5 +203,6 @@ router.post('/reset-password', async (req, res) => {
         res.status(500).json({ error: 'Failed to reset password' });
     }
 });
+
 
 module.exports = router;
