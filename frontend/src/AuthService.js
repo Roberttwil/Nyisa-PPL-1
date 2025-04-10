@@ -74,3 +74,64 @@ export const verifyOtp = async (username, otp) => {
     throw new Error(error.response?.data?.message || "OTP verification failed");
   }
 };
+
+export const resendOtp = async (username, email) => {
+  try {
+    const response = await axios.post(`${API_URL}/resend-otp`, { username, email });
+    return response.data;
+  } catch (error) {
+    console.error("Resend OTP error:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to resend OTP");
+  }
+};
+
+export const forgotPassword = async (username, email) => {
+  try {
+    const response = await axios.post(`${API_URL}/forgot-password`, { username, email });
+    return response.data;
+  } catch (error) {
+    console.error("Forgot password error:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to send reset OTP");
+  }
+};
+
+export const verifyResetOtp = async (username, otp) => {
+  try {
+    const response = await axios.post(`${API_URL}/verify-reset-otp`, { username, otp });
+
+    if (response.data.token) {
+      localStorage.setItem("resetToken", response.data.token);
+    }
+
+    console.log("OTP response:", response.data);
+
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to verify reset OTP");
+  }
+};
+
+export const resetPassword = async (token, newPassword) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/reset-password`,
+      { newPassword },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ template string syntax fixed
+        },
+      }
+    );
+
+    console.log("Reset response:", response.data);
+
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Reset Password Error:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to reset password");
+  }
+};

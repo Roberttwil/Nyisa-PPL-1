@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "./AuthService";  // Import login from AuthService
+import { login } from "./AuthService"; 
 import "./Login.css";
 
 const InputField = ({ type, placeholder, value, onChange }) => {
@@ -12,8 +12,8 @@ const InputField = ({ type, placeholder, value, onChange }) => {
         type={isPasswordShown ? "text" : type}
         placeholder={placeholder}
         className="input-field"
-        value={value}  // Bind value to the state
-        onChange={onChange}  // Bind onChange to update the state
+        value={value} 
+        onChange={onChange} 
         required
       />
       {type === "password" && (
@@ -44,21 +44,21 @@ const SocialLogin = () => {
 };
 
 const Login = () => {
-  const [username, setUsername] = useState("");  // Changed to username
+  const [username, setUsername] = useState(""); 
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");  // State for error handling
-  const [rememberMe, setRememberMe] = useState(false);  // State for "Remember me"
-  const [loading, setLoading] = useState(false);  // State for loading
-  const navigate = useNavigate();  // Hook for navigation after login
+  const [error, setError] = useState(""); 
+  const [rememberMe, setRememberMe] = useState(false); 
+  const [loading, setLoading] = useState(false); 
+  const navigate = useNavigate(); 
 
-  // Load username and rememberMe from localStorage if it exists
+
   useEffect(() => {
     const savedUsername = localStorage.getItem("username");
     const savedRememberMe = localStorage.getItem("rememberMe") === "true";
 
     if (savedUsername && savedRememberMe) {
       setUsername(savedUsername);
-      setRememberMe(true);  // Set rememberMe to true if it's stored
+      setRememberMe(true); 
     }
   }, []);
 
@@ -71,11 +71,7 @@ const Login = () => {
       await new Promise((resolve) => setTimeout(resolve, 2500));
       
       const response = await login(username, password);
-      console.log("Login Response:", response); // Debugging
-  
-      if (!response.isVerified) {
-        throw new Error("Your account is not verified. Please check your email for the OTP verification.");
-      }
+      console.log("Login Response:", response);
   
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
@@ -91,16 +87,7 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };  
-
-  // // Handle logout
-  // const handleLogout = () => {
-  //   localStorage.removeItem("rememberMe");
-  //   localStorage.removeItem("username");  // Remove username and rememberMe when logging out
-  //   setUsername("");  // Clear username state
-  //   setRememberMe(false);  // Uncheck rememberMe state
-  //   navigate("/login");  // Navigate back to login page
-  // };
+  }; 
 
   return (
     <div className="login-container">
@@ -151,9 +138,6 @@ const Login = () => {
         </button>
       </form>
 
-      {/* Show loading spinner */}
-      {loading && <div className="loading-spinner">Loading...</div>}
-
       <p className="separator">Or Sign In with</p>
 
       <SocialLogin />
@@ -162,8 +146,6 @@ const Login = () => {
         Don't have an account? <Link to="/register" className="signup-link">Sign Up here</Link>
       </p>
 
-      {/* Add logout button
-      <button onClick={handleLogout} className="logout-button">Logout</button> */}
     </div>
   );
 };

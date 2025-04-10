@@ -12,16 +12,16 @@ import Register from "./Register";
 import Forgot from "./Forgot";
 import OTP from "./OTP";
 import VerifOTP from "./Verif-OTP";
-import NotFound from "./NotFound"; // Tambahkan komponen NotFound
+import ResetPass from "./Reset";
+import NotFound from "./NotFound";
 
 function App() {
   const location = useLocation();
-  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp"];
-  const isNotFound = location.pathname !== "/" && !noNavbarFooter.includes(location.pathname);
+  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset"];
 
   return (
     <>
-      {!noNavbarFooter.includes(location.pathname) && !isNotFound && <Navbar />}
+      {!noNavbarFooter.includes(location.pathname) && <Navbar />}
 
       <div className="content">
         <Routes>
@@ -35,11 +35,12 @@ function App() {
           <Route path="/forgot" element={<Forgot />} />
           <Route path="/otp" element={<OTP />} />
           <Route path="/verif-otp" element={<VerifOTP />} />
+          <Route path="/reset" element={<ResetPass />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
 
-      {!noNavbarFooter.includes(location.pathname) && !isNotFound && <Footer />}
+      {!noNavbarFooter.includes(location.pathname) && <Footer />}
     </>
   );
 }

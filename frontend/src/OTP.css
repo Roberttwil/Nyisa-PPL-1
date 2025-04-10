@@ -91,3 +91,19 @@ body {
     color: #04210d;
     font-weight: bold;
 }
+
+.resend-button {
+    background: none;
+    border: none;
+    color: #064015;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.resend-button:hover {
+    color: #0d4f19;
+}

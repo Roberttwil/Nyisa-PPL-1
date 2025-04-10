@@ -26,7 +26,7 @@ const Home = () => {
         </div>
 
         <p className="description">
-          Temukan makanan lezat dengan harga <span className="highlight">terjangkau</span> sambil
+          Temukan makanan lezat dengan harga <span className="highlight-text">terjangkau</span> sambil
           berkontribusi menciptakan lingkungan yang lebih berkelanjutan.
         </p>
       </div>

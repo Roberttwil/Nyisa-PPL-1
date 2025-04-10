@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { verifyOtp } from "./AuthService";
+import { verifyOtp, resendOtp } from "./AuthService";
 import "./OTP.css";
 
 const OTP = () => {
@@ -8,6 +8,8 @@ const OTP = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const [loading, setLoading] = useState(false);
+    const [resendLoading, setResendLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const navigate = useNavigate();
@@ -23,6 +25,15 @@ const OTP = () => {
             setErrorMessage("No account data found. Please register first.");
         }
     }, []);
+
+    useEffect(() => {
+        if (resendTimer > 0) {
+            const timer = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [resendTimer]);
 
     const handleChange = (index, value) => {
         if (/^[0-9]?$/.test(value)) {
@@ -69,6 +80,22 @@ const OTP = () => {
         }
     };
 
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+
+        setResendLoading(true);
+        setErrorMessage("");
+
+        try {
+            await resendOtp(username, email);
+            setResendTimer(30);
+        } catch (error) {
+            setErrorMessage(error.message);
+        } finally {
+            setResendLoading(false);
+        }
+    };
+
     return (
         <div className="otp-container">
             <img src="/images/logo-nyisa.png" alt="Logo" className="logo" />
@@ -99,11 +126,21 @@ const OTP = () => {
                     {loading ? "Verifying..." : "Enter code"}
                 </button>
 
-                {errorMessage && <p className="error-message">{errorMessage}</p>}
-                {successMessage && <p className="success-message">{successMessage}</p>}
+                {errorMessage && <p style={{ color: 'red', fontWeight: 'bold', marginTop: '10px' }}>{errorMessage}</p>}
+                {successMessage && <p style={{ color: 'green', fontWeight: 'bold', marginTop: '10px' }}>{successMessage}</p>}
+
+                <button
+                    type="button"
+                    className="resend-button"
+                    onClick={handleResendOtp}
+                    disabled={resendLoading || resendTimer > 0}
+                >
+                    {resendLoading ? "Resending..." : resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                </button>
+
             </form>
         </div>
-    );  
+    );
 };
 
 export default OTP;

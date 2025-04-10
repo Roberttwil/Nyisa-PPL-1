@@ -92,7 +92,7 @@ const Register = () => {
         </button>
       </form>
 
-      {message && <p className="message">{message}</p>}
+      {message && <p className="message" style={{ color: 'black', fontWeight: 'bold', marginTop: '10px'}}>{message}</p>}
 
       <p className="separator">Or Sign Up with</p>
 

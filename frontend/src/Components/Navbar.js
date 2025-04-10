@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
 const navItems = [
@@ -12,16 +13,45 @@ const navItems = [
 
 const Navbar = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  // Cek status login saat komponen dimuat
+  useEffect(() => {
+    const checkLoginStatus = () => {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    };
+
+    checkLoginStatus(); // Mengecek status login saat pertama kali
+
+    // Tambahkan event listener untuk memantau perubahan storage
+    window.addEventListener("storage", checkLoginStatus);
+
+    return () => {
+      window.removeEventListener("storage", checkLoginStatus);
+    };
+  }, []);
 
   const toggleNavbar = () => {
     setMobileDrawerOpen(!mobileDrawerOpen);
   };
 
+  const handleAuth = () => {
+    if (isLoggedIn) {
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
+      setIsLoggedIn(false);
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <div className="navbar-logo">
-          <img src="/images/logo-nyisa.png" alt="Logo" />
+        <div className="navbar-logo" onClick={() => navigate("/")}>
+          <img src="/images/logo-nyisa.png" alt="Logo" className="clickable-logo" />
         </div>
         <ul className="navbar-menu">
           {navItems.map((item, index) => (
@@ -30,11 +60,14 @@ const Navbar = () => {
             </li>
           ))}
         </ul>
-        
-        {/* Bagian kanan untuk welcome dan tombol logout */}
+
         <div className="navbar-user-info">
-          <span className="welcome-text">Welcome, User!</span>
-          <button className="logout-btn">Log Out</button>
+          <button
+            className={`auth-btn ${isLoggedIn ? "sign-out" : "sign-in"}`}
+            onClick={handleAuth} >
+            {isLoggedIn ? "Sign Out" : "Sign In"}
+          </button>
+
         </div>
 
         <div className="navbar-menu-mobile">
@@ -43,8 +76,7 @@ const Navbar = () => {
           </button>
         </div>
       </div>
-      
-      {/* Drawer mobile menu */}
+
       {mobileDrawerOpen && (
         <div className="mobile-drawer">
           <ul>
