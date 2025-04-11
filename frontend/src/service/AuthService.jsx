@@ -3,12 +3,18 @@ import axios from "axios";
 const API_URL = "http://localhost:5000/api/auth";
 
 // Register function
-export const register = async (username, email, password) => {
+export const register = async (username, email, password, phone) => {
   try {
-    const response = await axios.post(`${API_URL}/register`, { username, email, password });
+    const response = await axios.post(`${API_URL}/register`, {
+      username,
+      email,
+      password,
+      phone,
+    });
 
     localStorage.setItem("registeredUsername", username);
     localStorage.setItem("registeredEmail", email);
+    localStorage.setItem("registeredPhone", phone);
 
     return response.data;
   } catch (error) {
