@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_URL = "http://localhost:5000/api/auth";
 
+// Register function
 export const register = async (username, email, password) => {
   try {
     const response = await axios.post(`${API_URL}/register`, { username, email, password });
@@ -15,21 +16,19 @@ export const register = async (username, email, password) => {
   }
 };
 
-// Fungsi untuk login
+// Login function
 export const login = async (username, password) => {
   try {
     const response = await axios.post(`${API_URL}/login`, { username, password });
 
     console.log("Login response:", response.data); // Debugging
 
-    // Ambil status verifikasi dari localStorage (karena API tidak mengembalikannya)
     const isVerified = localStorage.getItem("isVerified");
 
     if (isVerified !== "true") {
       throw new Error("Akun belum terverifikasi OTP");
     }
 
-    // Simpan token hanya jika akun sudah diverifikasi
     localStorage.setItem("token", response.data.token);
 
     return response.data;
@@ -39,33 +38,32 @@ export const login = async (username, password) => {
   }
 };
 
-// Fungsi untuk logout
+// Logout function
 export const logout = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("isVerified"); // Hapus status verifikasi saat logout
+  localStorage.removeItem("isVerified"); // Remove verification status when logging out
 };
 
-// Mendapatkan token dari localStorage
+// Get token from localStorage
 export const getToken = () => {
   return localStorage.getItem("token");
 };
 
-// Mengecek apakah user sudah login
+// Check if the user is authenticated
 export const isAuthenticated = () => {
   return !!getToken();
 };
 
-// Fungsi untuk verifikasi OTP
+// OTP verification function
 export const verifyOtp = async (username, otp) => {
   try {
     const response = await axios.post(`${API_URL}/verify-otp`, { username, otp });
 
     console.log("Verify OTP response:", response.data); // Debugging
 
-    // Jika OTP valid, simpan token dan isVerified di localStorage
     if (response.data.token) {
       localStorage.setItem("token", response.data.token);
-      localStorage.setItem("isVerified", "true"); // Simpan status verifikasi
+      localStorage.setItem("isVerified", "true"); // Save verification status
     }
 
     return response.data;
@@ -75,6 +73,7 @@ export const verifyOtp = async (username, otp) => {
   }
 };
 
+// Resend OTP function
 export const resendOtp = async (username, email) => {
   try {
     const response = await axios.post(`${API_URL}/resend-otp`, { username, email });
@@ -85,6 +84,7 @@ export const resendOtp = async (username, email) => {
   }
 };
 
+// Forgot password function
 export const forgotPassword = async (username, email) => {
   try {
     const response = await axios.post(`${API_URL}/forgot-password`, { username, email });
@@ -95,6 +95,7 @@ export const forgotPassword = async (username, email) => {
   }
 };
 
+// Verify reset OTP function
 export const verifyResetOtp = async (username, otp) => {
   try {
     const response = await axios.post(`${API_URL}/verify-reset-otp`, { username, otp });
@@ -111,6 +112,7 @@ export const verifyResetOtp = async (username, otp) => {
   }
 };
 
+// Reset password function
 export const resetPassword = async (token, newPassword) => {
   try {
     const response = await axios.post(
@@ -118,7 +120,7 @@ export const resetPassword = async (token, newPassword) => {
       { newPassword },
       {
         headers: {
-          Authorization: `Bearer ${token}`, // ✅ template string syntax fixed
+          Authorization: `Bearer ${token}`,
         },
       }
     );
