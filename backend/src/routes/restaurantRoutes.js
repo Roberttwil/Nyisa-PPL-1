@@ -82,7 +82,6 @@ router.put('/profile', authenticate, restaurantOnly, async (req, res) => {
         if (address) restaurant.address = address;
         if (phone) restaurant.phone = phone;
         if (email) restaurant.email = email;
-        if (photo) restaurant.photo = photo;
         if (rating) restaurant.rating = rating;
         if (latitude) restaurant.latitude = latitude;
         if (longitude) restaurant.longitude = longitude;

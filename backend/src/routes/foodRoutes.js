@@ -113,7 +113,6 @@ router.put('/:id', authenticate, restaurantOnly, async (req, res) => {
         if (name) food.name = name;
         if (type) food.type = type;
         if (price) food.price = price;
-        if (photo) food.photo = photo;
         if (quantity) food.quantity = quantity;
 
         await food.save();

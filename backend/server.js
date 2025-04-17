@@ -11,6 +11,7 @@ const orderRoutes = require('./src/routes/orderRoutes')
 const restaurantRoutes = require('./src/routes/restaurantRoutes');
 const foodRoutes = require('./src/routes/foodRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const uploadRoutes = require('./src/routes/uploadRoutes');
 
 const { authenticate } = require('./src/middleware/authMiddleware');
 
@@ -29,6 +30,7 @@ app.use('/api/order', orderRoutes)
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.get('/api/protected', authenticate, (req, res) => {
     res.json({ message: `Welcome, ${req.user.username}! You have access.` });

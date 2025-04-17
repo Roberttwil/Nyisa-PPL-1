@@ -26,6 +26,10 @@ const User = sequelize.define(
             type: DataTypes.STRING,
             allowNull: false
         },
+        photo: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
         status: {
             type: DataTypes.INTEGER,
             allowNull: false
