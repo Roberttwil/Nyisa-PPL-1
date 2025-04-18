@@ -28,7 +28,7 @@ router.post('/register', async (req, res) => {
 
         // If user exists but not verified → resend OTP and update password
         if (existing && !existing.is_verified) {
-            existing.password = password; 
+            existing.password = password;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -74,6 +74,7 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const user = await Users.findByPk(username);
+
         if (!user || !bcrypt.compareSync(password, user.password)) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -82,14 +83,25 @@ router.post('/login', async (req, res) => {
             return res.status(403).json({ message: 'Account not verified. Please check your email for OTP.' });
         }
 
+        // Fetch status from user profile table
+        const profile = await User.findOne({ where: { username } });
+
+        if (!profile) {
+            return res.status(404).json({ message: 'User profile not found' });
+        }
+
+        const role = profile.status === 1 ? 'restaurant' : 'user';
+
+        // Generate token including role
         const token = jwt.sign(
-            { username: user.username },
+            { username: user.username, role },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        res.json({ token });
+        res.json({ token, role });
     } catch (err) {
+        console.error('Login error:', err);
         res.status(500).json({ error: 'Login failed' });
     }
 });
