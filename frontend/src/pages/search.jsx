@@ -152,18 +152,17 @@ function Search() {
             {/* Restaurant List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6 w-full md:w-3/4">
               {restaurants.map((resto) => (
-                <PostCard
-                  key={resto.id}
-                  image={resto.photo}
-                  title={
-                    <div className="truncate whitespace-nowrap overflow-hidden">
-                      {resto.name}
-                    </div> // Menggunakan Tailwind CSS untuk memotong teks
-                  }
-                  description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${
-                    resto.type
-                  }`}
-                />
+                <Link key={resto.id} to={`/food-list/${resto.id}`}>
+                  <PostCard
+                    image={resto.photo}
+                    title={
+                      <div className="truncate whitespace-nowrap overflow-hidden">
+                        {resto.name}
+                      </div> // Menggunakan Tailwind CSS untuk memotong teks
+                    }
+                    description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${resto.type}`}
+                  />
+                </Link>
               ))}
             </div>
           </div>

@@ -3,16 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import facebookLogo from "../assets/facebook.png";
 import googleLogo from "../assets/google.png";
 import nyisaLogo from "../assets/nyisaLogo.png";
-import { login } from "../service/AuthService";  // Import login from AuthService
+import { login } from "../service/AuthService"; // Import login from AuthService
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState("");  
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");  
-  const [rememberMe, setRememberMe] = useState(false);  
-  const [loading, setLoading] = useState(false);  
-  const navigate = useNavigate();  
+  const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Load username and rememberMe from localStorage if it exists
   useEffect(() => {
@@ -21,7 +21,7 @@ const Login = () => {
 
     if (savedUsername && savedRememberMe) {
       setUsername(savedUsername);
-      setRememberMe(true);  
+      setRememberMe(true);
     }
   }, []);
 
@@ -31,11 +31,14 @@ const Login = () => {
     setError("");
 
     try {
+      // Tunggu sejenak untuk simulasi loading
       await new Promise((resolve) => setTimeout(resolve, 2500));
 
-      const response = await login(username, password);  // Call login from AuthService
+      // Panggil fungsi login dari AuthService
+      const response = await login(username, password);
       console.log("Login Response:", response);
 
+      // Simpan data ke localStorage jika remember me dipilih
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         localStorage.setItem("username", username);
@@ -44,7 +47,7 @@ const Login = () => {
         localStorage.removeItem("username");
       }
 
-      navigate("/");  // Redirect to home after successful login
+      navigate("/"); // Redirect ke halaman utama setelah login berhasil
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {
@@ -53,7 +56,13 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen" style={{ backgroundImage: 'linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)' }}>
+    <div
+      className="relative flex justify-center items-center min-h-screen"
+      style={{
+        backgroundImage:
+          "linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)",
+      }}
+    >
       <div className="max-w-md w-full p-8 text-center">
         <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
         <h2 className="text-2xl font-semibold text-green-900 mb-2">Sign In</h2>
@@ -89,7 +98,13 @@ const Login = () => {
           </div>
           <div className="flex justify-between text-sm text-green-900 mb-4">
             <label className="flex items-center">
-              <input type="checkbox" className="mr-2 cursor-pointer" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} /> Remember me
+              <input
+                type="checkbox"
+                className="mr-2 cursor-pointer"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+              />{" "}
+              Remember me
             </label>
             <Link to="/forgot" className="font-semibold hover:underline">
               Forgot password?
@@ -98,7 +113,7 @@ const Login = () => {
           <button
             type="submit"
             className="w-full bg-green-900 text-white py-2 rounded-lg hover:bg-green-800 transition duration-200 cursor-pointer"
-            disabled={loading}          
+            disabled={loading}
           >
             {loading ? "Logging in..." : "Sign In"}
           </button>

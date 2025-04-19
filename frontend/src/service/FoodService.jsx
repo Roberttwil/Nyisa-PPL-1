@@ -9,10 +9,11 @@ const fetchFoods = async (page = 1, limit = 10, filters = {}) => {
         const params = {
             page,
             limit,
-            search: filters.search || '',
-            type: filters.type || '',
-            minPrice: filters.minPrice || '',
-            maxPrice: filters.maxPrice || '',
+            search: filters.search,
+            type: filters.type,
+            minPrice: filters.minPrice,
+            maxPrice: filters.maxPrice,
+            restaurant_id: filters.restaurant_id, // Menambahkan restaurant_id pada params
         };
 
         // Mengirimkan request ke API
