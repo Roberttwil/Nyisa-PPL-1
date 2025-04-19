@@ -1,8 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { Users } = require('../models');
-const { User } = require('../models');
+const { Users, User, Restaurant } = require('../models');
 const sendOTP = require('../utils/mailer');
 const { verifyResetToken } = require('../middleware/authMiddleware');
 
@@ -64,7 +63,7 @@ router.post('/register', async (req, res) => {
             message: 'OTP sent to your email. Please verify to complete registration.'
         });
     } catch (err) {
-        console.error('❌ Registration error:', err);
+        console.error('Registration error:', err);
         res.status(500).json({ error: 'Registration failed. Please try again.' });
     }
 });
@@ -231,5 +230,108 @@ router.post('/reset-password', verifyResetToken, async (req, res) => {
     }
 });
 
+// Restaurant LOGIN
+router.post('/login-restaurant', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        const user = await Users.findByPk(username);
+        if (!user || !bcrypt.compareSync(password, user.password)) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        if (!user.is_verified) {
+            return res.status(403).json({ message: 'Account not verified. Please check your email.' });
+        }
+
+        const profile = await User.findOne({ where: { username } });
+        if (!profile || profile.status !== 1) {
+            return res.status(403).json({ message: 'Access denied. Not a restaurant user.' });
+        }
+
+        const token = jwt.sign(
+            { username: user.username, role: 'restaurant' },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token, role: 'restaurant' });
+    } catch (err) {
+        console.error('Restaurant login error:', err);
+        res.status(500).json({ error: 'Login failed. Please try again.' });
+    }
+});
+
+router.post('/register-restaurant', async (req, res) => {
+    try {
+        const {
+            username, password, email, phone,
+            restaurantName, restaurantType, address, longitude, latitude
+        } = req.body;
+
+        if (!username || !password || !email || !phone || !restaurantName || !restaurantType || !address) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
+        const existing = await Users.findByPk(username);
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+        // If already verified
+        if (existing && existing.is_verified) {
+            return res.status(400).json({ message: 'Username is already taken' });
+        }
+
+        // If exists but not verified → update
+        if (existing && !existing.is_verified) {
+            existing.password = password;
+            existing.otp = otp;
+            existing.otp_expires_at = otpExpires;
+            await existing.save();
+
+            await sendOTP(email, otp);
+            return res.status(200).json({ message: 'Account exists but not verified. OTP resent.' });
+        }
+
+        // Create Users (auth)
+        await Users.create({
+            username,
+            password,
+            otp,
+            otp_expires_at: otpExpires,
+            is_verified: false
+        });
+
+        // Create User (profile)
+        await User.create({
+            username,
+            name: restaurantName, 
+            phone,
+            email,
+            address,
+            status: 1 // restaurant user
+        });
+
+        // Create Restaurant
+        await Restaurant.create({
+            name: restaurantName,
+            phone,
+            email,
+            address,
+            restaurant_type: restaurantType,
+            photo: '', 
+            rating: 0,
+            latitude,
+            longitude
+        });
+
+        await sendOTP(email, otp);
+
+        res.status(201).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
+    } catch (err) {
+        console.error('Restaurant registration error:', err);
+        res.status(500).json({ message: 'Registration failed' });
+    }
+});
 
 module.exports = router;

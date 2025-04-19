@@ -32,7 +32,7 @@ const Restaurant = sequelize.define(
         },
         photo: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         rating: {
             type: DataTypes.FLOAT,

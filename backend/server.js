@@ -6,7 +6,7 @@ const app = express();
 
 const sequelize = require('./src/config/db');
 const authRoutes = require('./src/routes/authRoutes');
-const socialAuthRoutes = require('./src/routes/socialAuthsRoutes');
+// const socialAuthRoutes = require('./src/routes/socialAuthsRoutes');
 const orderRoutes = require('./src/routes/orderRoutes')
 const restaurantRoutes = require('./src/routes/restaurantRoutes');
 const foodRoutes = require('./src/routes/foodRoutes');
@@ -25,7 +25,7 @@ app.use(passport.initialize());
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/auth/social', socialAuthRoutes);
+// app.use('/api/auth/social', socialAuthRoutes);
 app.use('/api/order', orderRoutes)
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/foods', foodRoutes);
