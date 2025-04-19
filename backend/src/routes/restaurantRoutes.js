@@ -1,6 +1,8 @@
 const express = require('express');
 const { Op } = require('sequelize');
-const { Restaurant } = require('../models');
+const { Restaurant, User } = require('../models');
+const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
+const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
 
 const router = express.Router();
 
@@ -61,7 +63,7 @@ router.get('/cards', async (req, res) => {
 
 
 // PUT /api/restaurant/profile
-router.put('/profile', authenticate, restaurantOnly, async (req, res) => {
+router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
         const username = req.user.username;
 
@@ -73,8 +75,14 @@ router.put('/profile', authenticate, restaurantOnly, async (req, res) => {
 
         const {
             name, type, address, phone,
-            email, photo, rating, latitude, longitude
+            email, rating, latitude, longitude
         } = req.body;
+
+        // Optional image upload
+        if (req.file) {
+            const photoUrl = await resizeAndUpload(req.file, 'restaurant');
+            restaurant.photo = photoUrl;
+        }
 
         // Update only provided fields
         if (name) restaurant.name = name;

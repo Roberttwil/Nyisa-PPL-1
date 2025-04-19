@@ -1,6 +1,8 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const { Food, Restaurant, User } = require('../models');
+const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
+const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
 
 const router = express.Router();
 
@@ -78,16 +80,21 @@ router.get('/cards', async (req, res) => {
 });
 
 // POST /api/foods -> add food
-router.post('/', authenticate, restaurantOnly, async (req, res) => {
+router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
         const restaurant_id = await getRestaurantId(req.user.username);
-        const { name, type, price, photo, quantity } = req.body;
+        const { name, type, price, quantity } = req.body;
+
+        let photoUrl = null;
+        if (req.file) {
+            photoUrl = await resizeAndUpload(req.file, 'foods');
+        }
 
         const newFood = await Food.create({
             name,
             type,
             price,
-            photo,
+            photo: photoUrl,
             quantity,
             restaurant_id
         });
@@ -100,7 +107,7 @@ router.post('/', authenticate, restaurantOnly, async (req, res) => {
 });
 
 // PUT /api/foods/:id -> update food
-router.put('/:id', authenticate, restaurantOnly, async (req, res) => {
+router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
         const { id } = req.params;
         const restaurant_id = await getRestaurantId(req.user.username);
@@ -108,12 +115,17 @@ router.put('/:id', authenticate, restaurantOnly, async (req, res) => {
 
         if (!food) return res.status(404).json({ message: 'Food not found' });
 
-        const { name, type, price, photo, quantity } = req.body;
+        const { name, type, price, quantity } = req.body;
 
         if (name) food.name = name;
         if (type) food.type = type;
         if (price) food.price = price;
         if (quantity) food.quantity = quantity;
+
+        if (req.file) {
+            const photoUrl = await resizeAndUpload(req.file, 'foods');
+            food.photo = photoUrl;
+        }
 
         await food.save();
 

@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-const authenticate = (req, res, next) => {
+// Authenticate any logged-in user via JWT
+exports.authenticate = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader?.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Missing token' });
@@ -13,7 +14,8 @@ const authenticate = (req, res, next) => {
     });
 };
 
-const restaurantOnly = async (req, res, next) => {
+// Allow only restaurant users (status === 1)
+exports.restaurantOnly = async (req, res, next) => {
     try {
         const { username } = req.user;
         const user = await User.findOne({ where: { username } });
@@ -29,7 +31,8 @@ const restaurantOnly = async (req, res, next) => {
     }
 };
 
-const verifyResetToken = (req, res, next) => {
+// Middleware to verify password reset token with purpose
+exports.verifyResetToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader?.split(' ')[1];
     if (!token) return res.status(401).json({ message: 'Missing token' });
@@ -44,9 +47,4 @@ const verifyResetToken = (req, res, next) => {
     } catch (err) {
         return res.status(403).json({ message: 'Invalid or expired token' });
     }
-};
-
-module.exports = {
-    authenticate,
-    verifyResetToken
 };
