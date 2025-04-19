@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import nyisaLogo from "../assets/logo-nyisa.png";
+import nyisaLogo from "../assets/nyisaLogo.png";
 // import { resetPassword } from "./AuthService";
 
 const ResetPassword = () => {
