@@ -23,7 +23,7 @@ const Food = sequelize.define(
         },
         photo: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         quantity: {
             type: DataTypes.INTEGER,
