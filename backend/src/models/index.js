@@ -20,6 +20,8 @@ Food.belongsTo(Transaction, { foreignKey: 'food_id', targetKey: 'food_id', as: '
 Transaction.hasOne(Restaurant, { foreignKey: 'restaurant_id' , sourceKey: 'restaurant_id' , as: 'restaurant' });
 Restaurant.belongsTo(Transaction, { foreignKey: 'restaurant_id', targetKey: 'restaurant_id', as: 'transaction' });
 
+Cart.belongsTo(Food, { foreignKey: 'food_id', as: 'food' });
+
 module.exports = {
     User,
     Users,
