@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const { Op } = require('sequelize');
 const { Restaurant, User } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
@@ -75,24 +76,41 @@ router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), asy
 
         const {
             name, type, address, phone,
-            email, rating, latitude, longitude
+            email, rating
         } = req.body;
 
-        // Optional image upload
+        // Optional photo upload
         if (req.file) {
             const photoUrl = await resizeAndUpload(req.file, 'restaurant');
             restaurant.photo = photoUrl;
         }
 
-        // Update only provided fields
+        // Convert address to lat/lng (if address is provided)
+        if (address) {
+            restaurant.address = address;
+
+            const geoRes = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+                params: {
+                    address,
+                    key: process.env.GOOGLE_MAPS_API_KEY
+                }
+            });
+
+            const geoData = geoRes.data;
+            if (geoData.status === 'OK' && geoData.results.length > 0) {
+                const location = geoData.results[0].geometry.location;
+                restaurant.latitude = location.lat;
+                restaurant.longitude = location.lng;
+            } else {
+                return res.status(400).json({ message: 'Invalid address. Could not resolve coordinates.' });
+            }
+        }
+
         if (name) restaurant.name = name;
         if (type) restaurant.restaurant_type = type;
-        if (address) restaurant.address = address;
         if (phone) restaurant.phone = phone;
         if (email) restaurant.email = email;
         if (rating) restaurant.rating = rating;
-        if (latitude) restaurant.latitude = latitude;
-        if (longitude) restaurant.longitude = longitude;
 
         await restaurant.save();
 

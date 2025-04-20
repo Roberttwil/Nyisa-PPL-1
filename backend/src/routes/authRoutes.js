@@ -1,6 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
+
 const { Users, User, Restaurant } = require('../models');
 const sendOTP = require('../utils/mailer');
 const { verifyResetToken } = require('../middleware/authMiddleware');
@@ -230,48 +232,32 @@ router.post('/reset-password', verifyResetToken, async (req, res) => {
     }
 });
 
-// Restaurant LOGIN
-router.post('/login-restaurant', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-
-        const user = await Users.findByPk(username);
-        if (!user || !bcrypt.compareSync(password, user.password)) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        if (!user.is_verified) {
-            return res.status(403).json({ message: 'Account not verified. Please check your email.' });
-        }
-
-        const profile = await User.findOne({ where: { username } });
-        if (!profile || profile.status !== 1) {
-            return res.status(403).json({ message: 'Access denied. Not a restaurant user.' });
-        }
-
-        const token = jwt.sign(
-            { username: user.username, role: 'restaurant' },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        res.json({ token, role: 'restaurant' });
-    } catch (err) {
-        console.error('Restaurant login error:', err);
-        res.status(500).json({ error: 'Login failed. Please try again.' });
-    }
-});
 
 router.post('/register-restaurant', async (req, res) => {
     try {
         const {
             username, password, email, phone,
-            restaurantName, restaurantType, address, longitude, latitude
+            restaurantName, restaurantType, address
         } = req.body;
 
         if (!username || !password || !email || !phone || !restaurantName || !restaurantType || !address) {
             return res.status(400).json({ message: 'All fields are required.' });
         }
+
+        // 🔍 Convert address to lat/lng
+        const geoRes = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+            params: {
+                address,
+                key: process.env.GOOGLE_MAPS_API_KEY
+            }
+        });
+
+        const geoData = geoRes.data;
+        if (geoData.status !== 'OK' || !geoData.results.length) {
+            return res.status(400).json({ message: 'Invalid address. Failed to fetch coordinates.' });
+        }
+
+        const { lat, lng } = geoData.results[0].geometry.location;
 
         const existing = await Users.findByPk(username);
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -305,11 +291,11 @@ router.post('/register-restaurant', async (req, res) => {
         // Create User (profile)
         await User.create({
             username,
-            name: restaurantName, 
+            name: restaurantName,
             phone,
             email,
             address,
-            status: 1 // restaurant user
+            status: 1
         });
 
         // Create Restaurant
@@ -319,10 +305,10 @@ router.post('/register-restaurant', async (req, res) => {
             email,
             address,
             restaurant_type: restaurantType,
-            photo: '', 
+            photo: '',
             rating: 0,
-            latitude,
-            longitude
+            latitude: lat,
+            longitude: lng
         });
 
         await sendOTP(email, otp);

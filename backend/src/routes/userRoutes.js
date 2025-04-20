@@ -30,4 +30,22 @@ router.put('/profile', authenticate, async (req, res) => {
     }
 });
 
+
+router.get('/profile', authenticate, async (req, res) => {
+    try {
+        const username = req.user.username;
+
+        const user = await User.findOne({ where: { username } });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User profile not found' });
+        }
+
+        res.json({ profile: user });
+    } catch (err) {
+        console.error('Fetch profile error:', err);
+        res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+});
+
 module.exports = router;

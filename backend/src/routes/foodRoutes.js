@@ -21,7 +21,12 @@ router.get('/cards', async (req, res) => {
 
         const filters = {};
 
-        // Search by food name
+        // for filtering by restaurant ID
+        if (req.query.restaurant_id) {
+            filters.restaurant_id = req.query.restaurant_id;
+        }
+
+        // Filter by food name
         if (req.query.search) {
             filters.name = { [Op.like]: `%${req.query.search}%` };
         }
