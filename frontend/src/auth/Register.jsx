@@ -2,11 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import facebookLogo from "../assets/facebook.png";
 import googleLogo from "../assets/google.png";
-import nyisaLogo from "../assets/logo-nyisa.png";
-import { register } from "../service/AuthService";
+import nyisaLogo from "../assets/nyisaLogo.png";
+import { register } from "../services/AuthService";
 
 const Register = () => {
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    phone: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +23,7 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!formData.username || !formData.email || !formData.password) {
+    if (!formData.username || !formData.email || !formData.password || !formData.phone) {
       setMessage("All fields are required!");
       return;
     }
@@ -26,7 +31,7 @@ const Register = () => {
     setLoading(true);
     setMessage("");
     try {
-      const response = await register(formData.username, formData.email, formData.password);
+      const response = await register(formData.username, formData.email, formData.password, formData.phone);
       setMessage(response.message);
       setTimeout(() => navigate("/verif-otp"), 1500);
     } catch (error) {
@@ -65,6 +70,17 @@ const Register = () => {
               className="w-full px-4 py-2 border border-green-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter your email"
               value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-4 text-left">
+            <label className="block text-green-900 font-medium">Phone</label>
+            <input
+              type="text"
+              name="phone"
+              className="w-full px-4 py-2 border border-green-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Enter your phone number"
+              value={formData.phone}
               onChange={handleChange}
             />
           </div>
