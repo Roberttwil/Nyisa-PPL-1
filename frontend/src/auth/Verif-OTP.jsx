@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import nyisaLogo from "../assets/nyisaLogo.png";
-import { verifyOtp, resendOtp } from "../service/AuthService";
+import { verifyOtp, resendOtp } from "../services/AuthService";
 
 const OTP = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);

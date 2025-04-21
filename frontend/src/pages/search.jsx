@@ -6,7 +6,7 @@ import poster1 from "../assets/poster1.svg";
 import contohLogo from "../assets/logo_mcd.png";
 import contohBg from "../assets/mcd.jpg";
 import PostCard from "../components/postcard";
-import RestoService from "../service/RestoService";
+import RestoService from "../services/RestoService";
 
 function Search() {
   const [restaurants, setRestaurants] = useState([]);

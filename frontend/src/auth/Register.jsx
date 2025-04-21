@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import facebookLogo from "../assets/facebook.png";
 import googleLogo from "../assets/google.png";
 import nyisaLogo from "../assets/nyisaLogo.png";
-import { register } from "../service/AuthService";
+import { register } from "../services/AuthService";
 
 const Register = () => {
   const [formData, setFormData] = useState({

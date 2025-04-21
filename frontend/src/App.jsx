@@ -5,8 +5,9 @@ import Footer from "./Components/footer";
 import Home from "./pages/home";
 import Search from "./pages/search"
 import Food from "./pages/foodlist"
+import Cart from "./pages/cart"
 import Profile from "./pages/profile"
-import Login from "./Auth/Login";
+import Login from "./auth/Login";
 import Register from "./auth/Register";
 import VerifOTP from "./Auth/Verif-OTP";
 import Forgot from "./Auth/Forgot";
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
           <Route path="/food-list/:restoId" element={<Food />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

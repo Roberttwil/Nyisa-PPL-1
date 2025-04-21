@@ -22,24 +22,24 @@ export const register = async (username, email, password, phone) => {
   }
 };
 
+// Login function
 export const login = async (username, password) => {
   try {
     const response = await axios.post(`${API_URL}/login`, { username, password });
 
-    const { token, role, is_verified } = response.data;
+    console.log("Login response:", response.data); // Debugging
 
-    // Periksa apakah akun sudah terverifikasi
-    if (!is_verified) {
-      throw new Error("Akun belum terverifikasi. Silakan cek email untuk OTP.");
+    const isVerified = localStorage.getItem("isVerified");
+
+    if (isVerified !== "true") {
+      throw new Error("Akun belum terverifikasi OTP");
     }
 
-    // Simpan token dan role ke localStorage
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
+    localStorage.setItem("token", response.data.token);
 
-    return { token, role };  // Kembalikan token dan role
+    return response.data;
   } catch (error) {
-    console.error("Login error:", error.response?.data || error.message);
+    console.error("Login error:", error.response?.data?.message || error.message);
     throw new Error(error.response?.data?.message || "Login failed");
   }
 };

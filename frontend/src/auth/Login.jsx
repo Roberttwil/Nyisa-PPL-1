@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import facebookLogo from "../assets/facebook.png";
 import googleLogo from "../assets/google.png";
 import nyisaLogo from "../assets/nyisaLogo.png";
-import { login } from "../service/AuthService"; // Import login from AuthService
+import { login } from "../services/AuthService"; // Import login from AuthService
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import pictt from "../assets/croissant.png";
 import circle from "../assets/element1.svg";
 import flowerz from "../assets/element2.svg";
+import foodWaste from "../assets/food-waste.png"; // Import gambar food-waste
 
 export default function Home() {
   return (
@@ -64,20 +65,28 @@ export default function Home() {
         </p>
       </motion.div>
 
-      {/* Our Mission - Fade In After Punchline */}
+      {/* Our Mission + Image */}
       <motion.div
-        className="mt-25 bg-[#f4f5f2] px-8 py-10 rounded-2xl max-w-3xl shadow-md text-center"
+        className="mt-20 flex flex-col md:flex-row items-center gap-10 bg-[#f4f5f2] px-8 py-10 rounded-2xl max-w-5xl shadow-md text-center md:text-left"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 1 }}
       >
-        <h2 className="text-3xl font-bold text-[#0D3B2E] mb-4">Our Mission</h2>
-        <p className="text-[#3c574c] font-medium text-lg">
-          At <span className="text-[#ADD34C] font-bold">Nyisa</span>, our
-          mission is to rescue surplus food that's still safe and delicious,
-          making it available to everyone at affordable prices. We aim to reduce
-          food waste and promote a greener future—one meal at a time.
-        </p>
+        {/* Text Box */}
+        <div className="md:w-2/3">
+          <h2 className="text-3xl font-bold text-[#0D3B2E] mb-4">Our Mission</h2>
+          <p className="text-[#3c574c] font-medium text-lg">
+            At <span className="text-[#ADD34C] font-bold">Nyisa</span>, our
+            mission is to rescue surplus food that's still safe and delicious,
+            making it available to everyone at affordable prices. We aim to reduce
+            food waste and promote a greener future—one meal at a time.
+          </p>
+        </div>
+
+        {/* Image Box */}
+        <div className="md:w-1/4">
+          <img src={foodWaste} alt="Food Waste" className="w-full rounded-xl" />
+        </div>
       </motion.div>
     </div>
   );
