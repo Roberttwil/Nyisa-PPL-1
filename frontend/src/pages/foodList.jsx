@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import FoodService from "../services/FoodService";
 import PostCard from "../components/postcard";
 import OrderService from "../services/OrderService";
@@ -14,18 +14,29 @@ const FoodList = () => {
     minPrice: "",
     maxPrice: "",
   });
-  const [quantities, setQuantities] = useState({}); // quantity default 0
+  const [quantities, setQuantities] = useState({});
+  const navigate = useNavigate();
 
-  const fetchFoodData = async (page) => {
+  const fetchFoodData = async (page, token) => {
+    console.log("Token sent to API:", token);
     setLoading(true);
     try {
-      const data = await FoodService.fetchFoods(page, 15, {
-        ...filters,
-        restaurant_id: restoId,
-      });
+      const data = await FoodService.fetchFoods(
+        page,
+        15,
+        {
+          ...filters,
+          restaurant_id: restoId,
+        },
+        token
+      );
       setFoods(data.data);
     } catch (error) {
       console.error("Error fetching food data:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired or invalid token. Please log in again.");
+        navigate("/login");
+      }
     } finally {
       setLoading(false);
     }
@@ -43,38 +54,72 @@ const FoodList = () => {
   };
 
   const handleAddAllToCart = async () => {
-    const booking_code = "BOOKING_CODE"; // Ganti dengan nilai sebenarnya
-    const user_id = 9; // Ganti dengan nilai sebenarnya
-
+    const bookingCode = localStorage.getItem("bookingCode");
+    const userId = localStorage.getItem("user_id");
+    const token = localStorage.getItem("token"); // Ambil token dari localStorage
+  
+    console.log("Booking Code from localStorage:", bookingCode);
+    console.log("User ID from localStorage:", userId);
+    console.log("Token from localStorage:", token); // Pastikan token tersedia
+  
+    if (!bookingCode) {
+      alert(
+        "Booking code tidak ditemukan. Silakan login dan mulai order terlebih dahulu."
+      );
+      return;
+    }
+  
     try {
-      const promises = Object.entries(quantities)
-        .filter(([_, qty]) => qty > 0)
-        .map(async ([food_id, qty]) => {
-          const results = [];
-          for (let i = 0; i < qty; i++) {
-            const response = await OrderService.addToCart(
-              booking_code,
-              user_id,
-              food_id
-            );
-            results.push(response);
-          }
-          return results;
-        });
-
-      await Promise.all(promises);
-      alert("Items added to cart successfully!");
-      setQuantities({}); // Reset quantities
+      setLoading(true);
+  
+      const itemsToAdd = Object.entries(quantities).filter(
+        ([_, qty]) => qty > 0
+      );
+  
+      for (const [foodId, quantity] of itemsToAdd) {
+        console.log("Adding food item:", foodId);  // Memastikan foodId ada pada setiap iterasi
+  
+        for (let i = 0; i < quantity; i++) {
+          // Pastikan untuk menambahkan token di header saat melakukan permintaan
+          await OrderService.addToCart({
+            booking_code: bookingCode,
+            food_id: parseInt(foodId),
+            user_id: parseInt(userId),
+          });
+  
+          console.log(`Added foodId: ${foodId}, Quantity: ${quantity}`);
+        }
+      }
+  
+      alert("Semua item berhasil ditambahkan ke keranjang!");
     } catch (error) {
-      console.error("Error adding to cart:", error.message);
+      console.error("Gagal menambahkan ke keranjang:", error);
+      alert("Terjadi kesalahan saat menambahkan item ke keranjang.");
+    } finally {
+      setLoading(false);
     }
   };
+  
+  
 
   useEffect(() => {
-    if (restoId) {
-      fetchFoodData(1);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please log in first.");
+      navigate("/login");
+      return;
     }
-  }, [filters, restoId]);
+
+    // Memastikan booking code di-generate dan disimpan di localStorage
+    const bookingCode = localStorage.getItem("bookingCode");
+    if (!bookingCode) {
+      OrderService.generateBookingCode(); // Panggil fungsi ini untuk generate booking code
+    }
+
+    if (restoId) {
+      fetchFoodData(1, token);
+    }
+  }, [filters, restoId, navigate]);
 
   const hasItems = Object.values(quantities).some((qty) => qty > 0);
 

@@ -1,0 +1,22 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api/upload';
+
+export const uploadUserPhoto = async (photoFile, token) => {
+  try {
+    const formData = new FormData();
+    formData.append('photo', photoFile);
+
+    const response = await axios.put(`${API_URL}/user-photo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${token}`, // assuming token-based auth
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading user photo:', error);
+    throw error.response?.data || { message: 'Upload failed' };
+  }
+};

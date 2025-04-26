@@ -6,7 +6,7 @@ function PostCard({ image, title, description }) {
       <img src={image} alt="Produk" className="w-full h-36 object-cover" />
       <div className="flex flex-col py-4 px-4 gap-1">
         <h1 className="font-semibold text-base">{title}</h1>
-        <p className="text-sm text-gray-600">{description}</p>
+        <div className="text-sm text-gray-600">{description}</div>
       </div>
     </div>
   );

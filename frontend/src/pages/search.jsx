@@ -43,13 +43,7 @@ function Search() {
 
   useEffect(() => {
     fetchRestaurants();
-  }, [currentPage, minRating]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchRestaurants();
-  };
+  }, [currentPage, minRating, search]);
 
   return (
     <div className="flex flex-col my-10">
@@ -68,9 +62,9 @@ function Search() {
 
       <div className="flex flex-col items-center">
         <div className="flex flex-row gap-130 font-semibold text-[#0D3B2E]">
-          <p>Rekomendasi hari ini</p>
+          <p>Today's Recommendation</p>
           <a href="/" className="hover:underline">
-            Lihat semua
+            View All
           </a>
         </div>
         {/* Post Card Showcase */}
@@ -92,60 +86,50 @@ function Search() {
           />
         </div>
 
-        {/* Search + Filter Bar */}
+        {/* Search Input */}
         <div className="flex flex-col gap-6 mt-10 w-full max-w-6xl mx-auto px-4">
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex flex-col md:flex-row md:items-end gap-4 w-full"
-          >
-            {/* Search Input */}
-            <div className="flex flex-col w-full">
-              <label htmlFor="search" className="text-lg font-semibold mb-1">
-                Find restaurant name
-              </label>
-              <input
-                id="search"
-                type="text"
-                placeholder="Cari nama restoran..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="px-4 py-2 border rounded-lg w-full h-[42px]"
-              />
-            </div>
-
-            {/* Tombol Cari */}
-            <div className="flex flex-col w-full md:w-1/8 pr-6">
-              <label className="invisible">Cari</label>
-              <button
-                type="submit"
-                className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 cursor-pointer w-full h-[42px]"
-              >
-                Cari
-              </button>
-            </div>
-          </form>
-
           {/* Filter Rating and Restaurant List */}
-          <div className="flex flex-col md:flex-row gap-6 w-full">
-            {/* Filter Rating */}
-            <div className="flex flex-col w-full md:w-1/4">
-              <label htmlFor="rating" className="text-lg font-semibold mb-1">
-                Rating
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="rating"
-                  type="checkbox"
-                  checked={minRating === "4"}
-                  onChange={(e) => {
-                    const newRating = e.target.checked ? "4" : "";
-                    setMinRating(newRating); // Update rating
-                  }}
-                  className="w-5 h-5 scale-80 accent-green-700"
-                />
-                <label htmlFor="rating" className="text-md">
-                  4 stars & above
+          <div className="flex flex-col md:flex-row gap-6 w-full items-start">
+            {/* Filter Search + Rating */}
+            <div className="flex flex-col w-full md:w-1/3 gap-4 self-start">
+              {/* Search */}
+              <div className="flex flex-col w-full">
+                <label htmlFor="search" className="text-lg font-semibold mb-1">
+                  Find restaurant name
                 </label>
+                <input
+                  id="search"
+                  type="text"
+                  placeholder="Search restaurant name..."
+                  value={search}
+                  onChange={(e) => {
+                    setCurrentPage(1); // reset ke halaman 1 setiap kali search
+                    setSearch(e.target.value);
+                  }}
+                  className="px-4 py-2 border rounded-lg w-full h-[42px]"
+                />
+              </div>
+
+              {/* Rating */}
+              <div className="flex flex-col">
+                <label htmlFor="rating" className="text-lg font-semibold mb-1">
+                  Rating
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="rating"
+                    type="checkbox"
+                    checked={minRating === "4"}
+                    onChange={(e) => {
+                      const newRating = e.target.checked ? "4" : "";
+                      setMinRating(newRating); // Update rating
+                    }}
+                    className="w-5 h-5 accent-green-700"
+                  />
+                  <label htmlFor="rating" className="text-md">
+                    4 stars & above
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -158,9 +142,11 @@ function Search() {
                     title={
                       <div className="truncate whitespace-nowrap overflow-hidden">
                         {resto.name}
-                      </div> // Menggunakan Tailwind CSS untuk memotong teks
+                      </div>
                     }
-                    description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${resto.type}`}
+                    description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${
+                      resto.type
+                    }`}
                   />
                 </Link>
               ))}

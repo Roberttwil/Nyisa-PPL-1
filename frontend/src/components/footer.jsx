@@ -1,6 +1,7 @@
 import React from "react";
 import { Home, Search, Map, ShoppingCart, User } from "lucide-react";
 import nyisaLogo from "../assets/nyisaLogo.png";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -26,12 +27,6 @@ const Footer = () => {
               className="hover:underline hover:text-[#54986a] cursor-pointer"
             >
               Home
-            </a>
-            <a
-              href="/"
-              className="hover:underline hover:text-[#54986a] cursor-pointer"
-            >
-              Profile
             </a>
           </div>
           <a
@@ -61,9 +56,9 @@ const Footer = () => {
             Privacy Policy
           </span>
           <span className="text-xl text-green-700">•</span>
-          <span className="hover:underline hover:text-[#54986a] underline-offset-4 cursor-pointer">
+          <Link to="/partner" className="hover:underline hover:text-[#54986a] underline-offset-4 cursor-pointer">
             Being Nyisa Partner
-          </span>
+          </Link>
         </div>
       </div>
     </footer>

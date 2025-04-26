@@ -6,17 +6,19 @@ import Home from "./pages/home";
 import Search from "./pages/search"
 import Food from "./pages/foodlist"
 import Cart from "./pages/cart"
+import History from "./pages/history"
 import Profile from "./pages/profile"
 import Login from "./auth/Login";
 import Register from "./auth/Register";
-import VerifOTP from "./Auth/Verif-OTP";
-import Forgot from "./Auth/Forgot";
-import ResetOTP from "./Auth/Reset-OTP";
-import Reset from "./Auth/Reset";
+import VerifOTP from "./auth/Verif-OTP";
+import Forgot from "./auth/Forgot";
+import ResetOTP from "./auth/Reset-OTP";
+import Reset from "./auth/Reset";
+import Partner from "./pages/partner";
 
 function App() {
   const location = useLocation();
-  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset"];
+  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner"];
 
   return (
     <>
@@ -28,6 +30,7 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/food-list/:restoId" element={<Food />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -35,6 +38,7 @@ function App() {
           <Route path="/forgot" element={<Forgot />} />
           <Route path="/reset-otp" element={<ResetOTP />} />
           <Route path="/reset" element={<Reset />} />
+          <Route path="/partner" element={<Partner />} />
         </Routes>
       </div>
 

@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getProfile, updateProfile } from "../services/UserService";
 import { Pencil, Check, Camera } from "lucide-react";
+import Cropper from "react-cropper";
+import { useNavigate } from "react-router-dom"; // ← Tambahkan ini
 
 const Profile = () => {
   const [profile, setProfile] = useState({});
   const [editField, setEditField] = useState(null);
   const [form, setForm] = useState({});
   const fileInputRef = useRef(null);
+  const navigate = useNavigate(); // ← Tambahkan ini
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -47,21 +50,20 @@ const Profile = () => {
   };
 
   const handleImageClick = () => {
-    fileInputRef.current.click(); // Trigger input file saat FAB diklik
+    fileInputRef.current.click(); // ← trigger input file
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setProfile((prev) => ({ ...prev, photo: imageUrl }));
-      // Tambahkan logika upload ke server jika perlu
-      console.log("Selected image:", file.name);
+      localStorage.setItem("crop-image-url", imageUrl); // ← simpan sementara
+      navigate("/crop-image"); // ← pindah halaman
     }
   };
 
   const renderField = (label, field) => (
-    <div className="py-4 border-b border-gray-300">
+    <div className="py-3">
       <label className="text-gray-600 font-semibold block mb-1">{label}</label>
       <div className="flex items-center justify-between">
         <div className="flex-1">
