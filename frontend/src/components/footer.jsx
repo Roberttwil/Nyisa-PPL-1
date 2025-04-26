@@ -38,7 +38,7 @@ const Footer = () => {
 
       {/* Bottom Section */}
       <div className="bg-[#bfc1b4] mt-8 px-6 md:px-12 py-4 flex flex-col md:flex-row justify-between items-center text-sm text-green-900 font-medium gap-4">
-        <span className="ml-2">© 2025 Nyisa</span>
+        <span className="md:ml-2">© 2025 Nyisa</span>
         <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4">
           <span className="hover:underline hover:text-[#54986a] cursor-pointer">
             Terms & Conditions
