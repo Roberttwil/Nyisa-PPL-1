@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import poster3 from "../assets/poster3.svg";
 import poster2 from "../assets/poster2.svg";
 import poster1 from "../assets/poster1.svg";
@@ -22,16 +23,16 @@ function Search() {
     setLoading(true);
     try {
       const filters = {
-        search, // Pencarian berdasarkan nama restoran
-        minRating, // Rating minimal dari checkbox
-        type: type ? [type] : [], // Filter berdasarkan tipe restoran, jika ada
+        search,
+        minRating,
+        type: type ? [type] : [],
       };
 
-      // Memanggil API dengan parameter filter
+    
       const result = await RestoService.getRestaurants(currentPage, 3, filters);
       console.log("Fetched restaurants:", result);
 
-      // Menyimpan hasil restoran dan jumlah halaman total
+    
       setRestaurants(result.data || []);
       setTotalPages(result.totalPages || 1);
     } catch (error) {
@@ -47,43 +48,39 @@ function Search() {
 
   return (
     <div className="flex flex-col my-10">
-      {/* Banner */}
-      <div className="flex flex-row gap-10 w-full justify-center mb-12">
-        <Link to="/">
-          <img src={poster2} className="w-48" />
-        </Link>
-        <Link to="/">
-          <img src={poster1} className="w-48" />
-        </Link>
-        <Link to="/">
-          <img src={poster3} className="w-48" />
-        </Link>
+      <div className="flex flex-wrap gap-10 w-full justify-center mb-12">
+        {[poster2, poster1, poster3].map((poster, index) => (
+          <motion.div
+            key={index}
+            className="w-1/3 sm:w-1/4 md:w-1/4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: index * 0.2 }}
+          >
+            <img src={poster} className="w-full" />
+          </motion.div>
+        ))}
       </div>
 
+      {/* Today's Recommendation Section */}
       <div className="flex flex-col items-center">
-        <div className="flex flex-row gap-130 font-semibold text-[#0D3B2E]">
+        <div className="flex flex-row gap-10 sm:gap-20 font-semibold text-[#0D3B2E] w-full md:w-200 justify-between px-4">
           <p>Today's Recommendation</p>
-          <a href="/" className="hover:underline">
+          <a href="/" className="hover:underline text-sm sm:text-base">
             View All
           </a>
         </div>
+
         {/* Post Card Showcase */}
-        <div className="flex flex-row gap-6 justify-start mt-5">
-          <PostCard
-            image={contohBg}
-            title="McDonald"
-            description="Fast food • Burgers • Fries"
-          />
-          <PostCard
-            image={contohBg}
-            title="McDonald"
-            description="Fast food • Burgers • Fries"
-          />
-          <PostCard
-            image={contohBg}
-            title="McDonald"
-            description="Fast food • Burgers • Fries"
-          />
+        <div className="flex flex-wrap gap-6 justify-center sm:justify-start mt-5">
+          {[contohBg, contohBg, contohBg].map((image, index) => (
+            <PostCard
+              key={index}
+              image={image}
+              title="McDonald"
+              description="Fast food • Burgers • Fries"
+            />
+          ))}
         </div>
 
         {/* Search Input */}
@@ -103,7 +100,7 @@ function Search() {
                   placeholder="Search restaurant name..."
                   value={search}
                   onChange={(e) => {
-                    setCurrentPage(1); // reset ke halaman 1 setiap kali search
+                    setCurrentPage(1);
                     setSearch(e.target.value);
                   }}
                   className="px-4 py-2 border rounded-lg w-full h-[42px]"
@@ -122,7 +119,7 @@ function Search() {
                     checked={minRating === "4"}
                     onChange={(e) => {
                       const newRating = e.target.checked ? "4" : "";
-                      setMinRating(newRating); // Update rating
+                      setMinRating(newRating);
                     }}
                     className="w-5 h-5 accent-green-700"
                   />
@@ -133,21 +130,33 @@ function Search() {
               </div>
             </div>
 
-            {/* Restaurant List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6 w-full md:w-3/4">
-              {restaurants.map((resto) => (
+              {restaurants.map((resto, index) => (
                 <Link key={resto.id} to={`/food-list/${resto.id}`}>
-                  <PostCard
-                    image={resto.photo}
-                    title={
-                      <div className="truncate whitespace-nowrap overflow-hidden">
-                        {resto.name}
-                      </div>
-                    }
-                    description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${
-                      resto.type
-                    }`}
-                  />
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{
+                      opacity: { duration: 1, delay: index * 0.2 },
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30,
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 1.1 }}
+                  >
+                    <PostCard
+                      image={resto.photo}
+                      title={
+                        <div className="truncate whitespace-nowrap overflow-hidden">
+                          {resto.name}
+                        </div>
+                      }
+                      description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${
+                        resto.type
+                      }`}
+                    />
+                  </motion.div>
                 </Link>
               ))}
             </div>

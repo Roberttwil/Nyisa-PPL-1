@@ -57,28 +57,28 @@ const FoodList = () => {
     const bookingCode = localStorage.getItem("bookingCode");
     const userId = localStorage.getItem("user_id");
     const token = localStorage.getItem("token"); // Ambil token dari localStorage
-  
+
     console.log("Booking Code from localStorage:", bookingCode);
     console.log("User ID from localStorage:", userId);
     console.log("Token from localStorage:", token); // Pastikan token tersedia
-  
+
     if (!bookingCode) {
       alert(
         "Booking code tidak ditemukan. Silakan login dan mulai order terlebih dahulu."
       );
       return;
     }
-  
+
     try {
       setLoading(true);
-  
+
       const itemsToAdd = Object.entries(quantities).filter(
         ([_, qty]) => qty > 0
       );
-  
+
       for (const [foodId, quantity] of itemsToAdd) {
-        console.log("Adding food item:", foodId);  // Memastikan foodId ada pada setiap iterasi
-  
+        console.log("Adding food item:", foodId); // Memastikan foodId ada pada setiap iterasi
+
         for (let i = 0; i < quantity; i++) {
           // Pastikan untuk menambahkan token di header saat melakukan permintaan
           await OrderService.addToCart({
@@ -86,11 +86,11 @@ const FoodList = () => {
             food_id: parseInt(foodId),
             user_id: parseInt(userId),
           });
-  
+
           console.log(`Added foodId: ${foodId}, Quantity: ${quantity}`);
         }
       }
-  
+
       alert("Semua item berhasil ditambahkan ke keranjang!");
     } catch (error) {
       console.error("Gagal menambahkan ke keranjang:", error);
@@ -99,8 +99,6 @@ const FoodList = () => {
       setLoading(false);
     }
   };
-  
-  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -151,7 +149,11 @@ const FoodList = () => {
               >
                 <PostCard
                   image={food.photo}
-                  title={food.name}
+                  title={
+                    <div className="truncate whitespace-nowrap overflow-hidden">
+                      {food.name}
+                    </div>
+                  }
                   description={
                     <>
                       <p>Type: {food.type}</p>
@@ -164,7 +166,7 @@ const FoodList = () => {
                 {/* Quantity Controls */}
                 <div className="flex justify-center items-center gap-4 py-4">
                   <button
-                    className="bg-gray-200 text-lg w-6 h-6 rounded-full flex items-center justify-center"
+                    className="bg-gray-200 text-lg w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
                     onClick={() => handleDecrement(food.id)}
                   >
                     -
@@ -173,7 +175,7 @@ const FoodList = () => {
                     {quantities[food.id] || 0}
                   </span>
                   <button
-                    className="bg-gray-200 text-lg w-6 h-6 rounded-full flex items-center justify-center"
+                    className="bg-gray-200 text-lg w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
                     onClick={() => handleIncrement(food.id)}
                   >
                     +
@@ -191,7 +193,7 @@ const FoodList = () => {
         <div className="sticky bottom-0 bg-white py-4 mt-10 flex justify-center z-20">
           <button
             onClick={handleAddAllToCart}
-            className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition w-[90%] sm:w-auto md:w-full text-center cursor-pointer"
           >
             Add Selected Items to Cart
           </button>
