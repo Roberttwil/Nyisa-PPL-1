@@ -55,7 +55,7 @@ router.post('/add/cart', authenticate, async (req, res) => {
         const { booking_code, food_id } = req.body;
         const user_id = req.user.user_id;
 
-        if (!booking_code || !user_id || !food_id) {
+        if (!booking_code || !food_id) {
             return res.status(400).json({ error: 'Semua field harus diisi: booking_code, user_id, food_id' });
         }
 

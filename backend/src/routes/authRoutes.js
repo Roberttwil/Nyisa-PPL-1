@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
 
         // Generate token including role
         const token = jwt.sign(
-            { username: user.username, role },
+            { username: user.username, user_id: user.user_id, role },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -130,7 +130,11 @@ router.post('/verify-otp', async (req, res) => {
         user.is_verified = true;
         await user.save();
 
-        const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(
+            { username: user.username, user_id: user.user_id, role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
         res.json({ token });
     } catch (err) {
         res.status(500).json({ error: 'OTP verification failed' });
