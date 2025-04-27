@@ -3,7 +3,6 @@ import axios from "axios";
 const API_URL = "http://localhost:5000/api/auth";
 
 // Register function
-// Register function
 export const register = async (username, email, password, phone) => {
   try {
     const response = await axios.post(`${API_URL}/register`, {
@@ -190,33 +189,6 @@ export const resetPassword = async (token, newPassword) => {
   }
 };
 
-// Geocoding function to get latitude and longitude from an address
-const geocodeAddress = async (address) => {
-  const apiKey = "AIzaSyCD1lyDih6Oa79dNyNlYj-zPv9TrTP3dMs";
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-    address
-  )}&key=${apiKey}`;
-
-  try {
-    const response = await axios.get(url);
-    const data = response.data;
-
-    if (data.status === "OK" && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return {
-        lat: location.lat,
-        lng: location.lng,
-      };
-    } else {
-      console.error("No results found for the given address.");
-      throw new Error("Invalid address. No results found.");
-    }
-  } catch (error) {
-    console.error("Error fetching coordinates:", error);
-    throw new Error("Failed to fetch coordinates.");
-  }
-};
-
 // Register restaurant function, which includes geocoding the address
 export const registerRestaurant = async ({
   username,
@@ -228,9 +200,6 @@ export const registerRestaurant = async ({
   address,
 }) => {
   try {
-    // Get coordinates for the address
-    const { lat, lng } = await geocodeAddress(address);
-
     // Send the registration data, including the geocoded coordinates
     const response = await axios.post(`${API_URL}/register-restaurant`, {
       username,
