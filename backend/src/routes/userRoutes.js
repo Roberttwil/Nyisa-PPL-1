@@ -1,5 +1,5 @@
 const express = require('express');
-const { User } = require('../models');
+const { Transaction, Food, Restaurant } = require('../models');
 const { authenticate } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -45,6 +45,49 @@ router.get('/profile', authenticate, async (req, res) => {
     } catch (err) {
         console.error('Fetch profile error:', err);
         res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+});
+
+router.get('/transactions', authenticate, async (req, res) => {
+    try {
+        console.log('req.user:', req.user); 
+        const user_id = req.user.user_id;
+
+        const transactions = await Transaction.findAll({
+            where: { user_id },
+            include: [
+                {
+                    model: Food,
+                    as: 'food',
+                    attributes: ['name', 'type', 'photo', 'price']
+                },
+                {
+                    model: Restaurant,
+                    as: 'restaurant',
+                    attributes: ['name', 'restaurant_type']
+                }
+            ],
+            order: [['date', 'DESC']]
+        });
+
+        if (!transactions.length) {
+            return res.status(404).json({ message: 'No transactions found.' });
+        }
+
+        const formatted = transactions.map(tx => ({
+            transaction_id: tx.transaction_id,
+            booking_code: tx.booking_code,
+            total: tx.total,
+            status: tx.status,
+            date: tx.date,
+            food: tx.food,
+            restaurant: tx.restaurant
+        }));
+
+        res.json({ transactions: formatted });
+    } catch (err) {
+        console.error('Fetch transactions error:', err);
+        res.status(500).json({ message: 'Failed to fetch transactions' });
     }
 });
 

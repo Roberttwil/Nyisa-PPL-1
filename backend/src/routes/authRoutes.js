@@ -74,6 +74,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+
         const user = await Users.findByPk(username);
 
         if (!user || !bcrypt.compareSync(password, user.password)) {
@@ -84,7 +85,6 @@ router.post('/login', async (req, res) => {
             return res.status(403).json({ message: 'Account not verified. Please check your email for OTP.' });
         }
 
-        // Fetch status from user profile table
         const profile = await User.findOne({ where: { username } });
 
         if (!profile) {
@@ -93,9 +93,8 @@ router.post('/login', async (req, res) => {
 
         const role = profile.status === 1 ? 'restaurant' : 'user';
 
-        // Generate token including role
         const token = jwt.sign(
-            { username: user.username, user_id: user.user_id, role },
+            { username: user.username, user_id: profile.user_id, role },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
@@ -106,6 +105,7 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ error: 'Login failed' });
     }
 });
+
 
 // VERIFY REGISTRATION OTP
 router.post('/verify-otp', async (req, res) => {
@@ -130,13 +130,20 @@ router.post('/verify-otp', async (req, res) => {
         user.is_verified = true;
         await user.save();
 
+        const userProfile = await User.findOne({ where: { username: user.username } });
+        if (!userProfile) {
+            return res.status(404).json({ message: 'User profile not found' });
+        }
+
         const token = jwt.sign(
-            { username: user.username, user_id: user.user_id, role },
+            { username: user.username, user_id: userProfile.user_id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
+
         res.json({ token });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'OTP verification failed' });
     }
 });
@@ -201,7 +208,11 @@ router.post('/verify-reset-otp', async (req, res) => {
             return res.status(400).json({ message: 'OTP expired' });
         }
 
-        // JWT for token
+
+        user.otp = null;
+        user.otp_expires_at = null;
+        await user.save();
+
         const token = jwt.sign(
             { username: user.username, purpose: 'password-reset' },
             process.env.JWT_SECRET,
@@ -225,7 +236,8 @@ router.post('/reset-password', verifyResetToken, async (req, res) => {
         const user = await Users.findByPk(req.username);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        user.password = newPassword;
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
+        user.password = hashedPassword;
         user.otp = null;
         user.otp_expires_at = null;
         await user.save();
@@ -235,7 +247,6 @@ router.post('/reset-password', verifyResetToken, async (req, res) => {
         res.status(500).json({ error: 'Failed to reset password' });
     }
 });
-
 
 router.post('/register-restaurant', async (req, res) => {
     try {
@@ -248,12 +259,10 @@ router.post('/register-restaurant', async (req, res) => {
             return res.status(400).json({ message: 'All fields are required.' });
         }
 
-        // 🔍 Convert address to lat/lng
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
         const geoRes = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
-            params: {
-                address,
-                key: process.env.GOOGLE_MAPS_API_KEY
-            }
+            params: { address, key: process.env.GOOGLE_MAPS_API_KEY }
         });
 
         const geoData = geoRes.data;
@@ -267,14 +276,13 @@ router.post('/register-restaurant', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
-        // If already verified
-        if (existing && existing.is_verified) {
-            return res.status(400).json({ message: 'Username is already taken' });
-        }
+        if (existing) {
+            if (existing.is_verified) {
+                return res.status(400).json({ message: 'Username is already taken' });
+            }
 
-        // If exists but not verified → update
-        if (existing && !existing.is_verified) {
-            existing.password = password;
+            // Update user not verified
+            existing.password = hashedPassword;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -283,16 +291,21 @@ router.post('/register-restaurant', async (req, res) => {
             return res.status(200).json({ message: 'Account exists but not verified. OTP resent.' });
         }
 
-        // Create Users (auth)
+        // Check duplicate email
+        const emailExists = await User.findOne({ where: { email } });
+        if (emailExists) {
+            return res.status(400).json({ message: 'Email is already registered.' });
+        }
+
+        // Start Registration Process
         await Users.create({
             username,
-            password,
+            password: hashedPassword,
             otp,
             otp_expires_at: otpExpires,
             is_verified: false
         });
 
-        // Create User (profile)
         await User.create({
             username,
             name: restaurantName,
@@ -302,15 +315,14 @@ router.post('/register-restaurant', async (req, res) => {
             status: 1
         });
 
-        // Create Restaurant
         await Restaurant.create({
             name: restaurantName,
             phone,
             email,
             address,
             restaurant_type: restaurantType,
-            photo: '',
-            rating: 0,
+            photo: '',      // Bisa diset default di model
+            rating: 0,      // Bisa diset default di model
             latitude: lat,
             longitude: lng
         });
@@ -319,9 +331,10 @@ router.post('/register-restaurant', async (req, res) => {
 
         res.status(201).json({ message: 'OTP sent to your email. Please verify to complete registration.' });
     } catch (err) {
-        console.error('Restaurant registration error:', err);
+        console.error('Restaurant registration error:', err.message);
         res.status(500).json({ message: 'Registration failed' });
     }
 });
+
 
 module.exports = router;
