@@ -25,6 +25,10 @@ const Cart = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false
         },
+        quantity: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
     },
     {
         tableName: "cart",
