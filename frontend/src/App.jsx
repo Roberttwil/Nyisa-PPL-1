@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/navbar";
-import Footer from "./Components/footer";
+import Footer from "./components/footer";
 import Home from "./pages/home";
 import Search from "./pages/search"
 import Food from "./pages/foodlist"

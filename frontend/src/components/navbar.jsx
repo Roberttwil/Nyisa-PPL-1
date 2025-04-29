@@ -41,9 +41,8 @@ function Navbar() {
         />
       </Link>
 
-      {/* Mobile Menu Button */}
       <button
-        className="block md:hidden p-2 absolute left-50" // Geser tombol menu sedikit ke kiri
+        className="block md:hidden p-2 absolute left-1/2 transform -translate-x-1/2"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
       >
         <Menu size={24} />

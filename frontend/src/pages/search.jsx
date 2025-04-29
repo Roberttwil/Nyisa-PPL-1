@@ -28,11 +28,9 @@ function Search() {
         type: type ? [type] : [],
       };
 
-    
       const result = await RestoService.getRestaurants(currentPage, 3, filters);
       console.log("Fetched restaurants:", result);
 
-    
       setRestaurants(result.data || []);
       setTotalPages(result.totalPages || 1);
     } catch (error) {
@@ -48,6 +46,8 @@ function Search() {
 
   return (
     <div className="flex flex-col my-10">
+      
+      {/* Banner Posters */}
       <div className="flex flex-wrap gap-10 w-full justify-center mb-12">
         {[poster2, poster1, poster3].map((poster, index) => (
           <motion.div
@@ -62,16 +62,15 @@ function Search() {
         ))}
       </div>
 
-      {/* Today's Recommendation Section */}
+      {/* Today's Recommendation */}
       <div className="flex flex-col items-center">
-        <div className="flex flex-row gap-10 sm:gap-20 font-semibold text-[#0D3B2E] w-full md:w-200 justify-between px-4">
+      <div className="flex flex-row items-center justify-between w-full max-w-6xl px-4 font-semibold text-[#0D3B2E]">
           <p>Today's Recommendation</p>
           <a href="/" className="hover:underline text-sm sm:text-base">
             View All
           </a>
         </div>
 
-        {/* Post Card Showcase */}
         <div className="flex flex-wrap gap-6 justify-center sm:justify-start mt-5">
           {[contohBg, contohBg, contohBg].map((image, index) => (
             <PostCard
@@ -83,14 +82,14 @@ function Search() {
           ))}
         </div>
 
-        {/* Search Input */}
+        {/* Search & Filter */}
         <div className="flex flex-col gap-6 mt-10 w-full max-w-6xl mx-auto px-4">
-          {/* Filter Rating and Restaurant List */}
-          <div className="flex flex-col md:flex-row gap-6 w-full items-start">
-            {/* Filter Search + Rating */}
-            <div className="flex flex-col w-full md:w-1/3 gap-4 self-start">
-              {/* Search */}
-              <div className="flex flex-col w-full">
+          <div className="flex flex-col md:flex-row gap-6 w-full">
+            
+            {/* Filter Sidebar */}
+            <div className="flex flex-col w-full md:w-1/3 gap-4">
+              {/* Search Input */}
+              <div className="flex flex-col">
                 <label htmlFor="search" className="text-lg font-semibold mb-1">
                   Find restaurant name
                 </label>
@@ -107,7 +106,7 @@ function Search() {
                 />
               </div>
 
-              {/* Rating */}
+              {/* Rating Filter */}
               <div className="flex flex-col">
                 <label htmlFor="rating" className="text-lg font-semibold mb-1">
                   Rating
@@ -130,57 +129,68 @@ function Search() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6 w-full md:w-3/4">
-              {restaurants.map((resto, index) => (
-                <Link key={resto.id} to={`/food-list/${resto.id}`}>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{
-                      opacity: { duration: 1, delay: index * 0.2 },
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 30,
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 1.1 }}
-                  >
-                    <PostCard
-                      image={resto.photo}
-                      title={
-                        <div className="truncate whitespace-nowrap overflow-hidden">
-                          {resto.name}
+            {/* Restaurant List */}
+            <div className="w-full md:w-2/3">
+              {loading ? (
+                <div className="text-center py-10">Loading...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  {restaurants.map((resto, index) => (
+                    <Link key={resto.id} to={`/food-list/${resto.id}`}>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          opacity: { duration: 1, delay: index * 0.2 },
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 1.1 }}
+                        className="border-transparent rounded-lg overflow-hidden shadow-md hover:shadow-lg bg-white flex flex-col h-full"
+                      >
+                        <img
+                          src={resto.photo}
+                          alt={resto.name}
+                          className="h-40 w-full object-cover"
+                        />
+                        <div className="p-4 flex flex-col flex-grow">
+                          <h3 className="text-lg font-bold truncate">
+                            {resto.name}
+                          </h3>
+                          <p className="text-sm mt-1">
+                            ⭐ {resto.rating.toFixed(1)} • 🍽️ {resto.type}
+                          </p>
                         </div>
-                      }
-                      description={`⭐ ${resto.rating.toFixed(1)} • 🍽️ ${
-                        resto.type
-                      }`}
-                    />
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </div>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
-          {/* Pagination */}
-          <div className="flex justify-center items-center space-x-4 mt-10">
-            <button
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-sm">
-              Page <strong>{currentPage}</strong> of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-            >
-              Next
-            </button>
+              {/* Pagination */}
+              <div className="flex justify-center items-center space-x-4 mt-10">
+                <button
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-sm">
+                  Page <strong>{currentPage}</strong> of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

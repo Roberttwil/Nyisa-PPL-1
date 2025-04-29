@@ -56,16 +56,20 @@ const FoodList = () => {
   const handleAddAllToCart = async () => {
     const bookingCode = localStorage.getItem("bookingCode");
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token"); // Ambil token dari localStorage
+    const token = localStorage.getItem("token");
 
     console.log("Booking Code from localStorage:", bookingCode);
     console.log("User ID from localStorage:", userId);
-    console.log("Token from localStorage:", token); // Pastikan token tersedia
+    console.log("Token from localStorage:", token);
+
+    if (!token) {
+      alert("You must be logged in to add items to the cart.");
+      navigate("/login");
+      return;
+    }
 
     if (!bookingCode) {
-      alert(
-        "Booking code tidak ditemukan. Silakan login dan mulai order terlebih dahulu."
-      );
+      alert("Booking code not found. Please log in and start ordering first.");
       return;
     }
 
@@ -77,24 +81,22 @@ const FoodList = () => {
       );
 
       for (const [foodId, quantity] of itemsToAdd) {
-        console.log("Adding food item:", foodId); // Memastikan foodId ada pada setiap iterasi
+        console.log("Adding food item:", foodId);
 
         for (let i = 0; i < quantity; i++) {
-          // Pastikan untuk menambahkan token di header saat melakukan permintaan
           await OrderService.addToCart({
             booking_code: bookingCode,
             food_id: parseInt(foodId),
             user_id: parseInt(userId),
           });
-
           console.log(`Added foodId: ${foodId}, Quantity: ${quantity}`);
         }
       }
 
-      alert("Semua item berhasil ditambahkan ke keranjang!");
+      alert("All items have been successfully added to the cart!");
     } catch (error) {
-      console.error("Gagal menambahkan ke keranjang:", error);
-      alert("Terjadi kesalahan saat menambahkan item ke keranjang.");
+      console.error("Failed to add items to the cart:", error);
+      alert("An error occurred while adding items to the cart.");
     } finally {
       setLoading(false);
     }
@@ -102,11 +104,6 @@ const FoodList = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Please log in first.");
-      navigate("/login");
-      return;
-    }
 
     // Memastikan booking code di-generate dan disimpan di localStorage
     const bookingCode = localStorage.getItem("bookingCode");
@@ -145,28 +142,29 @@ const FoodList = () => {
             foods.map((food) => (
               <div
                 key={food.id}
-                className="bg-white rounded-xl overflow-hidden flex flex-col justify-between"
+                className="border border-transparent rounded-xl p-4 flex flex-col justify-between bg-white text-black shadow-sm"
               >
-                <PostCard
-                  image={food.photo}
-                  title={
-                    <div className="truncate whitespace-nowrap overflow-hidden">
-                      {food.name}
-                    </div>
-                  }
-                  description={
-                    <>
-                      <p>Type: {food.type}</p>
-                      <p>Price: ${food.price}</p>
-                      <p>Quantity: {food.quantity}</p>
-                    </>
-                  }
+                {/* Gambar makanan */}
+                <img
+                  src={food.photo}
+                  alt={food.name}
+                  className="w-full h-40 object-cover rounded-lg mb-4"
                 />
 
-                {/* Quantity Controls */}
-                <div className="flex justify-center items-center gap-4 py-4">
+                {/* Nama makanan */}
+                <h2 className="text-lg font-semibold truncate">{food.name}</h2>
+
+                {/* Deskripsi makanan */}
+                <div className="text-sm mt-2 space-y-1">
+                  <p>Type: {food.type}</p>
+                  <p>Price: ${food.price}</p>
+                  <p>Quantity: {food.quantity}</p>
+                </div>
+
+                {/* Kontrol quantity */}
+                <div className="flex justify-center items-center gap-4 py-4 mt-auto">
                   <button
-                    className="bg-gray-200 text-lg w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
+                    className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
                     onClick={() => handleDecrement(food.id)}
                   >
                     -
@@ -175,7 +173,7 @@ const FoodList = () => {
                     {quantities[food.id] || 0}
                   </span>
                   <button
-                    className="bg-gray-200 text-lg w-6 h-6 rounded-full flex items-center justify-center cursor-pointer"
+                    className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
                     onClick={() => handleIncrement(food.id)}
                   >
                     +
