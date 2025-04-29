@@ -54,13 +54,8 @@ const FoodList = () => {
   };
 
   const handleAddAllToCart = async () => {
-    const bookingCode = localStorage.getItem("bookingCode");
     const userId = localStorage.getItem("user_id");
     const token = localStorage.getItem("token");
-
-    console.log("Booking Code from localStorage:", bookingCode);
-    console.log("User ID from localStorage:", userId);
-    console.log("Token from localStorage:", token);
 
     if (!token) {
       alert("You must be logged in to add items to the cart.");
@@ -68,13 +63,19 @@ const FoodList = () => {
       return;
     }
 
-    if (!bookingCode) {
-      alert("Booking code not found. Please log in and start ordering first.");
-      return;
-    }
-
     try {
       setLoading(true);
+
+      // Generate a unique booking code for this order
+      const bookingCodeResponse = await OrderService.generateBookingCode();
+      const bookingCode = bookingCodeResponse.bookingCode;
+
+      // Store the booking code in localStorage (store all booking codes)
+      const allBookingCodes = JSON.parse(localStorage.getItem("bookingCodes")) || [];
+      allBookingCodes.push(bookingCode);
+      localStorage.setItem("bookingCodes", JSON.stringify(allBookingCodes));
+
+      console.log("Generated Booking Code:", bookingCode);
 
       const itemsToAdd = Object.entries(quantities).filter(
         ([_, qty]) => qty > 0
@@ -85,7 +86,7 @@ const FoodList = () => {
 
         for (let i = 0; i < quantity; i++) {
           await OrderService.addToCart({
-            booking_code: bookingCode,
+            booking_code: bookingCode, // Use the new booking code
             food_id: parseInt(foodId),
             user_id: parseInt(userId),
           });
@@ -102,14 +103,25 @@ const FoodList = () => {
     }
   };
 
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // Memastikan booking code di-generate dan disimpan di localStorage
-    const bookingCode = localStorage.getItem("bookingCode");
-    if (!bookingCode) {
-      OrderService.generateBookingCode(); // Panggil fungsi ini untuk generate booking code
-    }
+    const fetchBookingCode = async () => {
+      const existingCode = localStorage.getItem("bookingCode");
+      if (!existingCode) {
+        try {
+          const response = await OrderService.generateBookingCode();
+          const bookingCode = response.bookingCode;
+          localStorage.setItem("bookingCode", bookingCode); // Simpan hasil yang benar
+          console.log("Generated new booking code:", bookingCode);
+        } catch (error) {
+          console.error("Failed to generate booking code:", error);
+        }
+      }
+    };
+
+    fetchBookingCode();
 
     if (restoId) {
       fetchFoodData(1, token);

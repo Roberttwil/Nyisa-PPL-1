@@ -117,64 +117,64 @@ const Profile = () => {
     return false; // Penting! agar ReactCrop tau sudah di-handle
   };
 
-  const handleSaveCroppedImage = async () => {
-    const image = imgRef.current;
+  // const handleSaveCroppedImage = async () => {
+  //   const image = imgRef.current;
 
-    const canvas = previewCanvasRef.current;
-    const crop = completedCrop;
+  //   const canvas = previewCanvasRef.current;
+  //   const crop = completedCrop;
 
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
+  //   const scaleX = image.naturalWidth / image.width;
+  //   const scaleY = image.naturalHeight / image.height;
 
-    // Set ukuran canvas sesuai dengan crop size
-    canvas.width = crop.width;
-    canvas.height = crop.height;
+  //   // Set ukuran canvas sesuai dengan crop size
+  //   canvas.width = crop.width;
+  //   canvas.height = crop.height;
 
-    const ctx = canvas.getContext("2d");
+  //   const ctx = canvas.getContext("2d");
 
-    // Clear canvas sebelum menggambar
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  //   // Clear canvas sebelum menggambar
+  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // ✨ Buat clip lingkaran
-    ctx.beginPath();
-    ctx.arc(
-      crop.width / 2,
-      crop.height / 2,
-      Math.min(crop.width, crop.height) / 2,
-      0,
-      2 * Math.PI
-    );
-    ctx.closePath();
-    ctx.clip();
+  //   // ✨ Buat clip lingkaran
+  //   ctx.beginPath();
+  //   ctx.arc(
+  //     crop.width / 2,
+  //     crop.height / 2,
+  //     Math.min(crop.width, crop.height) / 2,
+  //     0,
+  //     2 * Math.PI
+  //   );
+  //   ctx.closePath();
+  //   ctx.clip();
 
-    // Gambar gambar yang sudah di-crop ke dalam canvas
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height
-    );
+  //   // Gambar gambar yang sudah di-crop ke dalam canvas
+  //   ctx.drawImage(
+  //     image,
+  //     crop.x * scaleX,
+  //     crop.y * scaleY,
+  //     crop.width * scaleX,
+  //     crop.height * scaleY,
+  //     0,
+  //     0,
+  //     crop.width,
+  //     crop.height
+  //   );
 
-    // Ambil hasil crop (circular) ke base64 URL
-    const croppedImageUrl = canvas.toDataURL("image/png");
+  //   // Ambil hasil crop (circular) ke base64 URL
+  //   const croppedImageUrl = canvas.toDataURL("image/png");
 
-    // Upload image hasil crop ke server
-    try {
-      await uploadUserPhoto(croppedImageUrl, localStorage.getItem("token"));
-      setProfile((prev) => ({ ...prev, photo: croppedImageUrl }));
-      alert("Profile photo updated!");
-    } catch (err) {
-      console.error("Error uploading profile photo:", err);
-      alert("Failed to update profile photo.");
-    }
+  //   // Upload image hasil crop ke server
+  //   try {
+  //     await uploadUserPhoto(croppedImageUrl, localStorage.getItem("token"));
+  //     setProfile((prev) => ({ ...prev, photo: croppedImageUrl }));
+  //     alert("Profile photo updated!");
+  //   } catch (err) {
+  //     console.error("Error uploading profile photo:", err);
+  //     alert("Failed to update profile photo.");
+  //   }
 
-    handleCloseModal();
-  };
+  //   handleCloseModal();
+  // };
 
   const handleCloseModal = () => {
     setShowModal(false);

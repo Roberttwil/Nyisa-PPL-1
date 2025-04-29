@@ -116,13 +116,13 @@ const OrderService = {
           Authorization: `Bearer ${token}`, // Sertakan token dalam request
         },
       });
-      const bookingCode = response.data.bookingCode;
-      localStorage.setItem("bookingCode", bookingCode); // Simpan booking code di localStorage
-      console.log("Booking code generated and stored:", bookingCode);
+  
+      return response.data; // Jangan simpan di localStorage di sini!
     } catch (error) {
       console.error("Error generating booking code:", error);
+      throw error;
     }
-  },
+  },  
 };
 
 export default OrderService;

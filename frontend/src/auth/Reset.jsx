@@ -82,20 +82,6 @@ const ResetPassword = () => {
                             required
                         />
                     </div>
-                    <div className="mb-4 text-left relative">
-                        <label className="block text-green-900 font-medium" htmlFor="confirmPassword">
-                            Confirm Password
-                        </label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            placeholder="Confirm Password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-2 border border-green-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
 
                     <button
                         type="submit"

@@ -46,7 +46,6 @@ function Search() {
 
   return (
     <div className="flex flex-col my-10">
-      
       {/* Banner Posters */}
       <div className="flex flex-wrap gap-10 w-full justify-center mb-12">
         {[poster2, poster1, poster3].map((poster, index) => (
@@ -64,7 +63,7 @@ function Search() {
 
       {/* Today's Recommendation */}
       <div className="flex flex-col items-center">
-      <div className="flex flex-row items-center justify-between w-full max-w-6xl px-4 font-semibold text-[#0D3B2E]">
+        <div className="flex flex-row items-center justify-between w-full max-w-6xl px-4 font-semibold text-[#0D3B2E]">
           <p>Today's Recommendation</p>
           <a href="/" className="hover:underline text-sm sm:text-base">
             View All
@@ -85,7 +84,6 @@ function Search() {
         {/* Search & Filter */}
         <div className="flex flex-col gap-6 mt-10 w-full max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-6 w-full">
-            
             {/* Filter Sidebar */}
             <div className="flex flex-col w-full md:w-1/3 gap-4">
               {/* Search Input */}
@@ -190,7 +188,6 @@ function Search() {
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>

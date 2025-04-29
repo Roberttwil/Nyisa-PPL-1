@@ -7,6 +7,7 @@ const Partner = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    
     restaurantName: "",
     email: "",
     phone: "",

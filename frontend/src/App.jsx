@@ -15,10 +15,12 @@ import Forgot from "./auth/Forgot";
 import ResetOTP from "./auth/Reset-OTP";
 import Reset from "./auth/Reset";
 import Partner from "./pages/partner";
+import RestoOTP from "./auth/Resto-OTP";
+import Owner from "./pages/owner";
 
 function App() {
   const location = useLocation();
-  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner"];
+  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp"];
 
   return (
     <>
@@ -39,6 +41,8 @@ function App() {
           <Route path="/reset-otp" element={<ResetOTP />} />
           <Route path="/reset" element={<Reset />} />
           <Route path="/partner" element={<Partner />} />
+          <Route path="/resto-otp" element={<RestoOTP />} />
+          <Route path="/owner" element={<Owner />} />
         </Routes>
       </div>
 
