@@ -41,8 +41,10 @@ router.get('/cart', authenticate, async (req, res) => {
             food_price: item.food?.price,
             food_type: item.food?.type,
             food_photo: item.food?.photo,
-            restaurant_id: item.restaurant_id
+            restaurant_id: item.restaurant_id,
+            quantity: item.quantity
         }));
+        
 
         res.json({ cart: formatted });
     } catch (err) {
@@ -52,11 +54,11 @@ router.get('/cart', authenticate, async (req, res) => {
 
 router.post('/add/cart', authenticate, async (req, res) => {
     try {
-        const { booking_code, food_id } = req.body;
+        const { booking_code, food_id, quantity } = req.body;
         const user_id = req.user.user_id;
 
-        if (!booking_code || !food_id) {
-            return res.status(400).json({ error: 'Semua field harus diisi: booking_code, user_id, food_id' });
+        if (!booking_code || !food_id || !quantity) {
+            return res.status(400).json({ error: 'Semua field harus diisi: booking_code, food_id, quantity' });
         }
 
         const food = await Food.findByPk(food_id, { attributes: ['restaurant_id'] });
@@ -66,7 +68,8 @@ router.post('/add/cart', authenticate, async (req, res) => {
             booking_code,
             user_id,
             restaurant_id: food.restaurant_id,
-            food_id
+            food_id,
+            quantity
         });
 
         res.status(201).json({ message: "Tambah ke Cart Berhasil", cartItem: newCartItem });
@@ -74,6 +77,7 @@ router.post('/add/cart', authenticate, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 router.post('/remove/cart', authenticate, async (req, res) => {
     try {
@@ -88,8 +92,9 @@ router.post('/remove/cart', authenticate, async (req, res) => {
 });
 
 router.post('/book', authenticate, async (req, res) => {
+    const { booking_code } = req.body;
+
     try {
-        const { booking_code } = req.body;
         let total = 0;
 
         const cartItems = await Cart.findAll({ where: { booking_code } });
@@ -97,31 +102,46 @@ router.post('/book', authenticate, async (req, res) => {
             return res.status(404).json({ message: 'Cart is empty' });
         }
 
-        const prices = await Promise.all(
-            cartItems.map(async (item) => {
-                const food = await Food.findByPk(item.food_id, { attributes: ['price'] });
-                return food ? food.price : 0;
-            })
-        );
+        const transactionPromises = cartItems.map(async (item) => {
+            const food = await Food.findByPk(item.food_id);
 
-        total = prices.reduce((sum, price) => sum + price, 0);
+            if (!food) {
+                throw new Error(`Makanan dengan ID ${item.food_id} tidak ditemukan`);
+            }
 
-        await Promise.all(cartItems.map(item => {
-            return Transaction.create({
+            // Check apakah stok cukup
+            if (food.quantity < item.quantity) {
+                throw new Error(`Stok tidak cukup untuk makanan: ${item.food_id}. Tersedia: ${food.quantity}, Diminta: ${item.quantity}`);
+            }
+
+            // Kurangi stok
+            food.quantity -= item.quantity;
+            await food.save();
+
+            // Hitung total per item
+            const itemTotal = food.price * item.quantity;
+            total += itemTotal;
+
+            // Simpan ke Transaction
+            await Transaction.create({
                 booking_code,
                 user_id: item.user_id,
                 restaurant_id: item.restaurant_id,
                 food_id: item.food_id,
-                total,
+                total: itemTotal,
                 status: 0,
                 date: new Date()
             });
-        }));
+        });
 
+        await Promise.all(transactionPromises);
+
+        // Hapus semua item cart
         await Cart.destroy({ where: { booking_code } });
 
         res.status(201).json({ message: "Booking Berhasil", total });
     } catch (err) {
+        console.error('Booking error:', err);
         res.status(500).json({ error: err.message });
     }
 });

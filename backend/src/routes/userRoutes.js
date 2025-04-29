@@ -1,5 +1,5 @@
 const express = require('express');
-const { Transaction, Food, Restaurant } = require('../models');
+const { Transaction, Food, Restaurant, User } = require('../models');
 const { authenticate } = require('../middleware/authMiddleware');
 
 const router = express.Router();
