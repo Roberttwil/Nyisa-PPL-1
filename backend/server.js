@@ -37,6 +37,7 @@ app.get('/api/protected', authenticate, (req, res) => {
 });
 
 
+
 (async () => {
     try {
         await sequelize.authenticate();
