@@ -31,12 +31,21 @@ const Login = () => {
     setError("");
 
     try {
-      // Tunggu sejenak untuk simulasi loading
       await new Promise((resolve) => setTimeout(resolve, 2500));
 
       // Panggil fungsi login dari AuthService
       const response = await login(username, password);
+
+      // Debugging: Log response untuk memeriksa data
       console.log("Login Response:", response);
+
+      // Pastikan role ada dalam response
+      if (response.role) {
+        console.log(`User logged in with role: ${response.role}`);
+        localStorage.setItem("role", response.role);
+      } else {
+        console.error("Role not found in response");
+      }
 
       // Simpan data ke localStorage jika remember me dipilih
       if (rememberMe) {
@@ -47,8 +56,10 @@ const Login = () => {
         localStorage.removeItem("username");
       }
 
+      // Arahkan pengguna ke halaman utama setelah login berhasil
       navigate("/"); // Redirect ke halaman utama setelah login berhasil
     } catch (err) {
+      console.error("Login failed:", err); // Log error jika ada masalah saat login
       setError(err.message || "Login failed");
     } finally {
       setLoading(false);

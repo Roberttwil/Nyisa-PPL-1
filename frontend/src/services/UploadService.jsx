@@ -1,3 +1,4 @@
+// src/services/UploadService.js
 import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api/upload';
@@ -10,7 +11,7 @@ export const uploadUserPhoto = async (photoFile, token) => {
     const response = await axios.put(`${API_URL}/user-photo`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`, // assuming token-based auth
+        Authorization: `Bearer ${token}`,
       },
     });
 

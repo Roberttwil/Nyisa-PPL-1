@@ -98,7 +98,11 @@ function Navbar() {
       <div>
         {isLoggedIn && userProfile ? (
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() =>
+              navigate(
+                userProfile.role === "restaurant" ? "/owner" : "/profile"
+              )
+            }
             className="flex items-center space-x-2 px-3 py-2 rounded-full hover:bg-gray-100 transition text-sm md:text-base"
           >
             <img

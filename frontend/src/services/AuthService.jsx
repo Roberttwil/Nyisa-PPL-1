@@ -35,20 +35,25 @@ export const login = async (username, password) => {
 
     console.log("Login response:", response.data); // Debugging
 
+    const { token, role } = response.data; // Mendapatkan token dan role
+
+    // Mengecek apakah user sudah terverifikasi
     const isVerified = localStorage.getItem("isVerified");
 
     if (isVerified !== "true") {
       throw new Error("Akun belum terverifikasi OTP");
     }
 
-    // Save token and user_id to localStorage
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("user_id", response.data.user_id); // Assuming the response contains user_id
+    // Simpan token, role, dan user_id ke localStorage
+    localStorage.setItem("token", token);
+    localStorage.setItem("role", role); // Simpan role ke localStorage
+    localStorage.setItem("user_id", response.data.user_id); // Simpan user_id
 
-    // Log user_id after successful login
+    // Log user_id dan role setelah login berhasil
     console.log("User ID from login:", response.data.user_id);
-
-    return response.data;
+    console.log("User Role from login:", role);
+    
+    return response.data; // Return response untuk digunakan lebih lanjut
   } catch (error) {
     console.error(
       "Login error:",
@@ -189,73 +194,32 @@ export const resetPassword = async (token, newPassword) => {
   }
 };
 
-// Register restaurant function, which includes geocoding the address
-// export const registerRestaurant = async ({
-//   username,
-//   password,
-//   email,
-//   phone,
-//   restaurantName,
-//   restaurantType,
-//   address,
-// }) => {
+// Geocoding function to get latitude and longitude from an address
+// const geocodeAddress = async (address) => {
+//   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+//   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+//     address
+//   )}&key=${apiKey}`;
+
 //   try {
-//     // Send the registration data, including the geocoded coordinates
-//     const response = await axios.post(`${API_URL}/register-restaurant`, {
-//       username,
-//       password,
-//       email,
-//       phone,
-//       restaurantName,
-//       restaurantType,
-//       address,
-//     });
+//     const response = await axios.get(url);
+//     const data = response.data;
 
-//     console.log("Address being sent:", address);
-
-//     // Optionally store some data in localStorage for later use (e.g., after successful registration)
-//     localStorage.setItem("registeredUsername", username);
-//     localStorage.setItem("registeredEmail", email);
-
-//     return response.data; // Return server response (e.g., confirmation message)
+//     if (data.status === "OK" && data.results.length > 0) {
+//       const location = data.results[0].geometry.location;
+//       return {
+//         lat: location.lat,
+//         lng: location.lng,
+//       };
+//     } else {
+//       console.error("No results found for the given address.");
+//       throw new Error("Invalid address. No results found.");
+//     }
 //   } catch (error) {
-//     console.error(
-//       "Register Restaurant Error:",
-//       error.response?.data?.message || error.message
-//     );
-//     // Throw a descriptive error message if registration fails
-//     throw new Error(
-//       error.response?.data?.message || "Register Restaurant failed"
-//     );
+//     console.error("Error fetching coordinates:", error);
+//     throw new Error("Failed to fetch coordinates.");
 //   }
 // };
-
-// Geocoding function to get latitude and longitude from an address
-const geocodeAddress = async (address) => {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-    address
-  )}&key=${apiKey}`;
-
-  try {
-    const response = await axios.get(url);
-    const data = response.data;
-
-    if (data.status === "OK" && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return {
-        lat: location.lat,
-        lng: location.lng,
-      };
-    } else {
-      console.error("No results found for the given address.");
-      throw new Error("Invalid address. No results found.");
-    }
-  } catch (error) {
-    console.error("Error fetching coordinates:", error);
-    throw new Error("Failed to fetch coordinates.");
-  }
-};
 
 // Register restaurant function, which includes geocoding the address
 export const registerRestaurant = async ({
@@ -281,6 +245,7 @@ export const registerRestaurant = async ({
       restaurantType,
       address,
     });
+    console.log(response.data);  // Pastikan responsnya sukses    
 
     console.log("Address being sent:", address);
 

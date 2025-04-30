@@ -12,7 +12,7 @@ const getToken = () => {
 };
 
 const OrderService = {
-  addToCart: async ({ booking_code, food_id, user_id }) => {
+  addToCart: async ({ booking_code, food_id, user_id, quantity }) => {
     try {
       const token = localStorage.getItem("token"); // Ambil token dari localStorage (atau tempat lain yang sesuai)
       if (!token) throw new Error("Missing token"); // Pastikan token ada
@@ -23,6 +23,7 @@ const OrderService = {
           booking_code,
           food_id,
           user_id,
+          quantity,
         },
         {
           headers: {
@@ -64,14 +65,13 @@ const OrderService = {
     }
   },
 
-  // Mendapatkan isi cart berdasarkan booking_code
   getCart: async (booking_code) => {
     try {
       const token = getToken(); // Ambil token JWT
       const response = await axios.get(`${API_URL}/cart`, {
         params: { booking_code },
         headers: {
-          Authorization: `Bearer ${token}`, // Sertakan token di header
+          Authorization: `Bearer ${token}`,
         },
       });
       return response.data.cart;
@@ -116,13 +116,13 @@ const OrderService = {
           Authorization: `Bearer ${token}`, // Sertakan token dalam request
         },
       });
-  
+
       return response.data; // Jangan simpan di localStorage di sini!
     } catch (error) {
       console.error("Error generating booking code:", error);
       throw error;
     }
-  },  
+  },
 };
 
 export default OrderService;

@@ -6,19 +6,22 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Ambil semua kode pemesanan yang ada di localStorage
-  const allBookingCodes =
-    JSON.parse(localStorage.getItem("bookingCodes")) || [];
-  const bookingCode = allBookingCodes[allBookingCodes.length - 1]; // Ambil booking code yang terbaru
+  const userId = localStorage.getItem("user_id");
+  const activeRestoId = localStorage.getItem("activeRestoId");
+  const userBookingCodes =
+    JSON.parse(localStorage.getItem("userBookingCodes")) || {};
+  const bookingCode = userBookingCodes[userId]?.[activeRestoId];
 
   useEffect(() => {
     const fetchCart = async () => {
       try {
         if (!bookingCode) {
-          throw new Error("Booking code tidak ditemukan");
+          throw new Error(
+            "Booking code not found for this restaurant and user."
+          );
         }
 
-        // Ambil data keranjang berdasarkan bookingCode
+        // Fetch cart based on the user's booking code
         const data = await OrderService.getCart(bookingCode);
         console.log("Cart API response:", data);
 
@@ -29,12 +32,23 @@ const Cart = () => {
           : null;
 
         if (!items) {
-          throw new Error("Data cart tidak valid");
+          throw new Error("Invalid cart data.");
         }
 
-        setCartItems(items);
+        // Grouping items with the same food_id
+        const groupedItems = items.reduce((acc, item) => {
+          const existingItem = acc.find((i) => i.food_id === item.food_id);
+          if (existingItem) {
+            existingItem.quantity += item.quantity;
+          } else {
+            acc.push({ ...item });
+          }
+          return acc;
+        }, []);
+
+        setCartItems(groupedItems);
       } catch (error) {
-        console.error("Gagal mengambil data cart:", error);
+        console.error("Failed to fetch cart data:", error);
         setError(error.message);
         setCartItems([]);
       } finally {
@@ -52,70 +66,86 @@ const Cart = () => {
         prevItems.filter((item) => item.food_id !== food_id)
       );
     } catch (error) {
-      console.error("Gagal menghapus item dari cart:", error);
+      console.error("Failed to remove item from cart:", error);
     }
   };
 
   const handleBooking = async () => {
     try {
       await OrderService.bookOrder(bookingCode);
-      alert("Pemesanan berhasil!");
+  
+      // Save purchase history to localStorage with restaurant ID and other details
+      const purchaseHistory = cartItems.map((item) => ({
+        name: item.food_name,
+        photo: item.food_photo,
+        total: item.food_price * item.quantity,
+        date: new Date().toLocaleDateString(),
+        restaurantId: activeRestoId, // Storing the restaurant ID
+        foodId: item.food_id,       // Storing the food ID
+      }));
+  
+      // Get existing history from localStorage
+      const existingHistory = JSON.parse(localStorage.getItem("purchaseHistory")) || [];
+  
+      // Add new history to existing data
+      const updatedHistory = [...existingHistory, ...purchaseHistory];
+  
+      // Store the updated history
+      localStorage.setItem("purchaseHistory", JSON.stringify(updatedHistory));
+  
+      alert("Order booked successfully!");
       setCartItems([]);
     } catch (error) {
-      console.error("Gagal melakukan booking:", error);
+      console.error("Failed to book order:", error);
     }
   };
+  
 
   const total = cartItems.reduce(
-    (sum, item) => sum + (item.price || 0) * (item.quantity || 0),
+    (sum, item) => sum + item.food_price * item.quantity,
     0
   );
 
   if (!bookingCode) {
     return (
       <p className="text-red-500">
-        Booking code tidak ditemukan. Silakan mulai pemesanan terlebih dahulu.
+        Booking code not found. Please start ordering first.
       </p>
     );
   }
 
   if (loading) return <p>Loading cart...</p>;
-  if (error) return <p className="text-red-500">Error: {error}</p>;
 
   return (
     <div className="flex flex-col max-w-6xl mx-auto px-4 py-8">
-      <div className="flex flex-row items-center justify-between w-full">
-      <h1 className="text-2xl font-bold mb-6 ">Your Cart</h1>
-      <p className="mt-3 font-bold text-2xl text-gray-700">
-        Booking Code: <span className="text-blue-600">{bookingCode}</span>
-      </p>
-        
+      <div className="flex flex-row items-center justify-between w-full mb-6">
+        <h1 className="text-2xl font-bold">Your Cart</h1>
+        {cartItems.length > 0 && (
+          <p className="mt-3 font-bold text-2xl text-gray-700">
+            Booking Code: <span className="text-blue-600">{bookingCode}</span>
+          </p>
+        )}
       </div>
 
       {cartItems.length === 0 ? (
-        <p className="text-gray-600">Cart kosong.</p>
+        <p className="text-gray-600">Your cart is empty. Please add items to your cart.</p>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {cartItems.map((item) => (
               <div
-                key={item.food_id || Math.random()}
+                key={`${item.food_id}-${item.quantity}`}
                 className="bg-white rounded-xl shadow-lg overflow-hidden"
               >
                 <div className="p-4">
-                  <h3 className="font-bold text-lg">
-                    {item.food_name || "Tanpa nama"}
-                  </h3>
+                  <h3 className="font-bold text-lg truncate">{item.food_name}</h3>
                   <img
-                    src={item.food_photo || "https://via.placeholder.com/150"}
-                    // alt={item.name || 'Gambar tidak tersedia'}
+                    src={item.food_photo}
+                    alt={item.food_name}
                     className="w-full h-40 object-cover rounded-lg mt-2"
                   />
-                  <p className="mt-2">
-                    Unit Price: Rp{" "}
-                    {item.food_price?.toLocaleString("id-ID") || 0}
-                  </p>
-                  <p>Quantity: {item.food_quantity || 0}</p>
+                  <p className="mt-2">Unit Price: Rp {item.food_price?.toLocaleString("id-ID")}</p>
+                  <p>Quantity: {item.quantity}</p>
                 </div>
                 <div className="flex justify-between items-center p-4">
                   <button
@@ -130,9 +160,7 @@ const Cart = () => {
           </div>
 
           <div className="mt-6 flex justify-between items-center">
-            <h3 className="text-xl font-bold">
-              Total: Rp {total.toLocaleString("id-ID")}
-            </h3>
+            <h3 className="text-xl font-bold">Total: Rp {total.toLocaleString("id-ID")}</h3>
             <button
               onClick={handleBooking}
               className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600"
