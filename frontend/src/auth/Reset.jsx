@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import nyisaLogo from "../assets/nyisaLogo.png";
-// import { resetPassword } from "./AuthService";
+import { resetPassword } from "../services/AuthService";
 
 const ResetPassword = () => {
     const [newPassword, setNewPassword] = useState("");

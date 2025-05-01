@@ -282,7 +282,7 @@ router.post('/register-restaurant', async (req, res) => {
             }
 
             // Update user not verified
-            existing.password = hashedPassword;
+            existing.password = password;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -300,7 +300,7 @@ router.post('/register-restaurant', async (req, res) => {
         // Start Registration Process
         await Users.create({
             username,
-            password: hashedPassword,
+            password,
             otp,
             otp_expires_at: otpExpires,
             is_verified: false

@@ -20,19 +20,21 @@ const Partner = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    // Mengubah formData ketika ada perubahan input
     if (e.target.name === "photo") {
       setFormData({ ...formData, photo: e.target.files[0] });
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
   };
-
+  
   const handleRegister = async (e) => {
     e.preventDefault();
-
+  
     // Log the address to verify its format
     console.log("Address to geocode:", formData.address);
-
+  
+    // Cek apakah semua field telah diisi
     if (
       !formData.username ||
       !formData.password ||
@@ -45,22 +47,23 @@ const Partner = () => {
       setMessage("All fields are required!");
       return;
     }
-
+  
     setLoading(true);
     setMessage("");
     try {
+      // Buat formData untuk mengirimkan data ke backend
       const formDataToSend = new FormData();
       formDataToSend.append("restaurantName", formData.restaurantName);
       formDataToSend.append("email", formData.email);
       formDataToSend.append("phone", formData.phone);
       formDataToSend.append("address", formData.address);
       formDataToSend.append("genre", formData.genre);
-
+  
       if (formData.photo) {
         formDataToSend.append("photo", formData.photo);
       }
-
-      // Proceed with sending data to register the restaurant partner
+  
+      // Lakukan request untuk registrasi restoran
       const response = await registerRestaurant({
         username: formData.username,
         password: formData.password,
@@ -70,17 +73,15 @@ const Partner = () => {
         restaurantType: formData.genre,
         address: formData.address,
       });
-
-      // Check if the registration was successful
-      if (response.success) {
+  
+      // Cek jika registrasi berhasil berdasarkan response message
+      if (response.message && response.message.includes("OTP sent to your email")) {
         setMessage(response.message);
-
-        // After successful registration, you can navigate to OTP verification page
-        navigate("/resto-otp", { state: { email: formData.email } });
+  
+        // Navigasi ke halaman OTP setelah registrasi berhasil
+        setTimeout(() => navigate("/resto-otp"), 2000, { state: { email: formData.email } });
       } else {
-        setMessage(
-          response.message || "Registration failed. Please try again."
-        );
+        setMessage(response.message || "Registration failed. Please try again.");
       }
     } catch (error) {
       const errorMessage =
@@ -90,6 +91,7 @@ const Partner = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div

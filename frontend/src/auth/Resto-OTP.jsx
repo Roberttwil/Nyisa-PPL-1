@@ -15,17 +15,17 @@ const OTP = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("pendingUsername");
-    const storedEmail = localStorage.getItem("pendingEmail");
-
+    const storedUsername = localStorage.getItem("registeredUsername");
+    const storedEmail = localStorage.getItem("registeredEmail");
+  
     if (storedUsername) setUsername(storedUsername);
     if (storedEmail) setEmail(storedEmail);
-
+  
     if (!storedUsername || !storedEmail) {
       setErrorMessage("No account data found. Please register first.");
     }
   }, []);
-
+  
   useEffect(() => {
     // Menangani penyimpanan username dan email
     const storedUsername = localStorage.getItem("registeredUsername");
@@ -83,7 +83,7 @@ const OTP = () => {
       await verifyOtp(username, enteredOtp);
       setSuccessMessage("Restaurant registration successful! Redirecting...");
       setTimeout(() => {
-        navigate("/");
+        navigate("/login");
       }, 3000);
     } catch (error) {
       setErrorMessage("Incorrect OTP. Please try again.");

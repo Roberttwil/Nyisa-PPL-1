@@ -18,7 +18,6 @@ const FoodList = () => {
   const navigate = useNavigate();
 
   const fetchFoodData = async (page, token) => {
-    console.log("Token sent to API:", token);
     setLoading(true);
     try {
       const data = await FoodService.fetchFoods(
@@ -66,32 +65,27 @@ const FoodList = () => {
     try {
       setLoading(true);
 
-      // Generate a unique booking code for this order
-      const bookingCodeResponse = await OrderService.generateBookingCode();
-      const bookingCode = bookingCodeResponse.bookingCode;
+      // Ambil booking code untuk restoran ini
+      const allCodes = JSON.parse(localStorage.getItem("bookingCodesPerResto")) || {};
+      const userBookingCodes = JSON.parse(localStorage.getItem("userBookingCodes")) || {};
+      const userBookingCode = userBookingCodes[userId]?.[restoId];
 
-      // Store the booking code in localStorage (store all booking codes)
-      const allBookingCodes = JSON.parse(localStorage.getItem("bookingCodes")) || [];
-      allBookingCodes.push(bookingCode);
-      localStorage.setItem("bookingCodes", JSON.stringify(allBookingCodes));
-
-      console.log("Generated Booking Code:", bookingCode);
+      if (!userBookingCode) {
+        alert("Booking code not found for this restaurant. Please refresh the page.");
+        return;
+      }
 
       const itemsToAdd = Object.entries(quantities).filter(
         ([_, qty]) => qty > 0
       );
 
       for (const [foodId, quantity] of itemsToAdd) {
-        console.log("Adding food item:", foodId);
-
-        for (let i = 0; i < quantity; i++) {
-          await OrderService.addToCart({
-            booking_code: bookingCode, // Use the new booking code
-            food_id: parseInt(foodId),
-            user_id: parseInt(userId),
-          });
-          console.log(`Added foodId: ${foodId}, Quantity: ${quantity}`);
-        }
+        await OrderService.addToCart({
+          booking_code: userBookingCode,
+          food_id: parseInt(foodId),
+          user_id: parseInt(userId),
+          quantity: parseInt(quantity),
+        });
       }
 
       alert("All items have been successfully added to the cart!");
@@ -103,23 +97,35 @@ const FoodList = () => {
     }
   };
 
+  const fetchBookingCode = async () => {
+    const userId = localStorage.getItem("user_id");
+    const allCodes = JSON.parse(localStorage.getItem("bookingCodesPerResto")) || {};
+    const userBookingCodes = JSON.parse(localStorage.getItem("userBookingCodes")) || {};
+
+    if (!userBookingCodes[userId]) {
+      userBookingCodes[userId] = {};
+    }
+
+    if (!userBookingCodes[userId][restoId]) {
+      try {
+        const response = await OrderService.generateBookingCode();
+        const bookingCode = response.bookingCode;
+        userBookingCodes[userId][restoId] = bookingCode;
+        localStorage.setItem("userBookingCodes", JSON.stringify(userBookingCodes));
+        console.log("Generated new booking code for user:", userId, "restaurant:", restoId, bookingCode);
+      } catch (error) {
+        console.error("Failed to generate booking code:", error);
+      }
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    const fetchBookingCode = async () => {
-      const existingCode = localStorage.getItem("bookingCode");
-      if (!existingCode) {
-        try {
-          const response = await OrderService.generateBookingCode();
-          const bookingCode = response.bookingCode;
-          localStorage.setItem("bookingCode", bookingCode); // Simpan hasil yang benar
-          console.log("Generated new booking code:", bookingCode);
-        } catch (error) {
-          console.error("Failed to generate booking code:", error);
-        }
-      }
-    };
+    // Simpan restoId aktif untuk digunakan di Cart
+    if (restoId) {
+      localStorage.setItem("activeRestoId", restoId);
+    }
 
     fetchBookingCode();
 
@@ -134,7 +140,6 @@ const FoodList = () => {
     <div className="max-w-6xl mx-auto px-4 py-8 pb-32 relative">
       <h1 className="text-2xl font-bold mb-6">Food List</h1>
 
-      {/* Filter/Search Input */}
       <div className="mb-6">
         <input
           type="text"
@@ -145,7 +150,6 @@ const FoodList = () => {
         />
       </div>
 
-      {/* Food Cards */}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -156,24 +160,17 @@ const FoodList = () => {
                 key={food.id}
                 className="border border-transparent rounded-xl p-4 flex flex-col justify-between bg-white text-black shadow-sm"
               >
-                {/* Gambar makanan */}
                 <img
                   src={food.photo}
                   alt={food.name}
                   className="w-full h-40 object-cover rounded-lg mb-4"
                 />
-
-                {/* Nama makanan */}
                 <h2 className="text-lg font-semibold truncate">{food.name}</h2>
-
-                {/* Deskripsi makanan */}
                 <div className="text-sm mt-2 space-y-1">
                   <p>Type: {food.type}</p>
                   <p>Price: ${food.price}</p>
                   <p>Quantity: {food.quantity}</p>
                 </div>
-
-                {/* Kontrol quantity */}
                 <div className="flex justify-center items-center gap-4 py-4 mt-auto">
                   <button
                     className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import nyisaLogo from "../assets/nyisaLogo.png";
-import { verifyOtp, resendOtp } from "../services/AuthService";
+import { verifyResetOtp, resendOtp } from "../services/AuthService";
 
 const OTP = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -68,7 +68,7 @@ const OTP = () => {
     const enteredOtp = otp.join("");
 
     try {
-      await verifyOtp(username, enteredOtp);
+      await verifyResetOtp(username, enteredOtp);
       setSuccessMessage("Verification successful! Redirecting...");
       setTimeout(() => {
         navigate("/reset");
