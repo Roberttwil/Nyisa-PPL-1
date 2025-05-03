@@ -63,7 +63,7 @@ router.get('/cards', async (req, res) => {
 });
 
 
-// PUT /api/restaurant/profile
+// PUT /api/restaurants/profile
 router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
         const username = req.user.username;
@@ -118,6 +118,38 @@ router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), asy
     } catch (err) {
         console.error('Restaurant profile update error:', err);
         res.status(500).json({ message: 'Failed to update restaurant profile' });
+    }
+});
+
+router.get('/profile/owner', authenticate, restaurantOnly, async (req, res) => {
+    try {
+        const username = req.user.username;
+
+        const user = await User.findOne({ where: { username } });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const restaurant = await Restaurant.findOne({ where: { email: user.email } });
+        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found for this user' });
+
+        const ownerProfile = {
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            address: user.address,
+            restaurant: {
+                id: restaurant.restaurant_id,
+                name: restaurant.name,
+                type: restaurant.restaurant_type,
+                photo: restaurant.photo,
+                rating: restaurant.rating
+            }
+        };
+
+        res.json({ owner: ownerProfile });
+    } catch (err) {
+        console.error('Failed to fetch owner profile:', err);
+        res.status(500).json({ message: 'Failed to fetch owner profile' });
     }
 });
 
