@@ -21,6 +21,10 @@ const ForgotPassword = () => {
       const response = await forgotPassword(username, email);
       setMessage(response.message);
 
+      // Simpan username dan email ke localStorage
+      localStorage.setItem("registeredUsername", username);
+      localStorage.setItem("registeredEmail", email);
+
       setTimeout(() => {
         navigate("/reset-otp");
       }, 2500);
@@ -55,7 +59,7 @@ const ForgotPassword = () => {
           onSubmit={handleSubmit}
         >
           <div className="text-left w-full">
-          <label className="block text-green-900 font-medium">Username</label>
+            <label className="block text-green-900 font-medium">Username</label>
             <input
               type="text"
               id="username"
@@ -68,7 +72,7 @@ const ForgotPassword = () => {
           </div>
 
           <div className="w-full relative text-left">
-          <label className="block text-green-900 font-medium">Email</label>
+            <label className="block text-green-900 font-medium">Email</label>
             <input
               type="email"
               id="email"

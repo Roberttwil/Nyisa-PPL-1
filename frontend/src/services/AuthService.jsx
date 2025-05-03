@@ -122,22 +122,31 @@ export const resendOtp = async (username, email) => {
   }
 };
 
-// Forgot password function
 export const forgotPassword = async (username, email) => {
   try {
+    // Mengirimkan permintaan POST ke backend
     const response = await axios.post(`${API_URL}/forgot-password`, {
       username,
       email,
     });
+
+    // Mengembalikan data respons jika berhasil
     return response.data;
   } catch (error) {
-    console.error(
-      "Forgot password error:",
-      error.response?.data?.message || error.message
-    );
-    throw new Error(
-      error.response?.data?.message || "Failed to send reset OTP"
-    );
+    // Menangani error dengan lebih jelas
+    if (error.response) {
+      // Jika ada respons error dari server
+      console.error("Forgot password error:", error.response.data.message);
+      throw new Error(error.response.data.message || "Failed to send reset OTP");
+    } else if (error.request) {
+      // Jika permintaan dikirim tetapi tidak ada respons
+      console.error("No response received:", error.request);
+      throw new Error("No response from server");
+    } else {
+      // Jika ada kesalahan lain dalam proses permintaan
+      console.error("Forgot password error:", error.message);
+      throw new Error(error.message || "Failed to send reset OTP");
+    }
   }
 };
 

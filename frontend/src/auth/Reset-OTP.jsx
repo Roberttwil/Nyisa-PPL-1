@@ -97,9 +97,15 @@ const OTP = () => {
   };
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen" style={{ backgroundImage: 'linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)' }}>
+    <div
+      className="relative flex justify-center items-center min-h-screen"
+      style={{
+        backgroundImage:
+          "linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)",
+      }}
+    >
       <div className="max-w-md w-full p-8 text-center">
-      <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
+        <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
         <h2 className="text-2xl font-semibold text-green-900 mb-6">
           OTP Reset Password Verify
         </h2>
@@ -148,7 +154,7 @@ const OTP = () => {
             {resendLoading
               ? "Resending..."
               : resendTimer > 0
-              ? `Resend in ${resendTimer}s`
+              ? `Resend OTP in ${resendTimer}s`
               : "Resend OTP"}
           </button>
         </form>

@@ -16,19 +16,33 @@ function Navbar() {
     if (token) {
       setIsLoggedIn(true);
       getProfile()
-        .then((data) => setUserProfile(data))
+        .then((data) => {
+          setUserProfile(data);
+          // Cek jika role = restaurant, arahkan ke halaman owner
+          if (data?.role === "restaurant") {
+            navigate("/owner");
+          }
+        })
         .catch((err) => {
           console.error("Profile fetch error:", err.message);
           setIsLoggedIn(false); // jika token invalid
         });
     }
-  }, []);
+  }, [navigate]);
 
   const handleAuthClick = () => {
     navigate("/login");
   };
 
   const isActive = (path) => location.pathname === path;
+
+  const handleProfileClick = () => {
+    if (userProfile?.role === "restaurant") {
+      navigate("/owner"); // jika role = restaurant, arahkan ke halaman owner
+    } else {
+      navigate("/profile"); // selain itu, arahkan ke halaman profile
+    }
+  };
 
   return (
     <nav className="sticky top-0 bg-white z-50 h-20 flex items-center justify-between px-4 sm:px-8 md:px-10">
@@ -53,41 +67,31 @@ function Navbar() {
         <div className="bg-[#D9E1D0] rounded-full px-4 py-2 flex space-x-4 items-center text-[#0D3B2E] font-medium text-sm md:text-base">
           <Link
             to="/"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/") ? "font-extrabold" : ""
-            }`}
+            className={`flex items-center gap-1 hover:underline ${isActive("/") ? "font-extrabold" : ""}`}
           >
             <Home size={16} /> Home
           </Link>
           <Link
             to="/search"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/search") ? "font-extrabold" : ""
-            }`}
+            className={`flex items-center gap-1 hover:underline ${isActive("/search") ? "font-extrabold" : ""}`}
           >
             <Search size={16} /> Search
           </Link>
           <Link
             to="/location"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/location") ? "font-extrabold" : ""
-            }`}
+            className={`flex items-center gap-1 hover:underline ${isActive("/location") ? "font-extrabold" : ""}`}
           >
             <Map size={16} /> Location
           </Link>
           <Link
             to="/cart"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/cart") ? "font-extrabold" : ""
-            }`}
+            className={`flex items-center gap-1 hover:underline ${isActive("/cart") ? "font-extrabold" : ""}`}
           >
             <ShoppingCart size={16} /> Cart
           </Link>
           <Link
             to="/history"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/history") ? "font-extrabold" : ""
-            }`}
+            className={`flex items-center gap-1 hover:underline ${isActive("/history") ? "font-extrabold" : ""}`}
           >
             <History size={16} /> History
           </Link>
@@ -98,11 +102,7 @@ function Navbar() {
       <div>
         {isLoggedIn && userProfile ? (
           <button
-            onClick={() =>
-              navigate(
-                userProfile.role === "restaurant" ? "/owner" : "/profile"
-              )
-            }
+            onClick={handleProfileClick} // Gunakan handleProfileClick untuk mengarahkan berdasarkan role
             className="flex items-center space-x-2 px-3 py-2 rounded-full hover:bg-gray-100 transition text-sm md:text-base"
           >
             <img
@@ -128,57 +128,35 @@ function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden absolute top-20 left-0 w-full bg-white shadow-lg z-40">
           <div className="flex flex-col items-center py-2">
-            {" "}
-            {/* Mengurangi padding dan jarak antar item */}
             <Link
               to="/"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
-                isActive("/") ? "font-extrabold" : ""
-              }`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/") ? "font-extrabold" : ""}`}
             >
-              <Home size={16} className="mr-2" />{" "}
-              {/* Menambahkan jarak kecil antara ikon dan teks */}
-              Home
+              <Home size={16} className="mr-2" /> Home
             </Link>
             <Link
               to="/search"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
-                isActive("/search") ? "font-extrabold" : ""
-              }`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/search") ? "font-extrabold" : ""}`}
             >
-              <Search size={16} className="mr-2" />{" "}
-              {/* Menambahkan jarak kecil antara ikon dan teks */}
-              Search
+              <Search size={16} className="mr-2" /> Search
             </Link>
             <Link
               to="/location"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
-                isActive("/location") ? "font-extrabold" : ""
-              }`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/location") ? "font-extrabold" : ""}`}
             >
-              <Map size={16} className="mr-2" />{" "}
-              {/* Menambahkan jarak kecil antara ikon dan teks */}
-              Location
+              <Map size={16} className="mr-2" /> Location
             </Link>
             <Link
               to="/cart"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
-                isActive("/cart") ? "font-extrabold" : ""
-              }`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/cart") ? "font-extrabold" : ""}`}
             >
-              <ShoppingCart size={16} className="mr-2" />{" "}
-              {/* Menambahkan jarak kecil antara ikon dan teks */}
-              Cart
+              <ShoppingCart size={16} className="mr-2" /> Cart
             </Link>
             <Link
               to="/history"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
-                isActive("/history") ? "font-extrabold" : ""
-              }`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/history") ? "font-extrabold" : ""}`}
             >
-              <History size={16} className="mr-2" />{" "}
-              {/* Menambahkan jarak kecil antara ikon dan teks */}
-              History
+              <History size={16} className="mr-2" /> History
             </Link>
           </div>
         </div>
