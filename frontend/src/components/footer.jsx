@@ -44,18 +44,6 @@ const Footer = () => {
           <span className="hover:underline hover:text-[#54986a] cursor-pointer">
             Privacy Policy
           </span>
-          {/* Kondisi: kalau belum login, baru munculkan bullet + link */}
-          {!isLoggedIn && (
-            <>
-              <span className="text-xl text-green-700">•</span>
-              <Link
-                to="/partner"
-                className="hover:underline hover:text-[#54986a] cursor-pointer"
-              >
-                Being Nyisa Partner
-              </Link>
-            </>
-          )}
         </div>
       </div>
     </footer>

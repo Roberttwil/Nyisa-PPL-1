@@ -153,4 +153,66 @@ router.get('/profile/owner', authenticate, restaurantOnly, async (req, res) => {
     }
 });
 
+router.get('/all', async (req, res) => {
+    try {
+        const { search = "", lat, lng } = req.query;
+        const filters = {};
+
+        if (search) {
+            filters.name = { [Op.like]: `%${search}%` };
+        }
+
+        const restaurants = await Restaurant.findAll({
+            where: filters,
+            attributes: [
+                'restaurant_id',
+                'name',
+                'address',
+                'latitude',
+                'longitude',
+                'photo',
+                'rating'
+            ],
+            raw: true 
+        });
+
+        let results = restaurants;
+
+        // If lat/lng are provided, calculate distance
+        if (lat && lng) {
+            const userLat = parseFloat(lat);
+            const userLng = parseFloat(lng);
+
+            results = restaurants.map((r) => {
+                const R = 6371; // Radius of Earth in km
+                const dLat = (userLat - parseFloat(r.latitude)) * Math.PI / 180;
+                const dLng = (userLng - parseFloat(r.longitude)) * Math.PI / 180;
+
+                const a =
+                    Math.sin(dLat / 2) ** 2 +
+                    Math.cos(userLat * Math.PI / 180) *
+                    Math.cos(parseFloat(r.latitude) * Math.PI / 180) *
+                    Math.sin(dLng / 2) ** 2;
+
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const distance = R * c;
+
+                return {
+                    ...r,
+                    distance
+                };
+            });
+
+            // sort by distance
+            results.sort((a, b) => a.distance - b.distance);
+        }
+
+        res.json(results);
+    } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
 module.exports = router;

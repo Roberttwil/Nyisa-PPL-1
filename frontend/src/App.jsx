@@ -17,14 +17,17 @@ import Reset from "./auth/Reset";
 import Partner from "./pages/partner";
 import RestoOTP from "./auth/Resto-OTP";
 import Owner from "./pages/owner";
+import Location from "./pages/location"
 
 function App() {
   const location = useLocation();
-  const noNavbarFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp"];
+  const noNavbar = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp"];
+  const noFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/location"];
+
 
   return (
     <>
-      {!noNavbarFooter.includes(location.pathname) && <Navbar />}
+      {!noNavbar.includes(location.pathname) && <Navbar />}
 
       <div className="content">
         <Routes>
@@ -43,10 +46,11 @@ function App() {
           <Route path="/partner" element={<Partner />} />
           <Route path="/resto-otp" element={<RestoOTP />} />
           <Route path="/owner" element={<Owner />} />
+          <Route path="/location" element={<Location />} />
         </Routes>
       </div>
 
-      {!noNavbarFooter.includes(location.pathname) && <Footer />}
+      {!noFooter.includes(location.pathname) && <Footer />}
     </>
   );
 }

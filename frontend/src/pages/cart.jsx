@@ -44,7 +44,7 @@ const Cart = () => {
             acc.push({ ...item });
           }
           return acc;
-        }, []);
+        }, []); 
 
         setCartItems(groupedItems);
       } catch (error) {
@@ -99,25 +99,17 @@ const Cart = () => {
       console.error("Failed to book order:", error);
     }
   };
-  
 
   const total = cartItems.reduce(
     (sum, item) => sum + item.food_price * item.quantity,
     0
   );
 
-  if (!bookingCode) {
-    return (
-      <p className="text-red-500">
-        Booking code not found. Please start ordering first.
-      </p>
-    );
-  }
-
   if (loading) return <p>Loading cart...</p>;
 
   return (
-    <div className="flex flex-col max-w-6xl mx-auto px-4 py-8">
+    <div className="flex flex-col min-h-screen max-w-6xl mx-auto px-4 py-8">
+      {/* Header Section */}
       <div className="flex flex-row items-center justify-between w-full mb-6">
         <h1 className="text-2xl font-bold">Your Cart</h1>
         {cartItems.length > 0 && (
@@ -127,10 +119,13 @@ const Cart = () => {
         )}
       </div>
 
-      {cartItems.length === 0 ? (
-        <p className="text-gray-600">Your cart is empty. Please add items to your cart.</p>
-      ) : (
-        <>
+      {/* Cart Items or Empty State */}
+      <div className="flex flex-grow flex-col">
+        {cartItems.length === 0 ? (
+          <div>
+            <p className="text-gray-600">Your cart is empty. Please add items to your cart.</p>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {cartItems.map((item) => (
               <div
@@ -150,7 +145,7 @@ const Cart = () => {
                 <div className="flex justify-between items-center p-4">
                   <button
                     onClick={() => handleRemove(item.food_id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -158,17 +153,20 @@ const Cart = () => {
               </div>
             ))}
           </div>
+        )}
+      </div>
 
-          <div className="mt-6 flex justify-between items-center">
-            <h3 className="text-xl font-bold">Total: Rp {total.toLocaleString("id-ID")}</h3>
-            <button
-              onClick={handleBooking}
-              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600"
-            >
-              Book Now
-            </button>
-          </div>
-        </>
+      {/* Total and Booking Button */}
+      {cartItems.length > 0 && (
+        <div className="mt-6 flex justify-between items-center">
+          <h3 className="text-xl font-bold">Total: Rp {total.toLocaleString("id-ID")}</h3>
+          <button
+            onClick={handleBooking}
+            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer"
+          >
+            Book Now
+          </button>
+        </div>
       )}
     </div>
   );

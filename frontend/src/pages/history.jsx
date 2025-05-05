@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const History = () => {
   const [purchaseHistory, setPurchaseHistory] = useState([]);
+  const [loading, setLoading] = useState(true); // Untuk menandai apakah data sedang dimuat
 
   useEffect(() => {
     const fetchPurchaseHistory = () => {
@@ -11,6 +12,7 @@ const History = () => {
       if (!token) {
         // If the user is not logged in, set history to an empty array and return early
         setPurchaseHistory([]);
+        setLoading(false);
         return;
       }
 
@@ -29,37 +31,51 @@ const History = () => {
       }
 
       setPurchaseHistory(validHistory);
+      setLoading(false); // Menandakan bahwa data sudah selesai dimuat
     };
 
     fetchPurchaseHistory();
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Purchase History</h1>
+    <div className="flex flex-col min-h-screen max-w-6xl mx-auto px-4 py-8">
+      {/* Header Section */}
+      <div className="flex flex-row items-center justify-between w-full mb-6">
+        <h1 className="text-2xl font-bold">Purchase History</h1>
+      </div>
 
-      {/* Check if purchaseHistory is empty and show message accordingly */}
-      {purchaseHistory.length === 0 ? (
-        <p className="text-gray-600">You have no purchase history.</p>
+      {/* Loading State */}
+      {loading ? (
+        <p>Loading your purchase history...</p> // Pesan loading jika data sedang dimuat
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {purchaseHistory.map((item, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-4">
-                <h3 className="font-bold text-lg truncate">{item.name}</h3>
-                <img
-                  src={item.photo}
-                  alt={item.name}
-                  className="w-full h-40 object-cover rounded-lg mt-2"
-                />
-                <p className="mt-2">Total: Rp {item.total.toLocaleString("id-ID")}</p>
-                <p className="text-sm text-gray-500 mt-1">Date: {item.date}</p>
-                <p className="text-sm text-gray-500 mt-1">Restaurant ID: {item.restaurantId}</p>
-                <p className="text-sm text-gray-500 mt-1">Food ID: {item.foodId}</p>
-              </div>
+        <>
+          {/* Empty History State */}
+          {purchaseHistory.length === 0 ? (
+            <div>
+              <p className="text-gray-600">You have no purchase history.</p>
             </div>
-          ))}
-        </div>
+          ) : (
+            // Display Purchase History
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {purchaseHistory.map((item, index) => (
+                <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg truncate">{item.name}</h3>
+                    <img
+                      src={item.photo}
+                      alt={item.name}
+                      className="w-full h-40 object-cover rounded-lg mt-2"
+                    />
+                    <p className="mt-2">Total: Rp {item.total.toLocaleString("id-ID")}</p>
+                    <p className="text-sm text-gray-500 mt-1">Date: {item.date}</p>
+                    <p className="text-sm text-gray-500 mt-1">Restaurant ID: {item.restaurantId}</p>
+                    <p className="text-sm text-gray-500 mt-1">Food ID: {item.foodId}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
