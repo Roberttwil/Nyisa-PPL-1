@@ -3,6 +3,7 @@ import { Home, Search, Map, ShoppingCart, History, Menu } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import nyisaLogo from "../assets/nyisaLogo.png";
 import { getProfile } from "../services/UserService";
+import RestoService from "../services/RestoService";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -13,22 +14,40 @@ function Navbar() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const storedRole = localStorage.getItem("role"); // ⬅️ ambil role dari localStorage
+
+    console.log("Token:", token); // Debugging token
+    console.log("Stored Role:", storedRole); // Debugging role
+
     if (token) {
       setIsLoggedIn(true);
-      getProfile()
-        .then((data) => {
-          setUserProfile(data);
-          // Cek jika role = restaurant, arahkan ke halaman owner
-          if (data?.role === "restaurant") {
-            navigate("/owner");
-          }
-        })
-        .catch((err) => {
-          console.error("Profile fetch error:", err.message);
-          setIsLoggedIn(false); // jika token invalid
-        });
+
+      if (storedRole === "restaurant") {
+        RestoService.getOwnerProfile(token)
+          .then((data) => {
+            console.log("Restaurant Profile Data:", data); // Debugging profile data
+            if (data) {
+              setUserProfile({ ...data, role: storedRole });
+            } else {
+              console.error("No data received for restaurant profile");
+            }
+          })
+          .catch((err) => {
+            console.error("Owner profile error:", err);
+          });
+      } else {
+        getProfile()
+          .then((data) => {
+            console.log("User Profile Data:", data); // Debugging profile data
+            setUserProfile({ ...data, role: storedRole });
+          })
+          .catch((err) => {
+            console.error("User profile error:", err.message);
+            setIsLoggedIn(false);
+          });
+      }
     }
-  }, [navigate]);
+  }, []);
 
   const handleAuthClick = () => {
     navigate("/login");
@@ -37,10 +56,11 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const handleProfileClick = () => {
+    console.log("User role:", userProfile?.role); // <-- Tambahkan ini
     if (userProfile?.role === "restaurant") {
-      navigate("/owner"); // jika role = restaurant, arahkan ke halaman owner
+      navigate("/owner");
     } else {
-      navigate("/profile"); // selain itu, arahkan ke halaman profile
+      navigate("/profile");
     }
   };
 
@@ -67,31 +87,41 @@ function Navbar() {
         <div className="bg-[#D9E1D0] rounded-full px-4 py-2 flex space-x-4 items-center text-[#0D3B2E] font-medium text-sm md:text-base">
           <Link
             to="/"
-            className={`flex items-center gap-1 hover:underline ${isActive("/") ? "font-extrabold" : ""}`}
+            className={`flex items-center gap-1 hover:underline ${
+              isActive("/") ? "font-extrabold" : ""
+            }`}
           >
             <Home size={16} /> Home
           </Link>
           <Link
             to="/search"
-            className={`flex items-center gap-1 hover:underline ${isActive("/search") ? "font-extrabold" : ""}`}
+            className={`flex items-center gap-1 hover:underline ${
+              isActive("/search") ? "font-extrabold" : ""
+            }`}
           >
             <Search size={16} /> Search
           </Link>
           <Link
             to="/location"
-            className={`flex items-center gap-1 hover:underline ${isActive("/location") ? "font-extrabold" : ""}`}
+            className={`flex items-center gap-1 hover:underline ${
+              isActive("/location") ? "font-extrabold" : ""
+            }`}
           >
             <Map size={16} /> Location
           </Link>
           <Link
             to="/cart"
-            className={`flex items-center gap-1 hover:underline ${isActive("/cart") ? "font-extrabold" : ""}`}
+            className={`flex items-center gap-1 hover:underline ${
+              isActive("/cart") ? "font-extrabold" : ""
+            }`}
           >
             <ShoppingCart size={16} /> Cart
           </Link>
           <Link
             to="/history"
-            className={`flex items-center gap-1 hover:underline ${isActive("/history") ? "font-extrabold" : ""}`}
+            className={`flex items-center gap-1 hover:underline ${
+              isActive("/history") ? "font-extrabold" : ""
+            }`}
           >
             <History size={16} /> History
           </Link>
@@ -111,7 +141,9 @@ function Navbar() {
               className="w-8 h-8 rounded-full object-cover bg-black"
             />
             <span className="font-semibold text-gray-800">
-              {userProfile.name || "Profile"}
+              {userProfile.owner
+                ? userProfile.owner.name
+                : userProfile.name || "Profile"}
             </span>
           </button>
         ) : (
@@ -130,31 +162,41 @@ function Navbar() {
           <div className="flex flex-col items-center py-2">
             <Link
               to="/"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/") ? "font-extrabold" : ""}`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
+                isActive("/") ? "font-extrabold" : ""
+              }`}
             >
               <Home size={16} className="mr-2" /> Home
             </Link>
             <Link
               to="/search"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/search") ? "font-extrabold" : ""}`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
+                isActive("/search") ? "font-extrabold" : ""
+              }`}
             >
               <Search size={16} className="mr-2" /> Search
             </Link>
             <Link
               to="/location"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/location") ? "font-extrabold" : ""}`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
+                isActive("/location") ? "font-extrabold" : ""
+              }`}
             >
               <Map size={16} className="mr-2" /> Location
             </Link>
             <Link
               to="/cart"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/cart") ? "font-extrabold" : ""}`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
+                isActive("/cart") ? "font-extrabold" : ""
+              }`}
             >
               <ShoppingCart size={16} className="mr-2" /> Cart
             </Link>
             <Link
               to="/history"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${isActive("/history") ? "font-extrabold" : ""}`}
+              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
+                isActive("/history") ? "font-extrabold" : ""
+              }`}
             >
               <History size={16} className="mr-2" /> History
             </Link>

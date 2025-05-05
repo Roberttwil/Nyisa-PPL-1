@@ -267,7 +267,7 @@ const Profile = () => {
               localStorage.removeItem("token");
               window.location.href = "/";
             }}
-            className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-800 transition"
+            className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-800 transition cursor-pointer"
           >
             Sign Out
           </button>
