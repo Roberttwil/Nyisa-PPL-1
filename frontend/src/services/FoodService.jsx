@@ -25,55 +25,60 @@ const fetchFoods = async (page = 1, limit = 10, filters = {}) => {
   }
 };
 
-const addFood = async (foodData, photoFile) => {
-    try {
-      const token = localStorage.getItem("token"); // Ambil token dari localStorage atau sesuai tempat kamu simpan
-  
-      const formData = new FormData();
-      formData.append("name", foodData.name);
-      formData.append("type", foodData.type);
-      formData.append("price", foodData.price);
-      formData.append("quantity", foodData.quantity);
-  
-      // Hanya tambahkan foto jika ada
-      if (photoFile) {
-        formData.append("photo", photoFile);
-      }
-  
-      const response = await axios.post(API_URL, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`, // Tambahkan ini
-        },
-      });
-  
-      return response.data;
-    } catch (error) {
-      console.error("Error adding food:", error);
-      throw error;
-    }
-  };
-  
-
-// Update food
-const updateFood = async (foodId, foodData, photoFile) => {
+const addFood = async (foodData, photoFile = null) => {
   try {
+    const token = localStorage.getItem("token");
+    
+    // Create FormData object to handle file upload
     const formData = new FormData();
     formData.append("name", foodData.name);
     formData.append("type", foodData.type);
     formData.append("price", foodData.price);
     formData.append("quantity", foodData.quantity);
-
+    
+    // Only add photo if it exists and is not null
     if (photoFile) {
       formData.append("photo", photoFile);
     }
+    
+    const response = await axios.post(API_URL, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`, 
+      },
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error adding food:", error);
+    throw error;
+  }
+};
 
+// Update food
+const updateFood = async (foodId, foodData, photoFile) => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    // Create FormData object for update with file upload
+    const formData = new FormData();
+    formData.append("name", foodData.name);
+    formData.append("type", foodData.type);
+    formData.append("price", foodData.price);
+    formData.append("quantity", foodData.quantity);
+    
+    // Only add photo if it exists
+    if (photoFile) {
+      formData.append("photo", photoFile);
+    }
+    
     const response = await axios.put(`${API_URL}/${foodId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
       },
     });
-
+    
     return response.data;
   } catch (error) {
     console.error("Error updating food:", error);
@@ -84,8 +89,14 @@ const updateFood = async (foodId, foodData, photoFile) => {
 // Delete food
 const deleteFood = async (foodId) => {
   try {
-    const response = await axios.delete(`${API_URL}/${foodId}`);
-
+    const token = localStorage.getItem("token");
+    
+    const response = await axios.delete(`${API_URL}/${foodId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
     return response.data;
   } catch (error) {
     console.error("Error deleting food:", error);

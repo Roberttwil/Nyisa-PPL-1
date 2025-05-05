@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import FoodService from "../services/FoodService";
-import PostCard from "../components/postcard";
 import OrderService from "../services/OrderService";
 
 const FoodList = () => {
@@ -15,6 +14,7 @@ const FoodList = () => {
     maxPrice: "",
   });
   const [quantities, setQuantities] = useState({});
+  const [userRole, setUserRole] = useState("user"); // Default to user role
   const navigate = useNavigate();
 
   const fetchFoodData = async (page, token) => {
@@ -121,20 +121,30 @@ const FoodList = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const storedRole = localStorage.getItem("role");
+    
+    // Set user role from localStorage
+    if (storedRole) {
+      setUserRole(storedRole);
+    }
 
     // Simpan restoId aktif untuk digunakan di Cart
     if (restoId) {
       localStorage.setItem("activeRestoId", restoId);
     }
 
-    fetchBookingCode();
+    // Only fetch booking code if user role is not restaurant
+    if (userRole !== "restaurant") {
+      fetchBookingCode();
+    }
 
     if (restoId) {
       fetchFoodData(1, token);
     }
-  }, [filters, restoId, navigate]);
+  }, [filters, restoId, navigate, userRole]);
 
   const hasItems = Object.values(quantities).some((qty) => qty > 0);
+  const isUserRole = userRole !== "restaurant";
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 pb-32 relative">
@@ -168,26 +178,30 @@ const FoodList = () => {
                 <h2 className="text-lg font-semibold truncate">{food.name}</h2>
                 <div className="text-sm mt-2 space-y-1">
                   <p>Type: {food.type}</p>
-                  <p>Price: ${food.price}</p>
+                  <p>Price: Rp{food.price}</p>
                   <p>Quantity: {food.quantity}</p>
                 </div>
-                <div className="flex justify-center items-center gap-4 py-4 mt-auto">
-                  <button
-                    className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                    onClick={() => handleDecrement(food.id)}
-                  >
-                    -
-                  </button>
-                  <span className="font-semibold">
-                    {quantities[food.id] || 0}
-                  </span>
-                  <button
-                    className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
-                    onClick={() => handleIncrement(food.id)}
-                  >
-                    +
-                  </button>
-                </div>
+                
+                {/* Only show quantity controls for users with role 'user' */}
+                {isUserRole && (
+                  <div className="flex justify-center items-center gap-4 py-4 mt-auto">
+                    <button
+                      className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                      onClick={() => handleDecrement(food.id)}
+                    >
+                      -
+                    </button>
+                    <span className="font-semibold">
+                      {quantities[food.id] || 0}
+                    </span>
+                    <button
+                      className="bg-gray-200 text-lg w-8 h-8 rounded-full flex items-center justify-center cursor-pointer"
+                      onClick={() => handleIncrement(food.id)}
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           ) : (
@@ -196,7 +210,8 @@ const FoodList = () => {
         </div>
       )}
 
-      {hasItems && (
+      {/* Only show "Add to Cart" button for users with role 'user' */}
+      {isUserRole && hasItems && (
         <div className="sticky bottom-0 bg-white py-4 mt-10 flex justify-center z-20">
           <button
             onClick={handleAddAllToCart}

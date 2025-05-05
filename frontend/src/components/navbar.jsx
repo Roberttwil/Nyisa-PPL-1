@@ -14,10 +14,10 @@ function Navbar() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedRole = localStorage.getItem("role"); // ⬅️ ambil role dari localStorage
+    const storedRole = localStorage.getItem("role");
 
-    console.log("Token:", token); // Debugging token
-    console.log("Stored Role:", storedRole); // Debugging role
+    console.log("Token:", token);
+    console.log("Stored Role:", storedRole);
 
     if (token) {
       setIsLoggedIn(true);
@@ -25,7 +25,7 @@ function Navbar() {
       if (storedRole === "restaurant") {
         RestoService.getOwnerProfile(token)
           .then((data) => {
-            console.log("Restaurant Profile Data:", data); // Debugging profile data
+            console.log("Restaurant Profile Data:", data);
             if (data) {
               setUserProfile({ ...data, role: storedRole });
             } else {
@@ -38,7 +38,7 @@ function Navbar() {
       } else {
         getProfile()
           .then((data) => {
-            console.log("User Profile Data:", data); // Debugging profile data
+            console.log("User Profile Data:", data);
             setUserProfile({ ...data, role: storedRole });
           })
           .catch((err) => {
@@ -56,13 +56,16 @@ function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   const handleProfileClick = () => {
-    console.log("User role:", userProfile?.role); // <-- Tambahkan ini
+    console.log("User role:", userProfile?.role);
     if (userProfile?.role === "restaurant") {
       navigate("/owner");
     } else {
       navigate("/profile");
     }
   };
+
+  // Check if user role is restaurant to hide cart
+  const isRestaurant = userProfile?.role === "restaurant";
 
   return (
     <nav className="sticky top-0 bg-white z-50 h-20 flex items-center justify-between px-4 sm:px-8 md:px-10">
@@ -109,14 +112,19 @@ function Navbar() {
           >
             <Map size={16} /> Location
           </Link>
-          <Link
-            to="/cart"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/cart") ? "font-extrabold" : ""
-            }`}
-          >
-            <ShoppingCart size={16} /> Cart
-          </Link>
+          
+          {/* Only show Cart for non-restaurant users */}
+          {!isRestaurant && (
+            <Link
+              to="/cart"
+              className={`flex items-center gap-1 hover:underline ${
+                isActive("/cart") ? "font-extrabold" : ""
+              }`}
+            >
+              <ShoppingCart size={16} /> Cart
+            </Link>
+          )}
+          
           <Link
             to="/history"
             className={`flex items-center gap-1 hover:underline ${
@@ -132,7 +140,7 @@ function Navbar() {
       <div>
         {isLoggedIn && userProfile ? (
           <button
-            onClick={handleProfileClick} // Gunakan handleProfileClick untuk mengarahkan berdasarkan role
+            onClick={handleProfileClick}
             className="flex items-center space-x-2 px-3 py-2 rounded-full hover:bg-gray-100 transition text-sm md:text-base"
           >
             <img
@@ -184,14 +192,19 @@ function Navbar() {
             >
               <Map size={16} className="mr-2" /> Location
             </Link>
-            <Link
-              to="/cart"
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
-                isActive("/cart") ? "font-extrabold" : ""
-              }`}
-            >
-              <ShoppingCart size={16} className="mr-2" /> Cart
-            </Link>
+            
+            {/* Only show Cart for non-restaurant users in mobile menu too */}
+            {!isRestaurant && (
+              <Link
+                to="/cart"
+                className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
+                  isActive("/cart") ? "font-extrabold" : ""
+                }`}
+              >
+                <ShoppingCart size={16} className="mr-2" /> Cart
+              </Link>
+            )}
+            
             <Link
               to="/history"
               className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
