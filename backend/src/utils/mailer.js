@@ -28,4 +28,27 @@ const sendOTP = async (to, otp) => {
     await transporter.sendMail(mailOptions);
 };
 
-module.exports = sendOTP;
+const sendBookingConfirmation = async (to, booking_code, total) => {
+  const mailOptions = {
+      from: `"Nyisa App" <${process.env.MAIL_USER}>`,
+      to,
+      subject: 'Booking Confirmation - Nyisa App',
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #27AE60;">Booking Confirmed</h2>
+        <p>Hello,</p>
+        <p>Thank you for your booking. Here are your details:</p>
+        <ul>
+          <li><strong>Booking Code:</strong> ${booking_code}</li>
+          <li><strong>Total:</strong> Rp ${total.toLocaleString()}</li>
+        </ul>
+        <p>You can track your transaction in the app. Please show this code to the restaurant.</p>
+        <p style="margin-top: 30px;">Best regards,<br><strong>Nyisa Team</strong></p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports =  { sendOTP, sendBookingConfirmation };

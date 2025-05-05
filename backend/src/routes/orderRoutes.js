@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const { authenticate } = require('../middleware/authMiddleware');
 const { Cart, Transaction, Food } = require('../models')
+const { sendBookingConfirmation } = require('../utils/mailer');
 
 function generateBookingCode(length) {
     let result = '';
@@ -44,7 +45,7 @@ router.get('/cart', authenticate, async (req, res) => {
             restaurant_id: item.restaurant_id,
             quantity: item.quantity
         }));
-        
+
 
         res.json({ cart: formatted });
     } catch (err) {
@@ -139,6 +140,11 @@ router.post('/book', authenticate, async (req, res) => {
         // Hapus semua item cart
         await Cart.destroy({ where: { booking_code } });
 
+        const user = await User.findOne({ where: { user_id } });
+        if (user?.email) {
+            await sendBookingConfirmation(user.email, booking_code, total);
+        }
+        
         res.status(201).json({ message: "Booking Berhasil", total });
     } catch (err) {
         console.error('Booking error:', err);
@@ -149,8 +155,8 @@ router.post('/book', authenticate, async (req, res) => {
 router.get('/booking-code', authenticate, (req, res) => {
     try {
         bookingCode = generateBookingCode(6);
-        
-        res.status(200).json({bookingCode: bookingCode});
+
+        res.status(200).json({ bookingCode: bookingCode });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
