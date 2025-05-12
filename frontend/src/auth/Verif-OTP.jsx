@@ -15,14 +15,22 @@ const OTP = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("registeredUsername");
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("username");
+
+    const storedUsername = fromQuery || localStorage.getItem("registeredUsername");
     const storedEmail = localStorage.getItem("registeredEmail");
 
     if (storedUsername) setUsername(storedUsername);
-    if (storedEmail) setEmail(storedEmail);
 
-    if (!storedUsername || !storedEmail) {
-      setErrorMessage("No account data found. Please register first.");
+    if (storedEmail) {
+      setEmail(storedEmail);
+    } else if (fromQuery && fromQuery.includes("@")) {
+      setEmail(fromQuery); // fallback: anggap username = email
+    }
+
+    if (!storedUsername || (!storedEmail && !fromQuery.includes("@"))) {
+      setErrorMessage("No account data found. Please register or login again.");
     }
   }, []);
 
@@ -99,7 +107,7 @@ const OTP = () => {
   return (
     <div className="relative flex justify-center items-center min-h-screen" style={{ backgroundImage: 'linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)' }}>
       <div className="max-w-md w-full p-8 text-center">
-      <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
+        <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
         <h2 className="text-2xl font-semibold text-green-900 mb-6">
           OTP Verify
         </h2>
@@ -148,8 +156,8 @@ const OTP = () => {
             {resendLoading
               ? "Resending..."
               : resendTimer > 0
-              ? `Resend in ${resendTimer}s`
-              : "Resend OTP"}
+                ? `Resend in ${resendTimer}s`
+                : "Resend OTP"}
           </button>
         </form>
       </div>

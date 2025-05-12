@@ -66,6 +66,10 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5000/api/auth/social/google";
+  };
+
   return (
     <div
       className="relative flex justify-center items-center min-h-screen"
@@ -131,7 +135,10 @@ const Login = () => {
         </form>
         <div className="my-4 text-green-900 font-medium">Or Sign In With</div>
         <div className="flex gap-3 justify-center">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100">
+          <button
+            onClick={handleGoogleLogin}
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100"
+          >
             <img src={googleLogo} alt="Google" className="w-5" /> Google
           </button>
           <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100">
