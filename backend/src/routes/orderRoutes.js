@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const { authenticate } = require('../middleware/authMiddleware');
-const { Cart, Transaction, Food } = require('../models')
+const { Cart, Transaction, Food, User } = require('../models')
 const { sendBookingConfirmation } = require('../utils/mailer');
 
 function generateBookingCode(length) {
@@ -94,7 +94,8 @@ router.post('/remove/cart', authenticate, async (req, res) => {
 
 router.post('/book', authenticate, async (req, res) => {
     const { booking_code } = req.body;
-
+    const user_id = req.user.user_id;
+    
     try {
         let total = 0;
 

@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.2
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Apr 10, 2025 at 08:20 AM
--- Server version: 8.0.41
--- PHP Version: 8.2.28
+-- Host: 127.0.0.1
+-- Generation Time: May 12, 2025 at 04:23 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `db_nyisa`
+-- Database: `nyisa`
 --
 
 -- --------------------------------------------------------
@@ -28,29 +28,33 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `cart` (
-  `cart_id` int NOT NULL,
-  `booking_code` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `user_id` int NOT NULL,
-  `restaurant_id` int NOT NULL,
-  `food_id` int NOT NULL
+  `cart_id` int(11) NOT NULL,
+  `booking_code` varchar(255) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `restaurant_id` int(11) NOT NULL,
+  `food_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `cart`
 --
 
-INSERT INTO `cart` (`cart_id`, `booking_code`, `user_id`, `restaurant_id`, `food_id`) VALUES
-(1, 'DhDaAgBSwb', 4, 4, 1),
-(2, 'DzPcuUyhGn', 1, 5, 8),
-(3, 'MFafbPCIIZ', 1, 5, 8),
-(4, 'Bp07FV1OXa', 1, 1, 15),
-(5, 'wb166NxfPJ', 5, 4, 14),
-(6, '15Mz2dCIdG', 2, 4, 1),
-(7, 'SajlN5nCxm', 4, 1, 5),
-(8, 'NHy9svrwaR', 2, 1, 7),
-(9, 'nWpiqDt606', 3, 1, 7),
-(10, 'GhPKjMi6SW', 5, 5, 8),
-(13, 'AAAAAAA', 1, 4, 1);
+INSERT INTO `cart` (`cart_id`, `booking_code`, `user_id`, `restaurant_id`, `food_id`, `quantity`) VALUES
+(1, 'DhDaAgBSwb', 4, 4, 1, 0),
+(2, 'DzPcuUyhGn', 1, 5, 8, 0),
+(3, 'MFafbPCIIZ', 1, 5, 8, 0),
+(4, 'Bp07FV1OXa', 1, 1, 15, 0),
+(5, 'wb166NxfPJ', 5, 4, 14, 0),
+(6, '15Mz2dCIdG', 2, 4, 1, 0),
+(7, 'SajlN5nCxm', 4, 1, 5, 0),
+(8, 'NHy9svrwaR', 2, 1, 7, 0),
+(9, 'nWpiqDt606', 3, 1, 7, 0),
+(10, 'GhPKjMi6SW', 5, 5, 8, 0),
+(13, 'AAAAAAA', 1, 4, 1, 0),
+(15, '9CDFPI', 8, 4, 1, 0),
+(18, 'TPK7D6', 8, 4, 1, 3),
+(19, 'U3QPLJ', 8, 4, 1, 3);
 
 -- --------------------------------------------------------
 
@@ -59,13 +63,13 @@ INSERT INTO `cart` (`cart_id`, `booking_code`, `user_id`, `restaurant_id`, `food
 --
 
 CREATE TABLE `food` (
-  `food_id` int NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `type` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `price` int NOT NULL,
-  `photo` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `quantity` int NOT NULL,
-  `restaurant_id` int NOT NULL
+  `food_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `price` int(11) NOT NULL,
+  `photo` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `restaurant_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -73,7 +77,7 @@ CREATE TABLE `food` (
 --
 
 INSERT INTO `food` (`food_id`, `name`, `type`, `price`, `photo`, `quantity`, `restaurant_id`) VALUES
-(1, 'Oriental Ceramic Pizza', 'Main Course', 53478, 'https://picsum.photos/seed/Zgyw6naP6/573/2481', 16, 4),
+(1, 'Oriental Ceramic Pizza', 'Main Course', 53478, 'https://picsum.photos/seed/Zgyw6naP6/573/2481', 37, 4),
 (2, 'Bespoke Plastic Pizza', 'Main Course', 89454, 'https://picsum.photos/seed/im5CZxC8/643/2593', 16, 3),
 (3, 'Handmade Granite Bike', 'Main Course', 99543, 'https://picsum.photos/seed/Ck4WNtIVj2/3822/843', 7, 3),
 (4, 'Sleek Ceramic Pants', 'Snack', 26256, 'https://loremflickr.com/932/731?lock=2306681204342106', 3, 5),
@@ -96,28 +100,29 @@ INSERT INTO `food` (`food_id`, `name`, `type`, `price`, `photo`, `quantity`, `re
 --
 
 CREATE TABLE `restaurant` (
-  `restaurant_id` int NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `address` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `phone` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `restaurant_type` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `photo` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `restaurant_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `phone` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `restaurant_type` varchar(255) NOT NULL,
+  `photo` varchar(255) NOT NULL,
   `rating` float NOT NULL,
-  `longitude` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `latitude` varchar(255) COLLATE utf8mb4_general_ci NOT NULL
+  `user_rating_count` int(11) DEFAULT NULL,
+  `longitude` varchar(255) NOT NULL,
+  `latitude` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `restaurant`
 --
 
-INSERT INTO `restaurant` (`restaurant_id`, `name`, `address`, `phone`, `email`, `restaurant_type`, `photo`, `rating`, `longitude`, `latitude`) VALUES
-(1, 'Weimann - Lubowitz', '3602 Eliezer Mission', '936-333-3110 x7441', 'Stevie.Williamson42@yahoo.com', 'Warung', 'https://loremflickr.com/3403/1694?lock=444486960928092', 4.94583, '4.9607', '-4.361'),
-(2, 'Shanahan, Bartoletti and Kuvalis', '7751 Cummings View', '403.606.0868', 'Hanna.Abshire92@gmail.com', 'Warung', 'https://loremflickr.com/2505/1317?lock=5181137673552609', 3.55609, '170.0146', '17.6271'),
-(3, 'Rosenbaum and Sons', '3362 Kole Ports', '(917) 271-4728 x628', 'Melvin.Hand92@hotmail.com', 'Resto', 'https://loremflickr.com/1569/2206?lock=1866216806232384', 3.5453, '-145.7219', '72.3065'),
-(4, 'Dibbert - Lang', '7640 West Tunnel', '(580) 862-5080', 'Maida29@hotmail.com', 'Warung', 'https://loremflickr.com/754/257?lock=8629652725795092', 4.81976, '37.0023', '46.4648'),
-(5, 'Lindgren - Cormier', '2349 Woodside', '1-973-490-9633 x62606', 'Marjorie_Fisher@yahoo.com', 'Warung', 'https://loremflickr.com/1884/2473?lock=8758299766362323', 4.35607, '-89.1357', '53.7273');
+INSERT INTO `restaurant` (`restaurant_id`, `name`, `address`, `phone`, `email`, `restaurant_type`, `photo`, `rating`, `user_rating_count`, `longitude`, `latitude`) VALUES
+(1, 'Weimann - Lubowitz', '3602 Eliezer Mission', '936-333-3110 x7441', 'Stevie.Williamson42@yahoo.com', 'Warung', 'https://loremflickr.com/3403/1694?lock=444486960928092', 4.5, 2, '4.9607', '-4.361'),
+(2, 'Shanahan, Bartoletti and Kuvalis', '7751 Cummings View', '403.606.0868', 'Hanna.Abshire92@gmail.com', 'Warung', 'https://loremflickr.com/2505/1317?lock=5181137673552609', 3.55609, NULL, '170.0146', '17.6271'),
+(3, 'Rosenbaum and Sons', '3362 Kole Ports', '(917) 271-4728 x628', 'Melvin.Hand92@hotmail.com', 'Resto', 'https://loremflickr.com/1569/2206?lock=1866216806232384', 3.5453, NULL, '-145.7219', '72.3065'),
+(4, 'Dibbert - Lang', '7640 West Tunnel', '(580) 862-5080', 'Maida29@hotmail.com', 'Warung', 'https://loremflickr.com/754/257?lock=8629652725795092', 4.81976, NULL, '37.0023', '46.4648'),
+(5, 'Lindgren - Cormier', '2349 Woodside', '1-973-490-9633 x62606', 'Marjorie_Fisher@yahoo.com', 'Warung', 'https://loremflickr.com/1884/2473?lock=8758299766362323', 4.35607, NULL, '-89.1357', '53.7273');
 
 -- --------------------------------------------------------
 
@@ -126,13 +131,13 @@ INSERT INTO `restaurant` (`restaurant_id`, `name`, `address`, `phone`, `email`, 
 --
 
 CREATE TABLE `transaction` (
-  `transaction_id` int NOT NULL,
-  `booking_code` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `user_id` int NOT NULL,
-  `restaurant_id` int NOT NULL,
-  `food_id` int NOT NULL,
+  `transaction_id` int(11) NOT NULL,
+  `booking_code` varchar(255) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `restaurant_id` int(11) NOT NULL,
+  `food_id` int(11) NOT NULL,
   `total` float NOT NULL,
-  `status` int NOT NULL,
+  `status` int(11) NOT NULL,
   `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -152,7 +157,15 @@ INSERT INTO `transaction` (`transaction_id`, `booking_code`, `user_id`, `restaur
 (9, 'zxbDYNbQlZ', 1, 4, 14, 139495, 1, '2025-04-06 15:49:47'),
 (10, 'LOt8cnrbnu', 4, 1, 15, 105299, 0, '2025-04-06 02:09:31'),
 (11, 'ABCDEF', 1, 4, 1, 99976, 0, '2025-04-07 00:26:49'),
-(12, 'ABCDEF', 1, 4, 14, 99976, 0, '2025-04-07 00:26:49');
+(12, 'ABCDEF', 1, 4, 14, 99976, 0, '2025-04-07 00:26:49'),
+(13, 'WAROPJ', 8, 4, 1, 53478, 0, '2025-04-28 07:50:09'),
+(14, 'TPK7D6', 8, 4, 1, 0, 0, '2025-04-29 13:41:41'),
+(15, 'TPK7D6', 8, 4, 1, 106956, 0, '2025-04-29 13:41:41'),
+(16, 'RA3KXK', 8, 4, 1, 160434, 0, '2025-05-12 09:52:12'),
+(17, 'RA3KXK', 8, 4, 1, 160434, 0, '2025-05-12 09:53:59'),
+(18, 'RA3KXK', 8, 4, 1, 160434, 0, '2025-05-12 09:56:46'),
+(19, 'GAHQN1', 8, 4, 1, 160434, 0, '2025-05-12 10:00:13'),
+(20, 'ZS4D2B', 8, 4, 1, 160434, 0, '2025-05-12 10:03:25');
 
 -- --------------------------------------------------------
 
@@ -161,25 +174,27 @@ INSERT INTO `transaction` (`transaction_id`, `booking_code`, `user_id`, `restaur
 --
 
 CREATE TABLE `user` (
-  `user_id` int NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `phone` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `address` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `status` int NOT NULL,
-  `username` varchar(255) COLLATE utf8mb4_general_ci NOT NULL
+  `user_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `phone` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `photo` varchar(255) NOT NULL,
+  `status` int(11) NOT NULL,
+  `username` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`user_id`, `name`, `phone`, `email`, `address`, `status`, `username`) VALUES
-(1, 'Marco Bednar-Goyette', '333-368-5688', 'Marietta.Muller@hotmail.com', '628 O\'Conner Hollow', 0, 'Eldon75'),
-(2, 'Stewart Donnelly', '595-472-4016 x7582', 'Alize_Kulas98@yahoo.com', '69849 Ike Streets', 0, 'Orrin25'),
-(3, 'Lauren Mosciski', '(933) 235-1277 x31937', 'Sibyl_Spinka@gmail.com', '4838 Kilback Cove', 0, 'Rubie.Mills47'),
-(4, 'Judy Schiller', '831.814.6454', 'Jessika.Runolfsdottir43@yahoo.com', '681 Flossie Drives', 1, 'Trenton65'),
-(5, 'Leah Swift', '585-436-6563 x63324', 'Madalyn40@yahoo.com', '307 Schmeler Pines', 0, 'Ettie_Leuschke47');
+INSERT INTO `user` (`user_id`, `name`, `phone`, `email`, `address`, `photo`, `status`, `username`) VALUES
+(1, 'Marco Bednar-Goyette', '333-368-5688', 'Marietta.Muller@hotmail.com', '628 O\'Conner Hollow', '', 0, 'Eldon75'),
+(2, 'Stewart Donnelly', '595-472-4016 x7582', 'Alize_Kulas98@yahoo.com', '69849 Ike Streets', '', 0, 'Orrin25'),
+(3, 'Lauren Mosciski', '(933) 235-1277 x31937', 'Sibyl_Spinka@gmail.com', '4838 Kilback Cove', '', 0, 'Rubie.Mills47'),
+(4, 'Judy Schiller', '831.814.6454', 'Jessika.Runolfsdottir43@yahoo.com', '681 Flossie Drives', '', 1, 'Trenton65'),
+(5, 'Leah Swift', '585-436-6563 x63324', 'Madalyn40@yahoo.com', '307 Schmeler Pines', '', 0, 'Ettie_Leuschke47'),
+(8, 'Darren Christian', '081234567890', 'darrenliharja@gmail.com', 'Jl. Dipatiukur No. 10, Bandung', 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/46a80156-130d-4804-b377-d621be2ce20a.jpeg', 0, 'dar');
 
 -- --------------------------------------------------------
 
@@ -188,11 +203,11 @@ INSERT INTO `user` (`user_id`, `name`, `phone`, `email`, `address`, `status`, `u
 --
 
 CREATE TABLE `users` (
-  `username` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `otp` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `otp` varchar(255) DEFAULT NULL,
   `otp_expires_at` datetime DEFAULT NULL,
-  `is_verified` tinyint(1) DEFAULT '0'
+  `is_verified` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -200,6 +215,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`username`, `password`, `otp`, `otp_expires_at`, `is_verified`) VALUES
+('dar', '$2b$10$5kqaNzKZqQ0o1gl12gaY.u31udnYd2OnhAcgRo8d2HRS1mK0OJN.e', NULL, NULL, 1),
+('darren22002@mail.unpad.ac.id', '$2b$10$hTj1Bi6EVfgKBt0todUlSuRu.vbZihb53OVJedNZzxjBpGMEoh/GG', '937272', '2025-05-12 14:25:39', 0),
 ('Eldon75', '$2b$10$puave1Ii2im3IwOmfEMEWuzzGmXuZNTPErQk8Tjfrcg4uYA41x2sy', NULL, NULL, 0),
 ('Ettie_Leuschke47', '$2b$10$Z8uq87gfthd4SLsTUJg8Qe/4LLqXbovh/fXjhA/.DFkJ0e1ucpqbi', NULL, NULL, 0),
 ('Orrin25', '$2b$10$.PL5r.eh6z1VC1mauScr/OA9/WwxYwHh2Oe6u13ZfYG7IBn7BxgHm', NULL, NULL, 0),
@@ -256,31 +273,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cart_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `food`
 --
 ALTER TABLE `food`
-  MODIFY `food_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `food_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `restaurant`
 --
 ALTER TABLE `restaurant`
-  MODIFY `restaurant_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `restaurant_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `transaction`
 --
 ALTER TABLE `transaction`
-  MODIFY `transaction_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
