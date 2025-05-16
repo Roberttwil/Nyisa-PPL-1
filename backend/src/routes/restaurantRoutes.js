@@ -1,6 +1,6 @@
 const express = require('express');
 const axios = require('axios');
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const { Restaurant, User } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
@@ -61,7 +61,6 @@ router.get('/cards', async (req, res) => {
         res.status(500).json({ message: 'Could not fetch restaurants' });
     }
 });
-
 
 // PUT /api/restaurants/profile
 router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
@@ -214,5 +213,31 @@ router.get('/all', async (req, res) => {
     }
 });
 
+router.put('/rate', authenticate, async (req, res) => {
+    try {
+        const { rating, restaurant_id } = req.body;
+
+        if (!rating || !restaurant_id || isNaN(rating) || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'Invalid rating or missing fields' });
+        }
+
+        const restaurant = await Restaurant.findOne({ where: { restaurant_id: restaurant_id } });
+        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found for this user' });
+
+        const rating_count = restaurant.rating * restaurant.user_rating_count;
+        const new_user_count = restaurant.user_rating_count + 1;
+        const new_rating = (rating_count + rating)  / new_user_count;
+
+        await Restaurant.update({
+            rating: new_rating,
+            user_rating_count: new_user_count
+        }, { where: { restaurant_id: restaurant_id } });
+
+        res.status(200).json({ message: "Rate Restaurant Berhasil", new_rating });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to rate restaurant' });
+    }
+})
 
 module.exports = router;

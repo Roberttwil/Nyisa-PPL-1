@@ -68,7 +68,7 @@ const CustomMarker = ({ restaurant, activeId, setActiveId, navigate }) => {
                             onClick={() => navigate(`/food-list/${restaurant.restaurant_id}`)}
                             className="relative w-full inline-flex items-center justify-start overflow-hidden font-medium transition-all bg-green-100 rounded hover:bg-white group py-1.5 px-2.5"
                         >
-                            <span className="w-56 h-48 rounded bg-green-600 absolute bottom-0 left-0 translate-x-full translate-y-full mb-9 ml-9 group-hover:ml-0 group-hover:mb-32 group-hover:translate-x-0 ease-out duration-500 transition-all"></span>
+                            <span className="w-full h-48 rounded bg-green-600 absolute bottom-0 left-0 translate-x-full translate-y-full mb-9 ml-9 group-hover:ml-0 group-hover:mb-32 group-hover:translate-x-0 ease-out duration-500 transition-all"></span>
                             <span className="relative w-full text-center text-green-700 transition-colors duration-300 ease-in-out group-hover:text-white">
                                 Details
                             </span>
