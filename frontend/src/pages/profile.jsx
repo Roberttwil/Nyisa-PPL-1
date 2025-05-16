@@ -4,7 +4,7 @@ import { uploadUserPhoto } from "../services/UploadService"; // Import uploadUse
 import { Pencil, Check, Camera, X } from "lucide-react";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { dataURLtoBlob } from "../utils/dataURLtoBlob";
+// import { dataURLtoBlob } from "../utils/dataURLtoBlob";
 
 const Profile = () => {
   const [profile, setProfile] = useState({});

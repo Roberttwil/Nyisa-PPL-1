@@ -2,36 +2,31 @@ import React, { useEffect, useState } from "react";
 
 const History = () => {
   const [purchaseHistory, setPurchaseHistory] = useState([]);
-  const [loading, setLoading] = useState(true); // Untuk menandai apakah data sedang dimuat
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPurchaseHistory = () => {
-      // Check if the user is logged in (i.e., check for a token in localStorage)
-      const token = localStorage.getItem("token"); // Or any other method you're using to store user info
+      const token = localStorage.getItem("token");
 
       if (!token) {
-        // If the user is not logged in, set history to an empty array and return early
         setPurchaseHistory([]);
         setLoading(false);
         return;
       }
 
-      // If user is logged in, proceed with fetching the history
-      const storedHistory = JSON.parse(localStorage.getItem("purchaseHistory")) || [];
+      const storedHistory =
+        JSON.parse(localStorage.getItem("purchaseHistory")) || [];
 
-      // Check if any items need to be removed (this could be based on any condition you like)
-      const validHistory = storedHistory.filter(item => {
-        // Example condition: Check if the food_id or restaurant_id is valid
-        return item.foodId && item.restaurantId;  // Replace with your own criteria
+      const validHistory = storedHistory.filter((item) => {
+        return item.foodId && item.restaurantId;
       });
 
-      // If the valid history is different from the stored history, update localStorage
       if (validHistory.length !== storedHistory.length) {
         localStorage.setItem("purchaseHistory", JSON.stringify(validHistory));
       }
 
       setPurchaseHistory(validHistory);
-      setLoading(false); // Menandakan bahwa data sudah selesai dimuat
+      setLoading(false);
     };
 
     fetchPurchaseHistory();
@@ -46,7 +41,7 @@ const History = () => {
 
       {/* Loading State */}
       {loading ? (
-        <p>Loading your purchase history...</p> // Pesan loading jika data sedang dimuat
+        <p>Loading your purchase history...</p>
       ) : (
         <>
           {/* Empty History State */}
@@ -55,10 +50,12 @@ const History = () => {
               <p className="text-gray-600">You have no purchase history.</p>
             </div>
           ) : (
-            // Display Purchase History
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {purchaseHistory.map((item, index) => (
-                <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden"
+                >
                   <div className="p-4">
                     <h3 className="font-bold text-lg truncate">{item.name}</h3>
                     <img
@@ -66,10 +63,18 @@ const History = () => {
                       alt={item.name}
                       className="w-full h-40 object-cover rounded-lg mt-2"
                     />
-                    <p className="mt-2">Total: Rp {item.total.toLocaleString("id-ID")}</p>
-                    <p className="text-sm text-gray-500 mt-1">Date: {item.date}</p>
-                    <p className="text-sm text-gray-500 mt-1">Restaurant ID: {item.restaurantId}</p>
-                    <p className="text-sm text-gray-500 mt-1">Food ID: {item.foodId}</p>
+                    <p className="mt-2">
+                      Total: Rp {item.total.toLocaleString("id-ID")}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Date: {item.date}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Restaurant ID: {item.restaurantId}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Food ID: {item.foodId}
+                    </p>
                   </div>
                 </div>
               ))}

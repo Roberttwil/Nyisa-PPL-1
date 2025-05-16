@@ -112,7 +112,7 @@ function Navbar() {
           >
             <Map size={16} /> Location
           </Link>
-          
+
           {/* Only show Cart for non-restaurant users */}
           {!isRestaurant && (
             <Link
@@ -124,15 +124,17 @@ function Navbar() {
               <ShoppingCart size={16} /> Cart
             </Link>
           )}
-          
-          <Link
-            to="/history"
-            className={`flex items-center gap-1 hover:underline ${
-              isActive("/history") ? "font-extrabold" : ""
-            }`}
-          >
-            <History size={16} /> History
-          </Link>
+
+          {!isRestaurant && (
+            <Link
+              to="/history"
+              className={`flex items-center gap-1 hover:underline ${
+                isActive("/history") ? "font-extrabold" : ""
+              }`}
+            >
+              <History size={16} /> History
+            </Link>
+          )}
         </div>
       </div>
 
@@ -192,7 +194,7 @@ function Navbar() {
             >
               <Map size={16} className="mr-2" /> Location
             </Link>
-            
+
             {/* Only show Cart for non-restaurant users in mobile menu too */}
             {!isRestaurant && (
               <Link
@@ -204,7 +206,7 @@ function Navbar() {
                 <ShoppingCart size={16} className="mr-2" /> Cart
               </Link>
             )}
-            
+
             <Link
               to="/history"
               className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 ${
