@@ -146,7 +146,11 @@ function Navbar() {
             className="flex items-center space-x-2 px-3 py-2 rounded-full hover:bg-gray-100 transition text-sm md:text-base"
           >
             <img
-              src={userProfile.photo || "https://via.placeholder.com/40"}
+              src={
+                userProfile.owner && userProfile.owner.restaurant.photo
+                  ? userProfile.owner.restaurant.photo
+                  : userProfile.photo || "https://via.placeholder.com/40"
+              }
               alt="Profile"
               className="w-8 h-8 rounded-full object-cover bg-black"
             />

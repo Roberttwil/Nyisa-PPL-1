@@ -60,84 +60,90 @@ const Location = () => {
         .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
     return (
-        <div className="flex h-screen w-screen">
-            {/* Left side list */}
-            <div className="z-30 w-1/3 bg-white overflow-y-auto p-4 shadow-2xl">
-                <h2 className="text-xl text-green-900 font-bold mb-4">Closest Restaurants</h2>
-                <input
-                    type="text"
-                    placeholder="Search Restaurant"
-                    className="w-full mb-4 p-2 border border-green-700 rounded text-green-800 opacity-70 transition-all duration-300 hover:bg-green-50 focus:bg-green-50 focus:border-green-600 focus:outline-none active:border-green-600"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+    <div className="flex flex-col md:flex-row h-screen w-screen">
+    {/* Left side list */}
+    <div className="z-30 w-full md:w-2/5 lg:w-1/3 xl:max-w-md bg-white h-screen overflow-y-auto shadow-2xl">
+      {/* Original code structure restored */}
+      <h2 className="text-xl text-green-900 font-bold mt-4 mb-4 px-4">Closest Restaurants</h2>
+      <input
+        type="text"
+        placeholder="Search Restaurant"
+        className="w-full mb-4 p-2 mx-4 border border-green-700 rounded text-green-800 opacity-70 transition-all duration-300 hover:bg-green-50 focus:bg-green-50 focus:border-green-600 focus:outline-none active:border-green-600"
+        style={{ width: 'calc(100% - 2rem)' }}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <div className="px-4 pb-4">
+        {filteredRestaurants.map((r) => (
+          <div
+            key={r.restaurant_id}
+            className={`mb-2 p-2 rounded cursor-pointer transition-all duration-400 hover:bg-green-50 ${
+              activeId === r.restaurant_id ? "bg-green-50" : "bg-white"
+            }`}
+            onClick={() => setActiveId(r.restaurant_id)}
+            onDoubleClick={() => navigate(`/food-list/${r.restaurant_id}`)}
+          >
+            <div className="flex items-center">
+              <div className="shrink-0 w-14 h-14 rounded overflow-hidden">
+                {r.photo ? (
+                  <img
+                    className="w-full h-full object-cover"
+                    src={r.photo}
+                    alt={r.name}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white text-xs">
+                    No Image
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 ms-4">
+                <p className="text-md font-bold text-green-900">{r.name}</p>
+                <p className="text-sm text-green-800 truncate opacity-80">
+                  {r.address || "Alamat tidak tersedia"}
+                </p>
+                {r.distance && (
+                  <p className="text-xs text-green-800 opacity-70">{r.distance.toFixed(2)} km</p>
+                )}
+              </div>
+              <div className="inline-flex items-center text-base font-semibold text-yellow-500">
+                {r.rating === 0 || r.rating === null || r.rating === undefined ? (
+                  <span className="text-green-600 font-medium">New</span>
+                ) : (
+                  <>⭐ {r.rating.toFixed(1)}</>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+
+        {/* Right side map */}
+        <div className="z-10 w-full md:w-2/3 h-[50vh] md:h-full">
+            <MapContainer
+                center={[-6.9, 107.7]}
+                zoom={15}
+                zoomControl={false}
+                className="h-full w-full"
+                whenCreated={(map) => (mapRef.current = map)}
+            >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                 {filteredRestaurants.map((r) => (
-                    <div
+                    <CustomMarker
                         key={r.restaurant_id}
-                        className={`mb-2 p-2 rounded cursor-pointer transition-all duration-400 hover:bg-green-50 ${activeId === r.restaurant_id ? "bg-green-50" : "bg-white"
-                            }`}
-                        onClick={() => setActiveId(r.restaurant_id, r.latitude, r.longitude)}
-                        onDoubleClick={() => navigate(`/food-list/${r.restaurant_id}`)}
-                    >
-                        <div className="flex items-center">
-                            <div className="shrink-0 w-14 h-14 rounded overflow-hidden">
-                                {r.photo ? (
-                                    <img
-                                        className="w-full h-full object-cover"
-                                        src={r.photo}
-                                        alt={r.name}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white text-xs">
-                                        No Image
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0 ms-4">
-                                <p className="text-md font-bold text-green-900">{r.name}</p>
-                                <p className="text-sm text-green-800 truncate opacity-80">
-                                    {r.address || "Alamat tidak tersedia"}
-                                </p>
-                                {r.distance && (
-                                    <p className="text-xs text-green-800 opacity-70">{r.distance.toFixed(2)} km</p>
-                                )}
-                            </div>
-                            <div className="inline-flex items-center text-base font-semibold text-yellow-500">
-                                {r.rating === 0 || r.rating === null || r.rating === undefined ? (
-                                    <span className="text-green-600 font-medium">New</span>
-                                ) : (
-                                    <>⭐ {r.rating.toFixed(1)}</>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                        restaurant={r}
+                        activeId={activeId}
+                        setActiveId={setActiveId}
+                        navigate={navigate}
+                    />
                 ))}
-
-            </div>
-
-            {/* Right side map */}
-            <div className="z-10 w-2/3 h-full">
-                <MapContainer
-                    center={[-6.9, 107.7]}
-                    zoom={15}
-                    zoomControl={false}
-                    className="h-full w-full"
-                    whenCreated={(map) => (mapRef.current = map)}
-                >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {filteredRestaurants.map((r) => (
-                        <CustomMarker
-                            key={r.restaurant_id}
-                            restaurant={r}
-                            activeId={activeId}
-                            setActiveId={setActiveId}
-                            navigate={navigate}
-                        />
-                    ))}
-                </MapContainer>
-            </div>
+            </MapContainer>
         </div>
-    );
+    </div>
+);
+
 };
 
 export default Location;

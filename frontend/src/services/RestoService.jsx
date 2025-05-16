@@ -58,6 +58,29 @@ const RestoService = {
       throw error;
     }
   },
+
+  // Fungsi baru untuk memberikan rating ke restaurant
+  rateRestaurant: async (restaurantId, rating, token) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/rate`, 
+        { 
+          restaurant_id: restaurantId,
+          rating: rating 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error rating restaurant:', error);
+      throw error;
+    }
+  },
 };
 
 export default RestoService;

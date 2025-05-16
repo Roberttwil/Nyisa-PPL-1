@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import facebookLogo from "../assets/facebook.png";
 import googleLogo from "../assets/google.png";
 import nyisaLogo from "../assets/nyisaLogo.png";
 import { login } from "../services/AuthService"; // Import login from AuthService
@@ -137,12 +136,10 @@ const Login = () => {
         <div className="flex gap-3 justify-center">
           <button
             onClick={handleGoogleLogin}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100 cursor-pointer"
           >
-            <img src={googleLogo} alt="Google" className="w-5" /> Google
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100">
-            <img src={facebookLogo} alt="Facebook" className="w-5" /> Facebook
+            <img src={googleLogo} alt="Google" className="w-5" />
+            <span className="text-md font-medium text-gray-800">Google</span>
           </button>
         </div>
         <p className="mt-4 text-green-900 text-sm">

@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import poster3 from "../assets/poster3.svg";
 import poster2 from "../assets/poster2.svg";
 import poster1 from "../assets/poster1.svg";
-import contohLogo from "../assets/logo_mcd.png";
 import contohBg from "../assets/mcd.jpg";
 import PostCard from "../components/postcard";
 import RestoService from "../services/RestoService";

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Edit, Trash, Camera, Check, Pencil } from "lucide-react";
 import foodService from "../services/FoodService";
 import RestoService from "../services/RestoService";
+import { uploadRestaurantPhoto } from "../services/UploadService";
 
 const Owner = () => {
   const [foodData, setFoodData] = useState({
@@ -26,6 +27,7 @@ const Owner = () => {
   const [editField, setEditField] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
   const profilePhotoRef = useRef(null);
+  const addFoodRef = useRef(null);
 
   const token = localStorage.getItem("token");
   const username = localStorage.getItem("username");
@@ -118,20 +120,20 @@ const Owner = () => {
   const handleProfilePhotoChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
+
       // File size validation (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         showError("Photo size must be less than 2MB");
         e.target.value = null; // Reset file input
         return;
       }
-      
+
       setProfilePhoto(file);
-      
+
       // Show preview
       const reader = new FileReader();
       reader.onload = (e) => {
-        const previewImg = document.getElementById('profile-preview');
+        const previewImg = document.getElementById("profile-preview");
         if (previewImg) {
           previewImg.src = e.target.result;
         }
@@ -147,28 +149,30 @@ const Owner = () => {
     }
 
     try {
-      const formData = new FormData();
-      formData.append('photo', profilePhoto);
-      
-      const result = await RestoService.updateRestaurantPhoto(formData, token);
-      
+      // Use the UploadService instead of RestoService
+      const result = await uploadRestaurantPhoto(profilePhoto, token);
+
       if (result && result.message) {
-        showSuccess("Profile photo updated successfully");
-        
+        showSuccess("Restaurant photo updated successfully");
+
         // Update local state with new photo URL if returned by API
-        if (result.photoUrl) {
-          setProfile(prev => ({
+        if (result.photo) {
+          setProfile((prev) => ({
             ...prev,
             owner: {
               ...prev.owner,
               restaurant: {
                 ...prev.owner.restaurant,
-                photo: result.photoUrl
-              }
-            }
+                photo: result.photo,
+              },
+            },
           }));
+        } else {
+          // If no photo URL is returned, refresh the profile to get the latest data
+          const updatedProfile = await RestoService.getOwnerProfile(token);
+          setProfile(updatedProfile);
         }
-        
+
         // Reset file input and state
         setProfilePhoto(null);
         if (profilePhotoRef.current) {
@@ -176,25 +180,32 @@ const Owner = () => {
         }
       }
     } catch (err) {
-      console.error("Error updating profile photo:", err);
-      showError(err?.response?.data?.message || "Failed to update profile photo");
+      console.error("Error updating restaurant photo:", err);
+
+      // More detailed error logging
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
+      }
+
+      showError(err?.message || "Failed to update restaurant photo");
     }
   };
 
   const handleUpdateProfile = async () => {
     try {
       const { restaurant, ...ownerData } = profile.owner;
-      
+
       // Prepare data for update
       const updateData = {
         ...ownerData,
-        restaurantName: restaurant.name
+        restaurantName: restaurant.name,
       };
-      
+
       // Send update to backend
       const result = await RestoService.updateOwnerProfile(updateData, token);
       showSuccess(`Profile updated: ${result.message || "Success"}`);
-      
+
       // Reset edit field
       setEditField(null);
     } catch (err) {
@@ -306,6 +317,16 @@ const Owner = () => {
     }
   };
 
+  const handleUpdateFoodWithConfirmation = (e) => {
+    e.preventDefault();
+    const confirmed = window.confirm(
+      "Are you sure you want to update this food?"
+    );
+    if (confirmed) {
+      handleUpdateFood(e);
+    }
+  };
+
   const handleUpdateFood = async (e) => {
     e.preventDefault();
 
@@ -388,11 +409,8 @@ const Owner = () => {
       price: food.price,
       quantity: food.quantity,
     });
-    // Scroll to edit form
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth",
-    });
+
+    addFoodRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleEditToggle = (field) => {
@@ -464,7 +482,7 @@ const Owner = () => {
                 <Camera className="w-5 h-5 text-gray-700 cursor-pointer" />
               </button>
             </div>
-            
+
             {/* Show upload button when photo is selected */}
             {profilePhoto && (
               <button
@@ -475,7 +493,7 @@ const Owner = () => {
                 Upload New Photo
               </button>
             )}
-            
+
             <div className="w-full mt-8 px-6">
               <form className="space-y-4">
                 {/* Owner Name */}
@@ -666,84 +684,17 @@ const Owner = () => {
         Restaurant ID: {profile?.owner?.restaurant?.id || "Not available"}
       </div>
 
-      {/* Manage Menu Section */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Manage Menu</h2>
-        <div className="flex justify-between items-center mb-4">
-          <span>{menu.length} items found</span>
-          <button
-            onClick={loadMenu}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Refresh Menu
-          </button>
-        </div>
-        
-        {/* Menu Items as Cards */}
-        {menu.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No menu items available.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {menu.map((food) => (
-              <div 
-                key={food.id} 
-                className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition"
-              >
-                <div className="relative h-48 bg-gray-100">
-                  <img 
-                    src={food.photo || "https://via.placeholder.com/300x200?text=No+Image"} 
-                    alt={food.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-lg text-gray-800">{food.name}</h3>
-                  <div className="mt-2 space-y-1">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Type:</span> {food.type}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Price:</span> Rp {food.price.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Quantity:</span> {food.quantity} pcs
-                    </p>
-                  </div>
-                  <div className="mt-4 flex justify-end space-x-2">
-                    <button
-                      onClick={() => handleEditFood(food)}
-                      className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
-                      title="Edit"
-                    >
-                      <Edit size={16} className="mr-1" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteFood(food.id)}
-                      className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center"
-                      title="Delete"
-                    >
-                      <Trash size={16} className="mr-1" />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Add/Edit Food Section */}
-      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+      <div
+        ref={addFoodRef}
+        className="bg-gray-50 p-6 rounded-lg border border-gray-200"
+      >
         <h2 className="text-2xl font-semibold mb-4">
           {foodIdToUpdate ? "Edit Food" : "Add Food"}
         </h2>
         <form
-          onSubmit={foodIdToUpdate ? handleUpdateFood : handleAddFood}
-          className="space-y-4"
+          onSubmit={foodIdToUpdate ? handleUpdateFoodWithConfirmation : handleAddFood}
+    className="space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -820,18 +771,19 @@ const Owner = () => {
               className="w-full p-2 border border-gray-300 rounded-lg"
               required={!foodIdToUpdate} // Required for new food, optional for update
             />
-            
+
             {/* Preview for updating food photo */}
-            {foodIdToUpdate && menu.find(item => item.id === foodIdToUpdate)?.photo && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-600 mb-1">Current Photo:</p>
-                <img 
-                  src={menu.find(item => item.id === foodIdToUpdate).photo} 
-                  alt="Current food" 
-                  className="h-24 w-auto object-cover rounded border border-gray-300"
-                />
-              </div>
-            )}
+            {foodIdToUpdate &&
+              menu.find((item) => item.id === foodIdToUpdate)?.photo && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600 mb-1">Current Photo:</p>
+                  <img
+                    src={menu.find((item) => item.id === foodIdToUpdate).photo}
+                    alt="Current food"
+                    className="h-24 w-auto object-cover rounded border border-gray-300"
+                  />
+                </div>
+              )}
           </div>
           <div className="mt-4 flex justify-between items-center">
             <div>
@@ -846,7 +798,12 @@ const Owner = () => {
                   type="button"
                   onClick={() => {
                     setFoodIdToUpdate(null);
-                    setFoodData({ name: "", type: "", price: "", quantity: "" });
+                    setFoodData({
+                      name: "",
+                      type: "",
+                      price: "",
+                      quantity: "",
+                    });
                     setPhoto(null);
                     resetFileInput();
                   }}
@@ -856,18 +813,99 @@ const Owner = () => {
                 </button>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.removeItem("token");
-                window.location.href = "/";
-              }}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-800 transition cursor-pointer"
-            >
-              Sign Out
-            </button>
           </div>
         </form>
+      </div>
+
+      {/* Manage Menu Section */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Manage Menu</h2>
+        <div className="flex justify-between items-center mb-4">
+          <span>{menu.length} items found</span>
+          <button
+            onClick={loadMenu}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Refresh Menu
+          </button>
+        </div>
+
+        {/* Menu Items as Cards */}
+        {menu.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">No menu items available.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {menu.map((food) => (
+              <div
+                key={food.id}
+                className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition"
+              >
+                <div className="relative h-48 bg-gray-100">
+                  <img
+                    src={
+                      food.photo ||
+                      "https://via.placeholder.com/300x200?text=No+Image"
+                    }
+                    alt={food.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-lg text-gray-800">
+                    {food.name}
+                  </h3>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Type:</span> {food.type}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Price:</span> Rp{" "}
+                      {food.price.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Quantity:</span>{" "}
+                      {food.quantity} pcs
+                    </p>
+                  </div>
+                  <div className="mt-4 flex justify-end space-x-2">
+                    <button
+                      onClick={() => handleEditFood(food)}
+                      className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
+                      title="Edit"
+                    >
+                      <Edit size={16} className="mr-1" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFood(food.id)}
+                      className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center"
+                      title="Delete"
+                    >
+                      <Trash size={16} className="mr-1" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sign Out Button */}
+      <div className="mt-8 flex justify-center">
+        <button
+          type="button"
+          onClick={() => {
+            localStorage.removeItem("token");
+            window.location.href = "/";
+          }}
+          className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-800 transition cursor-pointer"
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   );
