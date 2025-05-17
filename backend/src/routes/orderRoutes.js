@@ -27,7 +27,7 @@ router.get('/cart', authenticate, async (req, res) => {
             include: {
                 model: Food,
                 as: 'food',
-                attributes: ['name', 'price', 'photo', 'type']
+                attributes: ['name', 'price', 'promo_price', 'photo', 'type']
             }
         });
 
@@ -40,6 +40,7 @@ router.get('/cart', authenticate, async (req, res) => {
             food_id: item.food_id,
             food_name: item.food?.name,
             food_price: item.food?.price,
+            promo_price: item.food?.promo_price, 
             food_type: item.food?.type,
             food_photo: item.food?.photo,
             restaurant_id: item.restaurant_id,
@@ -95,7 +96,7 @@ router.post('/remove/cart', authenticate, async (req, res) => {
 router.post('/book', authenticate, async (req, res) => {
     const { booking_code } = req.body;
     const user_id = req.user.user_id;
-    
+
     try {
         let total = 0;
 
@@ -111,7 +112,7 @@ router.post('/book', authenticate, async (req, res) => {
                 throw new Error(`Makanan dengan ID ${item.food_id} tidak ditemukan`);
             }
 
-            // Check apakah stok cukup
+            // Cek apakah stok cukup
             if (food.quantity < item.quantity) {
                 throw new Error(`Stok tidak cukup untuk makanan: ${item.food_id}. Tersedia: ${food.quantity}, Diminta: ${item.quantity}`);
             }
@@ -120,8 +121,9 @@ router.post('/book', authenticate, async (req, res) => {
             food.quantity -= item.quantity;
             await food.save();
 
-            // Hitung total per item
-            const itemTotal = food.price * item.quantity;
+            // Gunakan harga promo jika tersedia
+            const effectivePrice = food.promo_price ?? food.price;
+            const itemTotal = effectivePrice * item.quantity;
             total += itemTotal;
 
             // Simpan ke Transaction
@@ -131,6 +133,7 @@ router.post('/book', authenticate, async (req, res) => {
                 restaurant_id: item.restaurant_id,
                 food_id: item.food_id,
                 total: itemTotal,
+                price: effectivePrice,
                 status: 0,
                 date: new Date()
             });
@@ -138,14 +141,15 @@ router.post('/book', authenticate, async (req, res) => {
 
         await Promise.all(transactionPromises);
 
-        // Hapus semua item cart
+        // Hapus semua item dari cart setelah booking
         await Cart.destroy({ where: { booking_code } });
 
+        // Kirim email ke user
         const user = await User.findOne({ where: { user_id } });
         if (user?.email) {
             await sendBookingConfirmation(user.email, booking_code, total);
         }
-        
+
         res.status(201).json({ message: "Booking Berhasil", total });
     } catch (err) {
         console.error('Booking error:', err);

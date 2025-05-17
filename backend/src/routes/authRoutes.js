@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const axios = require('axios');
 
 const { Users, User, Restaurant } = require('../models');
-const sendOTP = require('../utils/mailer');
+const { sendOTP } = require('../utils/mailer');
 const { verifyResetToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();

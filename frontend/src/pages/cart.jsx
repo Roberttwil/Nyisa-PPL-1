@@ -28,8 +28,8 @@ const Cart = () => {
         const items = Array.isArray(data)
           ? data
           : Array.isArray(data.cart)
-          ? data.cart
-          : null;
+            ? data.cart
+            : null;
 
         if (!items) {
           throw new Error("Invalid cart data.");
@@ -44,7 +44,7 @@ const Cart = () => {
             acc.push({ ...item });
           }
           return acc;
-        }, []); 
+        }, []);
 
         setCartItems(groupedItems);
       } catch (error) {
@@ -73,26 +73,26 @@ const Cart = () => {
   const handleBooking = async () => {
     try {
       await OrderService.bookOrder(bookingCode);
-  
+
       // Save purchase history to localStorage with restaurant ID and other details
       const purchaseHistory = cartItems.map((item) => ({
         name: item.food_name,
         photo: item.food_photo,
-        total: item.food_price * item.quantity,
+        total: (item.promo_price ?? item.food_price) * item.quantity,
         date: new Date().toLocaleDateString(),
         restaurantId: activeRestoId, // Storing the restaurant ID
         foodId: item.food_id,       // Storing the food ID
       }));
-  
+
       // Get existing history from localStorage
       const existingHistory = JSON.parse(localStorage.getItem("purchaseHistory")) || [];
-  
+
       // Add new history to existing data
       const updatedHistory = [...existingHistory, ...purchaseHistory];
-  
+
       // Store the updated history
       localStorage.setItem("purchaseHistory", JSON.stringify(updatedHistory));
-  
+
       alert("Order booked successfully!");
       setCartItems([]);
     } catch (error) {
@@ -100,10 +100,11 @@ const Cart = () => {
     }
   };
 
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.food_price * item.quantity,
-    0
-  );
+  const total = cartItems.reduce((sum, item) => {
+    const effectivePrice = item.promo_price ?? item.food_price;
+    return sum + effectivePrice * item.quantity;
+  }, 0);
+
 
   if (loading) return <p>Loading cart...</p>;
 
@@ -139,13 +140,29 @@ const Cart = () => {
                     alt={item.food_name}
                     className="w-full h-40 object-cover rounded-lg mt-2"
                   />
-                  <p className="mt-2">Unit Price: Rp {item.food_price?.toLocaleString("id-ID")}</p>
-                  <p>Quantity: {item.quantity}</p>
+                  <p className="mt-2 text-sm font-medium">
+                    Unit Price:{" "}
+                    {item.promo_price ? (
+                      <>
+                        <span className="line-through text-gray-500 mr-2">
+                          Rp {item.food_price?.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-green-700">
+                          Rp {item.promo_price?.toLocaleString("id-ID")}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-bold ">
+                        Rp {item.food_price?.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                  </p>
+                  <p className="font-medium text-sm">Quantity: {item.quantity}</p>
                 </div>
                 <div className="flex justify-between items-center p-4">
                   <button
                     onClick={() => handleRemove(item.food_id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 cursor-pointer"
+                    className="bg-red-500 text-white px-4 font-medium py-2 rounded-lg hover:bg-red-600 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -162,7 +179,7 @@ const Cart = () => {
           <h3 className="text-xl font-bold">Total: Rp {total.toLocaleString("id-ID")}</h3>
           <button
             onClick={handleBooking}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer"
+            className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer font-medium"
           >
             Book Now
           </button>

@@ -15,7 +15,7 @@ const sendOTP = async (to, otp) => {
         subject: 'Your OTP Code - Nyisa App',
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-          <h2 style="color: #2F80ED;">Your OTP Code</h2>
+          <h2 style="color: #27AE60;">Your OTP Code</h2>
           <p>Hello,</p>
           <p>Your one-time password (OTP) is:</p>
           <h1 style="text-align: left; color: #333;">${otp}</h1>
