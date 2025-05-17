@@ -122,7 +122,7 @@ const FoodList = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedRole = localStorage.getItem("role");
-    
+
     // Set user role from localStorage
     if (storedRole) {
       setUserRole(storedRole);
@@ -178,10 +178,17 @@ const FoodList = () => {
                 <h2 className="text-lg font-semibold truncate">{food.name}</h2>
                 <div className="text-sm mt-2 space-y-1">
                   <p>Type: {food.type}</p>
-                  <p>Price: Rp{food.price}</p>
+                  {food.promo_price ? (
+                    <p>
+                      <span className="line-through text-gray-500 mr-2">Rp{food.price}</span>
+                      <span className="text-green-700 font-bold">Rp{food.promo_price}</span>
+                    </p>
+                  ) : (
+                    <p>Price: Rp{food.price}</p>
+                  )}
                   <p>Quantity: {food.quantity}</p>
                 </div>
-                
+
                 {/* Only show quantity controls for users with role 'user' */}
                 {isUserRole && (
                   <div className="flex justify-center items-center gap-4 py-4 mt-auto">
