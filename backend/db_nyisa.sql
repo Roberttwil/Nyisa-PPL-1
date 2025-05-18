@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2025 at 04:23 PM
+-- Generation Time: May 16, 2025 at 03:23 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -67,7 +67,8 @@ CREATE TABLE `food` (
   `name` varchar(255) NOT NULL,
   `type` varchar(255) NOT NULL,
   `price` int(11) NOT NULL,
-  `photo` varchar(255) NOT NULL,
+  `promo_price` int(11) DEFAULT NULL,
+  `photo` varchar(255) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
   `restaurant_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -76,22 +77,22 @@ CREATE TABLE `food` (
 -- Dumping data for table `food`
 --
 
-INSERT INTO `food` (`food_id`, `name`, `type`, `price`, `photo`, `quantity`, `restaurant_id`) VALUES
-(1, 'Oriental Ceramic Pizza', 'Main Course', 53478, 'https://picsum.photos/seed/Zgyw6naP6/573/2481', 37, 4),
-(2, 'Bespoke Plastic Pizza', 'Main Course', 89454, 'https://picsum.photos/seed/im5CZxC8/643/2593', 16, 3),
-(3, 'Handmade Granite Bike', 'Main Course', 99543, 'https://picsum.photos/seed/Ck4WNtIVj2/3822/843', 7, 3),
-(4, 'Sleek Ceramic Pants', 'Snack', 26256, 'https://loremflickr.com/932/731?lock=2306681204342106', 3, 5),
-(5, 'Licensed Bronze Ball', 'Snack', 69332, 'https://loremflickr.com/3460/2645?lock=6081097202074361', 21, 1),
-(6, 'Licensed Concrete Shoes', 'Main Course', 43091, 'https://picsum.photos/seed/Y1cOvpoBuh/258/3956', 45, 3),
-(7, 'Gorgeous Marble Ball', 'Snack', 77555, 'https://loremflickr.com/3973/2972?lock=8321368911983550', 36, 1),
-(8, 'Sleek Concrete Tuna', 'Main Course', 93360, 'https://picsum.photos/seed/uDYx3/811/3762', 13, 5),
-(9, 'Unbranded Concrete Ball', 'Drink', 85382, 'https://picsum.photos/seed/A1QsGKdE/2440/3977', 29, 3),
-(10, 'Electronic Cotton Table', 'Drink', 56943, 'https://loremflickr.com/21/1633?lock=3340469842796603', 37, 1),
-(11, 'Oriental Steel Ball', 'Drink', 22818, 'https://loremflickr.com/3084/370?lock=4713116069184932', 11, 2),
-(12, 'Recycled Bronze Bacon', 'Snack', 87516, 'https://picsum.photos/seed/pxbRyI6/1996/2483', 44, 1),
-(13, 'Oriental Gold Hat', 'Main Course', 81997, 'https://picsum.photos/seed/AARtX/402/1032', 47, 5),
-(14, 'Elegant Bronze Pants', 'Snack', 46498, 'https://picsum.photos/seed/plEmmaWFe/2559/795', 43, 4),
-(15, 'Awesome Bamboo Sausages', 'Drink', 35100, 'https://picsum.photos/seed/jbipF6/669/515', 21, 1);
+INSERT INTO `food` (`food_id`, `name`, `type`, `price`, `promo_price`, `photo`, `quantity`, `restaurant_id`) VALUES
+(1, 'Oriental Ceramic Pizza', 'Main Course', 53478, NULL, 'https://picsum.photos/seed/Zgyw6naP6/573/2481', 37, 4),
+(2, 'Bespoke Plastic Pizza', 'Main Course', 89454, NULL, 'https://picsum.photos/seed/im5CZxC8/643/2593', 16, 3),
+(3, 'Handmade Granite Bike', 'Main Course', 99543, NULL, 'https://picsum.photos/seed/Ck4WNtIVj2/3822/843', 7, 3),
+(4, 'Sleek Ceramic Pants', 'Snack', 26256, NULL, 'https://loremflickr.com/932/731?lock=2306681204342106', 3, 5),
+(5, 'Licensed Bronze Ball', 'Snack', 69332, NULL, 'https://loremflickr.com/3460/2645?lock=6081097202074361', 21, 1),
+(6, 'Licensed Concrete Shoes', 'Main Course', 43091, NULL, 'https://picsum.photos/seed/Y1cOvpoBuh/258/3956', 45, 3),
+(7, 'Gorgeous Marble Ball', 'Snack', 77555, NULL, 'https://loremflickr.com/3973/2972?lock=8321368911983550', 36, 1),
+(8, 'Sleek Concrete Tuna', 'Main Course', 93360, NULL, 'https://picsum.photos/seed/uDYx3/811/3762', 13, 5),
+(9, 'Unbranded Concrete Ball', 'Drink', 85382, NULL, 'https://picsum.photos/seed/A1QsGKdE/2440/3977', 29, 3),
+(10, 'Electronic Cotton Table', 'Drink', 56943, NULL, 'https://loremflickr.com/21/1633?lock=3340469842796603', 37, 1),
+(11, 'Oriental Steel Ball', 'Drink', 22818, NULL, 'https://loremflickr.com/3084/370?lock=4713116069184932', 11, 2),
+(12, 'Recycled Bronze Bacon', 'Snack', 87516, NULL, 'https://picsum.photos/seed/pxbRyI6/1996/2483', 44, 1),
+(13, 'Oriental Gold Hat', 'Main Course', 81997, NULL, 'https://picsum.photos/seed/AARtX/402/1032', 47, 5),
+(14, 'Elegant Bronze Pants', 'Snack', 46498, NULL, 'https://picsum.photos/seed/plEmmaWFe/2559/795', 43, 4),
+(15, 'Awesome Bamboo Sausages', 'Drink', 35100, NULL, 'https://picsum.photos/seed/jbipF6/669/515', 21, 1);
 
 -- --------------------------------------------------------
 
@@ -105,7 +106,7 @@ CREATE TABLE `restaurant` (
   `address` varchar(255) NOT NULL,
   `phone` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `restaurant_type` varchar(255) NOT NULL,
+  `restaurant_type` varchar(255) DEFAULT NULL,
   `photo` varchar(255) NOT NULL,
   `rating` float NOT NULL,
   `user_rating_count` int(11) DEFAULT NULL,
@@ -179,7 +180,7 @@ CREATE TABLE `user` (
   `phone` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
-  `photo` varchar(255) NOT NULL,
+  `photo` varchar(255) DEFAULT NULL,
   `status` int(11) NOT NULL,
   `username` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -194,7 +195,8 @@ INSERT INTO `user` (`user_id`, `name`, `phone`, `email`, `address`, `photo`, `st
 (3, 'Lauren Mosciski', '(933) 235-1277 x31937', 'Sibyl_Spinka@gmail.com', '4838 Kilback Cove', '', 0, 'Rubie.Mills47'),
 (4, 'Judy Schiller', '831.814.6454', 'Jessika.Runolfsdottir43@yahoo.com', '681 Flossie Drives', '', 1, 'Trenton65'),
 (5, 'Leah Swift', '585-436-6563 x63324', 'Madalyn40@yahoo.com', '307 Schmeler Pines', '', 0, 'Ettie_Leuschke47'),
-(8, 'Darren Christian', '081234567890', 'darrenliharja@gmail.com', 'Jl. Dipatiukur No. 10, Bandung', 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/46a80156-130d-4804-b377-d621be2ce20a.jpeg', 0, 'dar');
+(8, 'Darren Christian', '081234567890', 'darrenliharja@gmail.com', 'Jl. Dipatiukur No. 10, Bandung', 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/46a80156-130d-4804-b377-d621be2ce20a.jpeg', 0, 'dar'),
+(19, 'DARREN LIHARJA 1', '', 'darren22002@mail.unpad.ac.id', '', '', 0, 'darren22002@mail.unpad.ac.id');
 
 -- --------------------------------------------------------
 
@@ -216,7 +218,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`username`, `password`, `otp`, `otp_expires_at`, `is_verified`) VALUES
 ('dar', '$2b$10$5kqaNzKZqQ0o1gl12gaY.u31udnYd2OnhAcgRo8d2HRS1mK0OJN.e', NULL, NULL, 1),
-('darren22002@mail.unpad.ac.id', '$2b$10$hTj1Bi6EVfgKBt0todUlSuRu.vbZihb53OVJedNZzxjBpGMEoh/GG', '937272', '2025-05-12 14:25:39', 0),
+('darren22002@mail.unpad.ac.id', '$2b$10$wOU.d8cEqrvfOXW/q3apHOHqYwMEGB5zTOoi04VHZOIwP6/7j4Am6', NULL, NULL, 1),
+('darrenliharja@gmail.com', '$2b$10$B0vyEl8GQj6b.cCAZMwtHOjmyc0ZYgYgD3SOSyvCmltrznXD.J27e', '277260', '2025-05-16 07:50:06', 1),
 ('Eldon75', '$2b$10$puave1Ii2im3IwOmfEMEWuzzGmXuZNTPErQk8Tjfrcg4uYA41x2sy', NULL, NULL, 0),
 ('Ettie_Leuschke47', '$2b$10$Z8uq87gfthd4SLsTUJg8Qe/4LLqXbovh/fXjhA/.DFkJ0e1ucpqbi', NULL, NULL, 0),
 ('Orrin25', '$2b$10$.PL5r.eh6z1VC1mauScr/OA9/WwxYwHh2Oe6u13ZfYG7IBn7BxgHm', NULL, NULL, 0),
@@ -297,7 +300,7 @@ ALTER TABLE `transaction`
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

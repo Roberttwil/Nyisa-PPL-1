@@ -21,6 +21,10 @@ const Food = sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false
         },
+        promo_price: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
         photo: {
             type: DataTypes.STRING,
             allowNull: true

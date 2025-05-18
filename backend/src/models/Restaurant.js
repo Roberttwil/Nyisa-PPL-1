@@ -40,7 +40,7 @@ const Restaurant = sequelize.define(
         },
         user_rating_count: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         longitude: {
             type: DataTypes.STRING,
