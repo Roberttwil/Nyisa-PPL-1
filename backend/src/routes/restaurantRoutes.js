@@ -172,7 +172,7 @@ router.get('/all', async (req, res) => {
                 'photo',
                 'rating'
             ],
-            raw: true 
+            raw: true
         });
 
         let results = restaurants;
@@ -226,7 +226,7 @@ router.put('/rate', authenticate, async (req, res) => {
 
         const rating_count = restaurant.rating * restaurant.user_rating_count;
         const new_user_count = restaurant.user_rating_count + 1;
-        const new_rating = (rating_count + rating)  / new_user_count;
+        const new_rating = (rating_count + rating) / new_user_count;
 
         await Restaurant.update({
             rating: new_rating,
@@ -239,5 +239,47 @@ router.put('/rate', authenticate, async (req, res) => {
         res.status(500).json({ message: 'Failed to rate restaurant' });
     }
 })
+
+router.get('/restaurant/transactions', authenticate, restaurantOnly, async (req, res) => {
+    try {
+        const restaurant_id = req.user.restaurant_id;
+
+        const transactions = await Transaction.findAll({
+            where: { restaurant_id },
+            include: [
+                {
+                    model: Food,
+                    as: 'food',
+                    attributes: ['name', 'type', 'photo', 'price']
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['name', 'email', 'phone']
+                }
+            ],
+            order: [['date', 'DESC']]
+        });
+
+        if (!transactions.length) {
+            return res.status(404).json({ message: 'No transactions found for this restaurant' });
+        }
+
+        const formatted = transactions.map(tx => ({
+            transaction_id: tx.transaction_id,
+            booking_code: tx.booking_code,
+            total: tx.total,
+            status: tx.status,
+            date: tx.date,
+            food: tx.food,
+            user: tx.user
+        }));
+
+        res.json({ transactions: formatted });
+    } catch (err) {
+        console.error('Fetch restaurant transactions error:', err);
+        res.status(500).json({ message: 'Failed to fetch transactions' });
+    }
+});
 
 module.exports = router;
