@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { Cart, Transaction, Food, User } = require('../models')
 const { sendBookingConfirmation } = require('../utils/mailer');
 
@@ -40,7 +40,7 @@ router.get('/cart', authenticate, async (req, res) => {
             food_id: item.food_id,
             food_name: item.food?.name,
             food_price: item.food?.price,
-            promo_price: item.food?.promo_price, 
+            promo_price: item.food?.promo_price,
             food_type: item.food?.type,
             food_photo: item.food?.photo,
             restaurant_id: item.restaurant_id,
@@ -166,5 +166,38 @@ router.get('/booking-code', authenticate, (req, res) => {
         res.status(500).json({ error: err.message });
     }
 })
+
+// PATCH /api/orders/verify/:transaction_id
+router.patch('/verify/:transaction_id', authenticate, restaurantOnly, async (req, res) => {
+    const { transaction_id } = req.params;
+    const restaurant_id = req.user.restaurant_id;
+
+    try {
+        // Cek apakah transaksi benar-benar milik restoran yang sedang login
+        const transaction = await Transaction.findOne({
+            where: {
+                transaction_id,
+                restaurant_id
+            }
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found or not authorized' });
+        }
+
+        if (transaction.status === 1) {
+            return res.status(400).json({ message: 'Transaction already verified' });
+        }
+
+        transaction.status = 1;
+        await transaction.save();
+
+        res.json({ message: 'Transaction verified successfully', transaction });
+    } catch (err) {
+        console.error('Transaction verification error:', err);
+        res.status(500).json({ message: 'Internal server error verifying transaction' });
+    }
+});
+
 
 module.exports = router

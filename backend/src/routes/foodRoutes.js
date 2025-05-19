@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const { Food, Restaurant, User } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
+const axios = require('axios');
 
 const router = express.Router();
 
@@ -158,6 +159,17 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
     } catch (err) {
         console.error('Delete food error:', err);
         res.status(500).json({ message: 'Failed to delete food' });
+    }
+});
+
+router.get('/recommend/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const response = await axios.get(`http://127.0.0.1:8000/recommend/${id}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Recommendation service failed' });
     }
 });
 
