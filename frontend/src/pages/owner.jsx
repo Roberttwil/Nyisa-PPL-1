@@ -25,6 +25,7 @@ const Owner = () => {
     photo: "",
   });
   const [editField, setEditField] = useState(null);
+  const [formData, setFormData] = useState({});
   const [profilePhoto, setProfilePhoto] = useState(null);
   const profilePhotoRef = useRef(null);
   const addFoodRef = useRef(null);
@@ -39,6 +40,7 @@ const Owner = () => {
         try {
           const result = await RestoService.getOwnerProfile(token);
           setProfile(result);
+          setFormData(result); // Initialize form data with profile
           console.log("Fetched profile:", result);
         } catch (err) {
           console.error("Failed to load owner profile:", err);
@@ -79,41 +81,84 @@ const Owner = () => {
     }
   };
 
+  // Handle input changes for both owner and restaurant fields
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
+    setFormData((prev) => {
+      const newFormData = { ...prev };
 
-    // If changing restaurant name
-    if (name === "restaurantName") {
-      setProfile((prev) => ({
-        ...prev,
-        owner: {
-          ...prev.owner,
-          restaurant: {
-            ...prev.owner.restaurant,
-            name: value,
-          },
-        },
-      }));
+      // Create nested structure if it doesn't exist
+      if (!newFormData.owner) newFormData.owner = {};
+      if (!newFormData.owner.restaurant) newFormData.owner.restaurant = {};
+
+      // Handle special fields
+      if (name === "restaurantName") {
+        newFormData.owner.restaurant.name = value;
+      } else {
+        newFormData.owner[name] = value;
+      }
+
+      return newFormData;
+    });
+  };
+
+  const handleEditToggle = (field) => {
+    if (editField === field) {
+      handleUpdateProfile(field);
+    } else {
+      setEditField(field);
     }
-    // If changing owner name
-    else if (name === "ownerName") {
-      setProfile((prev) => ({
-        ...prev,
-        owner: {
-          ...prev.owner,
-          name: value,
-        },
-      }));
-    }
-    // If changing other owner fields
-    else if (name in profile.owner) {
-      setProfile((prev) => ({
-        ...prev,
-        owner: {
-          ...prev.owner,
-          [name]: value,
-        },
-      }));
+  };
+
+  const handleUpdateProfile = async (field) => {
+    try {
+      let updateData = {};
+
+      // Adjust data structure for API
+      if (field === "restaurantName") {
+        updateData = { name: formData.owner.restaurant.name };
+      } else {
+        updateData = { [field]: formData.owner[field] };
+      }
+
+      console.log("Updating profile field:", field);
+      console.log(
+        "With value:",
+        field === "restaurantName"
+          ? formData.owner.restaurant.name
+          : formData.owner[field]
+      );
+
+      const result = await RestoService.updateOwnerProfile(updateData, token);
+
+      // Update local profile state with new value
+      setProfile((prev) => {
+        const newProfile = { ...prev };
+
+        if (field === "restaurantName") {
+          if (!newProfile.owner) newProfile.owner = {};
+          if (!newProfile.owner.restaurant) newProfile.owner.restaurant = {};
+          newProfile.owner.restaurant.name = formData.owner.restaurant.name;
+        } else {
+          if (!newProfile.owner) newProfile.owner = {};
+          newProfile.owner[field] = formData.owner[field];
+        }
+
+        return newProfile;
+      });
+
+      setEditField(null);
+      showSuccess(`Profile updated: ${result.message || "Success"}`);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+
+      // More detailed error messages
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
+      }
+
+      showError(err?.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -189,28 +234,6 @@ const Owner = () => {
       }
 
       showError(err?.message || "Failed to update restaurant photo");
-    }
-  };
-
-  const handleUpdateProfile = async () => {
-    try {
-      const { restaurant, ...ownerData } = profile.owner;
-
-      // Prepare data for update
-      const updateData = {
-        ...ownerData,
-        restaurantName: restaurant.name,
-      };
-
-      // Send update to backend
-      const result = await RestoService.updateOwnerProfile(updateData, token);
-      showSuccess(`Profile updated: ${result.message || "Success"}`);
-
-      // Reset edit field
-      setEditField(null);
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      showError(err?.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -413,15 +436,6 @@ const Owner = () => {
     addFoodRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleEditToggle = (field) => {
-    if (editField === field) {
-      // Save changes when Check is pressed
-      handleUpdateProfile();
-    } else {
-      setEditField(field); // Activate edit mode
-    }
-  };
-
   // Reset file input after submit
   const resetFileInput = () => {
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -435,6 +449,63 @@ const Owner = () => {
     if (profilePhotoRef.current) {
       profilePhotoRef.current.click();
     }
+  };
+
+  // Render a form field with editable capability
+  const renderField = (label, fieldPath, isRestaurantField = false) => {
+    // Extract field name for editField state management
+    const fieldName = fieldPath.split(".").pop();
+
+    // Different value handling for owner vs restaurant fields
+    const getValue = () => {
+      if (isRestaurantField) {
+        return profile?.owner?.restaurant?.[fieldName] || "";
+      }
+      return profile?.owner?.[fieldName] || "";
+    };
+
+    const getFormValue = () => {
+      if (isRestaurantField) {
+        return formData?.owner?.restaurant?.[fieldName] || "";
+      }
+      return formData?.owner?.[fieldName] || "";
+    };
+
+    // Input name based on field type
+    const inputName = isRestaurantField ? "restaurantName" : fieldName;
+
+    return (
+      <div className="py-3">
+        <label className="text-gray-600 font-semibold block mb-1">
+          {label}
+        </label>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {editField === fieldName ? (
+              <input
+                name={inputName}
+                value={getFormValue()}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
+              />
+            ) : (
+              <p className="text-lg text-gray-900">{getValue() || "Not set"}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => handleEditToggle(fieldName)}
+            className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
+          >
+            {editField === fieldName ? (
+              <Check size={20} />
+            ) : (
+              <Pencil size={20} />
+            )}
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -497,170 +568,19 @@ const Owner = () => {
             <div className="w-full mt-8 px-6">
               <form className="space-y-4">
                 {/* Owner Name */}
-                <div className="py-3">
-                  <label className="text-gray-600 font-semibold block mb-1">
-                    Owner Name
-                  </label>
-                  <div className="flex items-center">
-                    {editField === "name" ? (
-                      <input
-                        name="name"
-                        value={profile.owner.name || ""}
-                        onChange={handleProfileChange}
-                        className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                      />
-                    ) : (
-                      <p className="text-lg text-gray-900 w-full">
-                        {profile.owner.name || "Not set"}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleEditToggle("name")}
-                      className="ml-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                    >
-                      {editField === "name" ? (
-                        <Check size={20} />
-                      ) : (
-                        <Pencil size={20} />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                {renderField("Owner Name", "owner.name")}
 
                 {/* Email */}
-                <div className="py-3 flex items-center justify-between">
-                  <div className="w-full">
-                    <label className="text-gray-600 font-semibold block mb-1">
-                      Email
-                    </label>
-                    <div className="flex items-center">
-                      {editField === "email" ? (
-                        <input
-                          name="email"
-                          value={profile.owner.email || ""}
-                          onChange={handleProfileChange}
-                          className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                        />
-                      ) : (
-                        <p className="text-lg text-gray-900 w-full">
-                          {profile.owner.email || "Not set"}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEditToggle("email")}
-                        className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
-                      >
-                        {editField === "email" ? (
-                          <Check size={20} />
-                        ) : (
-                          <Pencil size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {renderField("Email", "owner.email")}
 
                 {/* Restaurant Name */}
-                <div className="py-3">
-                  <label className="text-gray-600 font-semibold block mb-1">
-                    Restaurant Name
-                  </label>
-                  <div className="flex items-center">
-                    {editField === "restaurantName" ? (
-                      <input
-                        name="restaurantName"
-                        value={profile.owner.restaurant.name || ""}
-                        onChange={handleProfileChange}
-                        className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                      />
-                    ) : (
-                      <p className="text-lg text-gray-900 w-full">
-                        {profile.owner.restaurant.name || "Not set"}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleEditToggle("restaurantName")}
-                      className="ml-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                    >
-                      {editField === "restaurantName" ? (
-                        <Check size={20} />
-                      ) : (
-                        <Pencil size={20} />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                {renderField("Restaurant Name", "owner.restaurant.name", true)}
 
                 {/* Phone */}
-                <div className="py-3 flex items-center justify-between">
-                  <div className="w-full">
-                    <label className="text-gray-600 font-semibold block mb-1">
-                      Phone
-                    </label>
-                    <div className="flex items-center">
-                      {editField === "phone" ? (
-                        <input
-                          name="phone"
-                          value={profile.owner.phone || ""}
-                          onChange={handleProfileChange}
-                          className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                        />
-                      ) : (
-                        <p className="text-lg text-gray-900 w-full">
-                          {profile.owner.phone || "Not set"}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEditToggle("phone")}
-                        className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
-                      >
-                        {editField === "phone" ? (
-                          <Check size={20} />
-                        ) : (
-                          <Pencil size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {renderField("Phone", "owner.phone")}
 
                 {/* Address */}
-                <div className="py-3 flex items-center justify-between">
-                  <div className="w-full">
-                    <label className="text-gray-600 font-semibold block mb-1">
-                      Address
-                    </label>
-                    <div className="flex items-center">
-                      {editField === "address" ? (
-                        <input
-                          name="address"
-                          value={profile.owner.address || ""}
-                          onChange={handleProfileChange}
-                          className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                        />
-                      ) : (
-                        <p className="text-lg text-gray-900 w-full">
-                          {profile.owner.address || "Not set"}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEditToggle("address")}
-                        className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
-                      >
-                        {editField === "address" ? (
-                          <Check size={20} />
-                        ) : (
-                          <Pencil size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {renderField("Address", "owner.address")}
 
                 {/* Rating - Read Only */}
                 <div className="py-3">
@@ -693,8 +613,10 @@ const Owner = () => {
           {foodIdToUpdate ? "Edit Food" : "Add Food"}
         </h2>
         <form
-          onSubmit={foodIdToUpdate ? handleUpdateFoodWithConfirmation : handleAddFood}
-    className="space-y-4"
+          onSubmit={
+            foodIdToUpdate ? handleUpdateFoodWithConfirmation : handleAddFood
+          }
+          className="space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
