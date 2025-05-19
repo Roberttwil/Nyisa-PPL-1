@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getAllRestaurants } from "../services/LocationService";
 import CustomMarker from "../components/customMarker";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+// import L from "leaflet";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({

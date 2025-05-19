@@ -141,7 +141,7 @@ function Navbar() {
         {isLoggedIn && userProfile ? (
           <button
             onClick={handleProfileClick}
-            className="flex items-center space-x-2 px-3 py-2 rounded-full hover:bg-gray-100 transition text-sm md:text-base"
+            className="flex items-center space-x-2 px-3 py-2 rounded-full  hover:bg-[#D9E1D0] cursor-pointer transition text-sm md:text-base"
           >
             <img
               src={userProfile.photo || "https://via.placeholder.com/40"}
