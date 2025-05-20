@@ -25,3 +25,13 @@ export const updateProfile = async (profileData) => {
     throw error;
   }
 };
+
+export const getTransactionHistory = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/transactions`, getAuthHeader());
+    return response.data.transactions;
+  } catch (error) {
+    console.error('Failed to fetch transaction history:', error);
+    throw error;
+  }
+};

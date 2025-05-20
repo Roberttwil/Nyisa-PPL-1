@@ -64,7 +64,7 @@ router.get('/transactions', authenticate, async (req, res) => {
                 {
                     model: Restaurant,
                     as: 'restaurant',
-                    attributes: ['name', 'restaurant_type']
+                    attributes: ['name', 'restaurant_type', 'restaurant_id']
                 }
             ],
             order: [['date', 'DESC']]

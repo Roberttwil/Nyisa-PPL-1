@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = 'http://localhost:5000/api/restaurants';
+const API_URL = "http://localhost:5000/api/restaurants";
 
 const RestoService = {
   getRestaurants: async (page = 1, limit = 10, filters = {}) => {
@@ -10,12 +10,12 @@ const RestoService = {
         limit,
       };
 
-      if (filters.search && filters.search.trim() !== '') {
+      if (filters.search && filters.search.trim() !== "") {
         params.search = filters.search.trim();
       }
 
       if (filters.type && filters.type.length > 0) {
-        params.type = filters.type.join(',');
+        params.type = filters.type.join(",");
       }
 
       if (filters.minRating) {
@@ -25,7 +25,7 @@ const RestoService = {
       const response = await axios.get(`${API_URL}/cards`, { params });
       return response.data;
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error("Error fetching restaurants:", error);
       throw error;
     }
   },
@@ -39,7 +39,7 @@ const RestoService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching owner profile:', error);
+      console.error("Error fetching owner profile:", error);
       throw error;
     }
   },
@@ -49,35 +49,51 @@ const RestoService = {
       const response = await axios.put(`${API_URL}/profile`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
     } catch (error) {
-      console.error('Error updating owner profile:', error);
+      console.error("Error updating owner profile:", error);
       throw error;
     }
   },
 
   // Fungsi baru untuk memberikan rating ke restaurant
-  rateRestaurant: async (restaurantId, rating, token) => {
+  rateRestaurant: async (restaurant_id, rating, token) => {
+    console.log("Sending rating request with data:");
+    console.log("restaurant_id:", restaurant_id);
+    console.log("rating:", rating);
+    console.log("token:", token);
+
     try {
       const response = await axios.put(
-        `${API_URL}/rate`, 
-        { 
-          restaurant_id: restaurantId,
-          rating: rating 
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+        "http://localhost:5000/api/restaurants/rate",
+        { restaurant_id: Number(restaurant_id), rating: Number(rating) },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      return response.data;
+      console.log("Rating response:", response.data);
+      return response;
     } catch (error) {
-      console.error('Error rating restaurant:', error);
+      console.error(
+        "Error while rating restaurant:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+
+   getRestaurantTransactions: async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${API_URL}/restaurant/transactions`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.transactions;
+    } catch (error) {
+      console.error('Failed to fetch transaction history:', error);
       throw error;
     }
   },

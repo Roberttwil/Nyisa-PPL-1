@@ -112,9 +112,9 @@ const Cart = () => {
     <div className="flex flex-col min-h-screen max-w-6xl mx-auto px-4 py-8">
       {/* Header Section */}
       <div className="flex flex-row items-center justify-between w-full mb-6">
-        <h1 className="text-2xl font-bold">Your Cart</h1>
+        <h1 className="text-2xl md:text-2xl font-bold">Your Cart</h1>
         {cartItems.length > 0 && (
-          <p className="mt-3 font-bold text-2xl text-gray-700">
+          <p className="font-bold text-xl md:text-2xl text-gray-700">
             Booking Code: <span className="text-blue-600">{bookingCode}</span>
           </p>
         )}

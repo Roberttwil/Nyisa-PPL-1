@@ -147,16 +147,14 @@ function Navbar() {
             </button>
           )}
 
-          {!isRestaurant && (
-            <button
-              onClick={() => handleNavClick("/history")}
-              className={`flex items-center gap-1 hover:underline cursor-pointer ${
-                isActive("/history") ? "font-extrabold" : ""
-              }`}
-            >
-              <History size={16} /> History
-            </button>
-          )}
+          <button
+            onClick={() => handleNavClick("/history")}
+            className={`flex items-center gap-1 hover:underline cursor-pointer ${
+              isActive("/history") ? "font-extrabold" : ""
+            }`}
+          >
+            <History size={16} /> History
+          </button>
         </div>
       </div>
 

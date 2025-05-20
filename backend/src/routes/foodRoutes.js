@@ -166,7 +166,7 @@ router.get('/recommend/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        const response = await axios.get(`http://127.0.0.1:8000/recommend/${id}`);
+        const response = await axios.get(`http://127.0.0.1:8000/api/foods/recommend/${id}`);
         res.json(response.data);
     } catch (error) {
         res.status(500).json({ error: 'Recommendation service failed' });

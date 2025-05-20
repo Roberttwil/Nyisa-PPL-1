@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -11,7 +12,15 @@ import pandas as pd
 
 app = FastAPI() 
 
-DATABASE_URL = "mysql+aiomysql://user:user@localhost:3306/db_nyisa"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # untuk development, nanti bisa diganti spesifik origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+DATABASE_URL = "mysql+aiomysql://root@localhost:3307/db_nyisa"
 
 Base = declarative_base()
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -57,7 +66,7 @@ async def load_data():
 def root():
     return {"message": "HALO API FROM MICROSEVICE!"}
 
-@app.get('/recommend/{id}')
+@app.get('/api/foods/recommend/{id}')
 async def recommend(id: int):
     global df, similarity
     

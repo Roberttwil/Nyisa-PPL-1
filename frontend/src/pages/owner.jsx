@@ -9,6 +9,7 @@ const Owner = () => {
     name: "",
     type: "",
     price: "",
+    promo_price: "", // Added promoPrice field
     quantity: "",
   });
   const [foodPhoto, setFoodPhoto] = useState(null);
@@ -114,50 +115,43 @@ const Owner = () => {
     try {
       let updateData = {};
 
-      // Adjust data structure for API
       if (field === "restaurantName") {
-        updateData = { name: formData.owner.restaurant.name };
+        updateData = { name: profile.owner.restaurant.name };
       } else {
-        updateData = { [field]: formData.owner[field] };
+        updateData = { [field]: profile.owner[field] };
       }
-
-      console.log("Updating profile field:", field);
-      console.log(
-        "With value:",
-        field === "restaurantName"
-          ? formData.owner.restaurant.name
-          : formData.owner[field]
-      );
 
       const result = await RestoService.updateOwnerProfile(updateData, token);
 
-      // Update local profile state with new value
+      // Update lokal state real-time
       setProfile((prev) => {
-        const newProfile = { ...prev };
+        const updated = { ...prev };
 
         if (field === "restaurantName") {
-          if (!newProfile.owner) newProfile.owner = {};
-          if (!newProfile.owner.restaurant) newProfile.owner.restaurant = {};
-          newProfile.owner.restaurant.name = formData.owner.restaurant.name;
+          updated.owner.restaurant.name = profile.owner.restaurant.name;
         } else {
-          if (!newProfile.owner) newProfile.owner = {};
-          newProfile.owner[field] = formData.owner[field];
+          updated.owner[field] = profile.owner[field];
         }
 
-        return newProfile;
+        return updated;
+      });
+
+      setFormData((prev) => {
+        const updated = { ...prev };
+
+        if (field === "restaurantName") {
+          updated.owner.restaurant.name = profile.owner.restaurant.name;
+        } else {
+          updated.owner[field] = profile.owner[field];
+        }
+
+        return updated;
       });
 
       setEditField(null);
       showSuccess(`Profile updated: ${result.message || "Success"}`);
     } catch (err) {
       console.error("Error updating profile:", err);
-
-      // More detailed error messages
-      if (err.response) {
-        console.error("Response status:", err.response.status);
-        console.error("Response data:", err.response.data);
-      }
-
       showError(err?.response?.data?.message || "Failed to update profile");
     }
   };
@@ -306,6 +300,11 @@ const Owner = () => {
         quantity: parseInt(foodData.quantity),
       };
 
+      // Add promoPrice only if it's not empty
+      if (foodData.promo_price) {
+        foodDataToSend.promo_price = parseInt(foodData.promo_price);
+      }
+
       console.log("Sending food data:", foodDataToSend);
       console.log("With photo:", foodPhoto ? foodPhoto.name : "No photo");
 
@@ -317,7 +316,13 @@ const Owner = () => {
         showSuccess(`${foodData.name} successfully added to menu!`);
 
         // Reset form
-        setFoodData({ name: "", type: "", price: "", quantity: "" });
+        setFoodData({
+          name: "",
+          type: "",
+          price: "",
+          promo_price: "",
+          quantity: "",
+        });
         setFoodPhoto(null);
         resetFileInput();
 
@@ -376,6 +381,11 @@ const Owner = () => {
         quantity: parseInt(foodData.quantity),
       };
 
+      // Add promoPrice only if it's not empty
+      if (foodData.promo_price) {
+        foodDataToSend.promo_price = parseFloat(foodData.promo_price);
+      }
+
       // Send to server
       const result = await foodService.updateFood(
         foodIdToUpdate,
@@ -384,7 +394,13 @@ const Owner = () => {
       );
 
       showSuccess(`Food updated: ${result.message || "Success"}`);
-      setFoodData({ name: "", type: "", price: "", quantity: "" });
+      setFoodData({
+        name: "",
+        type: "",
+        price: "",
+        promo_price: "",
+        quantity: "",
+      });
       setPhoto(null);
       setFoodIdToUpdate(null);
       resetFileInput();
@@ -425,17 +441,23 @@ const Owner = () => {
   };
 
   const handleEditFood = (food) => {
+    // Debug: Check the actual structure of the food object
+    console.log("Food object for editing:", food);
+    console.log("promo_price value:", food.promo_price);
+    console.log("promoPrice value:", food.promoPrice);
+
     setFoodIdToUpdate(food.id);
     setFoodData({
       name: food.name,
       type: food.type,
       price: food.price,
+      // Check both possible field names for promo price
+      promo_price: food.promo_price || food.promoPrice || "",
       quantity: food.quantity,
     });
 
     addFoodRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   // Reset file input after submit
   const resetFileInput = () => {
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -567,14 +589,11 @@ const Owner = () => {
 
             <div className="w-full mt-8 px-6">
               <form className="space-y-4">
-                {/* Owner Name */}
-                {renderField("Owner Name", "owner.name")}
+                {/* Restaurant Name */}
+                {renderField("Restaurant Name", "owner.restaurant.name")}
 
                 {/* Email */}
                 {renderField("Email", "owner.email")}
-
-                {/* Restaurant Name */}
-                {renderField("Restaurant Name", "owner.restaurant.name", true)}
 
                 {/* Phone */}
                 {renderField("Phone", "owner.phone")}
@@ -648,7 +667,7 @@ const Owner = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Price
@@ -661,6 +680,20 @@ const Owner = () => {
                 onChange={handleInputChange}
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Promo Price{" "}
+                <span className="text-xs text-gray-500">(Optional)</span>
+              </label>
+              <input
+                type="number"
+                name="promo_price"
+                placeholder="Promo Price (optional)"
+                value={foodData.promo_price}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
               />
             </div>
             <div>
@@ -724,6 +757,7 @@ const Owner = () => {
                       name: "",
                       type: "",
                       price: "",
+                      promo_price: "",
                       quantity: "",
                     });
                     setPhoto(null);
@@ -782,10 +816,27 @@ const Owner = () => {
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Type:</span> {food.type}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Price:</span> Rp{" "}
-                      {food.price.toLocaleString()}
-                    </p>
+
+                    {/* Updated promo price display with both field name variations */}
+                    {(() => {
+                      const promoPrice = food.promo_price || food.promoPrice;
+                      return promoPrice ? (
+                        <p>
+                          <span className="line-through text-gray-500 mr-2">
+                            Rp {food.price.toLocaleString()}
+                          </span>
+                          <span className="text-green-700 font-bold">
+                            Rp {promoPrice.toLocaleString()}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Price:</span> Rp{" "}
+                          {food.price.toLocaleString()}
+                        </p>
+                      );
+                    })()}
+
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Quantity:</span>{" "}
                       {food.quantity} pcs
