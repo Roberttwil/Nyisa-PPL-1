@@ -1,7 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const { authenticate } = require('../middleware/authMiddleware');
-const { Cart, Transaction, Food } = require('../models')
+const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
+const { Cart, Transaction, Food, User } = require('../models')
+const { sendBookingConfirmation } = require('../utils/mailer');
 
 function generateBookingCode(length) {
     let result = '';
@@ -26,7 +27,7 @@ router.get('/cart', authenticate, async (req, res) => {
             include: {
                 model: Food,
                 as: 'food',
-                attributes: ['name', 'price', 'photo', 'type']
+                attributes: ['name', 'price', 'promo_price', 'photo', 'type']
             }
         });
 
@@ -39,12 +40,13 @@ router.get('/cart', authenticate, async (req, res) => {
             food_id: item.food_id,
             food_name: item.food?.name,
             food_price: item.food?.price,
+            promo_price: item.food?.promo_price,
             food_type: item.food?.type,
             food_photo: item.food?.photo,
             restaurant_id: item.restaurant_id,
             quantity: item.quantity
         }));
-        
+
 
         res.json({ cart: formatted });
     } catch (err) {
@@ -93,6 +95,7 @@ router.post('/remove/cart', authenticate, async (req, res) => {
 
 router.post('/book', authenticate, async (req, res) => {
     const { booking_code } = req.body;
+    const user_id = req.user.user_id;
 
     try {
         let total = 0;
@@ -109,7 +112,7 @@ router.post('/book', authenticate, async (req, res) => {
                 throw new Error(`Makanan dengan ID ${item.food_id} tidak ditemukan`);
             }
 
-            // Check apakah stok cukup
+            // Cek apakah stok cukup
             if (food.quantity < item.quantity) {
                 throw new Error(`Stok tidak cukup untuk makanan: ${item.food_id}. Tersedia: ${food.quantity}, Diminta: ${item.quantity}`);
             }
@@ -118,8 +121,9 @@ router.post('/book', authenticate, async (req, res) => {
             food.quantity -= item.quantity;
             await food.save();
 
-            // Hitung total per item
-            const itemTotal = food.price * item.quantity;
+            // Gunakan harga promo jika tersedia
+            const effectivePrice = food.promo_price ?? food.price;
+            const itemTotal = effectivePrice * item.quantity;
             total += itemTotal;
 
             // Simpan ke Transaction
@@ -129,6 +133,7 @@ router.post('/book', authenticate, async (req, res) => {
                 restaurant_id: item.restaurant_id,
                 food_id: item.food_id,
                 total: itemTotal,
+                price: effectivePrice,
                 status: 0,
                 date: new Date()
             });
@@ -136,8 +141,14 @@ router.post('/book', authenticate, async (req, res) => {
 
         await Promise.all(transactionPromises);
 
-        // Hapus semua item cart
+        // Hapus semua item dari cart setelah booking
         await Cart.destroy({ where: { booking_code } });
+
+        // Kirim email ke user
+        const user = await User.findOne({ where: { user_id } });
+        if (user?.email) {
+            await sendBookingConfirmation(user.email, booking_code, total);
+        }
 
         res.status(201).json({ message: "Booking Berhasil", total });
     } catch (err) {
@@ -149,11 +160,44 @@ router.post('/book', authenticate, async (req, res) => {
 router.get('/booking-code', authenticate, (req, res) => {
     try {
         bookingCode = generateBookingCode(6);
-        
-        res.status(200).json({bookingCode: bookingCode});
+
+        res.status(200).json({ bookingCode: bookingCode });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 })
+
+// PATCH /api/orders/verify/:transaction_id
+router.patch('/verify/:transaction_id', authenticate, restaurantOnly, async (req, res) => {
+    const { transaction_id } = req.params;
+    const restaurant_id = req.user.restaurant_id;
+
+    try {
+        // Cek apakah transaksi benar-benar milik restoran yang sedang login
+        const transaction = await Transaction.findOne({
+            where: {
+                transaction_id,
+                restaurant_id
+            }
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found or not authorized' });
+        }
+
+        if (transaction.status === 1) {
+            return res.status(400).json({ message: 'Transaction already verified' });
+        }
+
+        transaction.status = 1;
+        await transaction.save();
+
+        res.json({ message: 'Transaction verified successfully', transaction });
+    } catch (err) {
+        console.error('Transaction verification error:', err);
+        res.status(500).json({ message: 'Internal server error verifying transaction' });
+    }
+});
+
 
 module.exports = router

@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const { Food, Restaurant, User } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
+const axios = require('axios');
 
 const router = express.Router();
 
@@ -50,7 +51,7 @@ router.get('/cards', async (req, res) => {
 
         const { count, rows } = await Food.findAndCountAll({
             where: filters,
-            attributes: ['food_id', 'name', 'photo', 'type', 'price', 'quantity', 'restaurant_id'],
+            attributes: ['food_id', 'name', 'photo', 'type', 'price', 'promo_price', 'quantity', 'restaurant_id'],
             limit,
             offset,
             include: [
@@ -68,6 +69,7 @@ router.get('/cards', async (req, res) => {
             photo: f.photo,
             type: f.type,
             price: f.price,
+            promo_price: f.promo_price || null,
             quantity: f.quantity,
             restaurantName: f.restaurant?.name || null
         }));
@@ -88,7 +90,7 @@ router.get('/cards', async (req, res) => {
 router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
         const restaurant_id = await getRestaurantId(req.user.username);
-        const { name, type, price, quantity } = req.body;
+        const { name, type, price, promo_price, quantity } = req.body;
 
         let photoUrl = null;
         if (req.file) {
@@ -99,6 +101,7 @@ router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (re
             name,
             type,
             price,
+            promo_price,
             photo: photoUrl,
             quantity,
             restaurant_id
@@ -120,11 +123,12 @@ router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (
 
         if (!food) return res.status(404).json({ message: 'Food not found' });
 
-        const { name, type, price, quantity } = req.body;
+        const { name, type, price, quantity, promo_price } = req.body;
 
         if (name) food.name = name;
         if (type) food.type = type;
         if (price) food.price = price;
+        if (promo_price !== undefined) food.promo_price = promo_price;
         if (quantity) food.quantity = quantity;
 
         if (req.file) {
@@ -155,6 +159,17 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
     } catch (err) {
         console.error('Delete food error:', err);
         res.status(500).json({ message: 'Failed to delete food' });
+    }
+});
+
+router.get('/recommend/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/foods/recommend/${id}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Recommendation service failed' });
     }
 });
 

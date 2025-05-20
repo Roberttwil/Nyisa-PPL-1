@@ -37,8 +37,8 @@ const Cart = () => {
         const items = Array.isArray(data)
           ? data
           : Array.isArray(data.cart)
-          ? data.cart
-          : null;
+            ? data.cart
+            : null;
 
         if (!items) {
           throw new Error("Invalid cart data.");
@@ -85,11 +85,12 @@ const Cart = () => {
       const purchaseHistory = cartItems.map((item) => ({
         name: item.food_name,
         photo: item.food_photo,
-        total: item.food_price * item.quantity,
+        total: (item.promo_price ?? item.food_price) * item.quantity,
         date: new Date().toLocaleDateString(),
         restaurantId: activeRestoId,
         foodId: item.food_id,
       }));
+
 
       const existingHistory = JSON.parse(localStorage.getItem("purchaseHistory")) || [];
       const updatedHistory = [...existingHistory, ...purchaseHistory];
@@ -100,6 +101,7 @@ const Cart = () => {
         type: 'success',
         message: 'Your order has been successfully booked.',
       });
+
       setCartItems([]);
     } catch (error) {
       console.error("Failed to book order:", error);
@@ -111,11 +113,10 @@ const Cart = () => {
     }
   };
 
-
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.food_price * item.quantity,
-    0
-  );
+  const total = cartItems.reduce((sum, item) => {
+    const effectivePrice = item.promo_price ?? item.food_price;
+    return sum + effectivePrice * item.quantity;
+  }, 0);
 
   if (loading) return <p>Loading cart...</p>;
 
@@ -174,9 +175,9 @@ const Cart = () => {
 
       {/* Header Section */}
       <div className="flex flex-row items-center justify-between w-full mb-6">
-        <h1 className="text-2xl font-bold">Your Cart</h1>
+        <h1 className="text-2xl md:text-2xl font-bold">Your Cart</h1>
         {cartItems.length > 0 && (
-          <p className="mt-3 font-bold text-2xl text-gray-700">
+          <p className="font-bold text-xl md:text-2xl text-gray-700">
             Booking Code: <span className="text-blue-600">{bookingCode}</span>
           </p>
         )}
@@ -202,8 +203,24 @@ const Cart = () => {
                     alt={item.food_name}
                     className="w-full h-40 object-cover rounded-lg mt-2"
                   />
-                  <p className="mt-2">Unit Price: Rp {item.food_price?.toLocaleString("id-ID")}</p>
-                  <p>Quantity: {item.quantity}</p>
+                  <p className="mt-2 text-sm font-medium">
+                    Unit Price:{" "}
+                    {item.promo_price ? (
+                      <>
+                        <span className="line-through text-gray-500 mr-2">
+                          Rp {item.food_price?.toLocaleString("id-ID")}
+                        </span>
+                        <span className="text-green-700">
+                          Rp {item.promo_price?.toLocaleString("id-ID")}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-bold ">
+                        Rp {item.food_price?.toLocaleString("id-ID")}
+                      </span>
+                    )}
+                  </p>
+                  <p className="font-medium text-sm">Quantity: {item.quantity}</p>
                 </div>
                 <div className="flex justify-between items-center p-4">
                   <button
@@ -212,7 +229,8 @@ const Cart = () => {
                       show: true,
                       foodId: item.food_id,
                       foodName: item.food_name,
-                    })
+                      onConfirm: () => handleRemove(item.food_id),
+                    }),
                   }
                     className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 cursor-pointer"
                   >
@@ -231,7 +249,7 @@ const Cart = () => {
           <h3 className="text-xl font-bold">Total: Rp {total.toLocaleString("id-ID")}</h3>
           <button
             onClick={handleBooking}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer"
+            className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer font-medium"
           >
             Book Now
           </button>

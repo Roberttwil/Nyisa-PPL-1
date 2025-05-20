@@ -6,26 +6,13 @@ import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 // import { dataURLtoBlob } from "../utils/dataURLtoBlob";
 
+
 const Profile = () => {
   const [profile, setProfile] = useState({});
   const [editField, setEditField] = useState(null);
   const [form, setForm] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [crop, setCrop] = useState({
-    unit: "%",
-    x: 25,
-    y: 25,
-    width: 30, // Set a reasonable default width
-    height: 30, // Set a reasonable default height
-    aspect: 1, // Aspect ratio of 1 makes it a circle
-  });
-
-  const [completedCrop, setCompletedCrop] = useState(null);
-  const imgRef = useRef(null);
-  const previewCanvasRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const cropContainerRef = useRef(null); // Referensi untuk container crop
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const profilePhotoRef = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -65,147 +52,77 @@ const Profile = () => {
     }
   };
 
-  const handleImageClick = () => {
-    setShowModal(true);
-  };
+  const handleProfilePhotoChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
-
-      if (file.size > maxSizeInBytes) {
-        alert(
-          "Error: Ukuran gambar maksimal adalah 2MB. Silakan pilih gambar yang lebih kecil."
-        );
-        e.target.value = null; // reset input file supaya bisa upload ulang
+      // File size validation (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Photo size must be less than 2MB");
+        e.target.value = null; // Reset file input
         return;
       }
 
-      // Verifikasi apakah file adalah gambar
-      if (!file.type.startsWith("image/")) {
-        alert("Silakan pilih file gambar.");
-        return;
-      }
+      setProfilePhoto(file);
 
-      setSelectedFile(URL.createObjectURL(file));
-      setCompletedCrop(null); // reset crop selesai
-    }
-  };
-
-  const onImageLoaded = (img) => {
-    imgRef.current = img;
-
-    // Pastikan gambar sudah dimuat sebelum melanjutkan
-    if (img && img.complete) {
-      const width = img.width;
-      const height = img.height;
-      const smallest = Math.min(width, height);
-
-      // Set default crop di tengah gambar
-      const initialCrop = {
-        unit: "%",
-        x: (width - smallest) / 2,
-        y: (height - smallest) / 2,
-        width: smallest,
-        height: smallest,
-        aspect: 1,
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewImg = document.getElementById("profile-preview");
+        if (previewImg) {
+          previewImg.src = e.target.result;
+        }
       };
-
-      setCrop(initialCrop);
+      reader.readAsDataURL(file);
     }
-
-    return false; // Penting! agar ReactCrop tau sudah di-handle
   };
 
-  const handleSaveCroppedImage = async () => {
-    const image = imgRef.current;
-    const canvas = previewCanvasRef.current;
-    const crop = completedCrop;
-
-    // Validasi
-    if (!image || !crop || !canvas) {
-      alert("Gambar belum siap diproses.");
+  const handleUploadProfilePhoto = async () => {
+    if (!profilePhoto) {
+      alert("Please select a photo to upload");
       return;
     }
 
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-
-    canvas.width = crop.width;
-    canvas.height = crop.height;
-
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.beginPath();
-    ctx.arc(
-      crop.width / 2,
-      crop.height / 2,
-      Math.min(crop.width, crop.height) / 2,
-      0,
-      2 * Math.PI
-    );
-    ctx.closePath();
-    ctx.clip();
-
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height
-    );
-
-    const croppedImageUrl = canvas.toDataURL("image/png");
-    const blob = dataURLtoBlob(croppedImageUrl);
-    const token = localStorage.getItem("token");
-
     try {
-      const result = await uploadUserPhoto(blob, token);
-      setProfile((prev) => ({ ...prev, photo: result.photo }));
-      alert("Profile photo updated!");
+      // Get token from localStorage
+      const token = localStorage.getItem("token");
+      
+      // Use the UploadService to upload the photo
+      const result = await uploadUserPhoto(profilePhoto, token);
+
+      if (result && result.photo) {
+        // Update local state with new photo URL if returned by API
+        setProfile((prev) => ({ ...prev, photo: result.photo }));
+        alert("Profile photo updated successfully!");
+      } else {
+        // If no photo URL is returned, refresh the profile to get the latest data
+        const updatedProfile = await getProfile();
+        setProfile(updatedProfile);
+        alert("Profile photo updated!");
+      }
+
+      // Reset file input and state
+      setProfilePhoto(null);
+      if (profilePhotoRef.current) {
+        profilePhotoRef.current.value = "";
+      }
     } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Gagal mengunggah foto profil.");
-    }
+      console.error("Error updating profile photo:", err);
 
-    handleCloseModal();
-  };
+      // More detailed error logging
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
+      }
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedFile(null);
-    setCompletedCrop(null);
-  };
-
-  const onCropChange = (newCrop) => {
-    // Ensure that the crop values are valid before updating state
-    if (
-      newCrop &&
-      !isNaN(newCrop.x) &&
-      !isNaN(newCrop.y) &&
-      !isNaN(newCrop.width) &&
-      !isNaN(newCrop.height)
-    ) {
-      setCrop(newCrop);
+      alert(err?.message || "Failed to update profile photo");
     }
   };
 
-  const onCropComplete = (crop) => {
-    // Ensure that the crop values are valid before updating completedCrop
-    if (
-      crop &&
-      !isNaN(crop.x) &&
-      !isNaN(crop.y) &&
-      !isNaN(crop.width) &&
-      !isNaN(crop.height)
-    ) {
-      setCompletedCrop(crop);
+  // Function to trigger profile photo file input
+  const triggerProfilePhotoUpload = () => {
+    if (profilePhotoRef.current) {
+      profilePhotoRef.current.click();
     }
   };
 
@@ -241,18 +158,37 @@ const Profile = () => {
       <div className="w-full max-w-3xl bg-white rounded-xl pb-8 flex flex-col items-center">
         <div className="relative mt-8">
           <img
+            id="profile-preview"
             src={profile.photo || "https://via.placeholder.com/150"}
-            className="rounded-full w-40 h-40 object-cover bg-black"
+            className="rounded-full w-40 h-40 object-cover bg-gray-200"
             alt="Profile"
+          />
+          <input
+            type="file"
+            ref={profilePhotoRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleProfilePhotoChange}
           />
           <button
             type="button"
-            onClick={handleImageClick}
+            onClick={triggerProfilePhotoUpload}
             className="absolute bottom-1 right-1 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition"
           >
             <Camera className="w-5 h-5 text-gray-700 cursor-pointer" />
           </button>
         </div>
+
+        {/* Show upload button when photo is selected */}
+        {profilePhoto && (
+          <button
+            type="button"
+            onClick={handleUploadProfilePhoto}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+          >
+            Upload New Photo
+          </button>
+        )}
 
         <div className="w-full mt-8 px-6">
           {renderField("Name", "name")}
@@ -273,77 +209,6 @@ const Profile = () => {
           </button>
         </div>
       </div>
-
-      {/* Modal Cropper */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-          <div className="relative bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
-            {/* Close Button */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 transition z-10"
-              aria-label="Close modal"
-            >
-              <X className="w-6 h-6 text-gray-600" />
-            </button>
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-              Edit Profile Picture
-            </h2>
-
-            {/* Upload File */}
-            <label className="cursor-pointer bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition mb-4 self-center">
-              Choose File
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
-
-            {/* Crop & Preview Container */}
-            {selectedFile && (
-              <div
-                ref={cropContainerRef}
-                className="relative flex flex-col items-center overflow-auto"
-                style={{ maxHeight: "70vh", maxWidth: "100%" }}
-              >
-                {/* Preview Image */}
-                <div className="relative w-full max-w-xs h-auto max-h-[300px] mb-6">
-                  {/* ReactCrop Container */}
-                  <ReactCrop
-                    src={selectedFile}
-                    crop={crop}
-                    keepSelection
-                    circularCrop
-                    aspect="1"
-                    onChange={onCropChange}
-                    onComplete={onCropComplete}
-                    onImageLoaded={onImageLoaded}
-                  >
-                    <img
-                      src={selectedFile}
-                      alt="Selected Preview"
-                      className="w-full h-auto"
-                      style={{ maxHeight: "70vh" }}
-                    />
-                  </ReactCrop>
-                </div>
-
-                <button
-                  onClick={handleSaveCroppedImage}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
-                >
-                  Save Cropped Image
-                </button>
-                <canvas ref={previewCanvasRef} style={{ display: "none" }} />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

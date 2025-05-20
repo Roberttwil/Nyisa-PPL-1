@@ -38,6 +38,10 @@ const Restaurant = sequelize.define(
             type: DataTypes.FLOAT,
             allowNull: false
         },
+        user_rating_count: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
         longitude: {
             type: DataTypes.STRING,
             allowNull: false

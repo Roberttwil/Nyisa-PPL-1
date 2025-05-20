@@ -18,11 +18,12 @@ import Partner from "./pages/partner";
 import RestoOTP from "./auth/Resto-OTP";
 import Owner from "./pages/owner";
 import Location from "./pages/location"
+import SocialAuthSuccess from "./auth/socialAuthSucess";
 
 function App() {
   const location = useLocation();
-  const noNavbar = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp"];
-  const noFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/location"];
+  const noNavbar = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/social-auth-success"];
+  const noFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/location",  "/social-auth-success"];
 
 
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="/resto-otp" element={<RestoOTP />} />
           <Route path="/owner" element={<Owner />} />
           <Route path="/location" element={<Location />} />
+          <Route path="/social-auth-success" element={<SocialAuthSuccess />} />
         </Routes>
       </div>
 

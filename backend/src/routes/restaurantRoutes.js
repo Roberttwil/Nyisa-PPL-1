@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
-const { Op } = require('sequelize');
-const { Restaurant, User } = require('../models');
+const { Op, where } = require('sequelize');
+const { Restaurant, User, Transaction } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
 
@@ -62,7 +62,6 @@ router.get('/cards', async (req, res) => {
     }
 });
 
-
 // PUT /api/restaurants/profile
 router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
@@ -74,26 +73,26 @@ router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), asy
         const restaurant = await Restaurant.findOne({ where: { email: user.email } });
         if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
 
-        const {
-            name, type, address, phone,
-            email, rating
-        } = req.body;
+        const { name, type, phone, email, address, rating } = req.body;
 
-        // Optional photo upload
+        console.log('Incoming data:', req.body);
+
+        // Handle photo upload
         if (req.file) {
             const photoUrl = await resizeAndUpload(req.file, 'restaurant');
             restaurant.photo = photoUrl;
         }
 
-        // Convert address to lat/lng (if address is provided)
+        // Update location if address provided
         if (address) {
             restaurant.address = address;
+            user.address = address;
 
             const geoRes = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
                 params: {
                     address,
-                    key: process.env.GOOGLE_MAPS_API_KEY
-                }
+                    key: process.env.GOOGLE_MAPS_API_KEY,
+                },
             });
 
             const geoData = geoRes.data;
@@ -106,12 +105,25 @@ router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), asy
             }
         }
 
-        if (name) restaurant.name = name;
+        if (name) {
+            restaurant.name = name;
+            user.name = name;
+        }
         if (type) restaurant.restaurant_type = type;
-        if (phone) restaurant.phone = phone;
-        if (email) restaurant.email = email;
+
+        if (phone) {
+            restaurant.phone = phone;
+            user.phone = phone;
+        }
+
+        if (email) {
+            restaurant.email = email;
+            user.email = email;
+        }
+
         if (rating) restaurant.rating = rating;
 
+        await user.save();
         await restaurant.save();
 
         res.json({ message: 'Restaurant profile updated successfully', restaurant });
@@ -173,7 +185,7 @@ router.get('/all', async (req, res) => {
                 'photo',
                 'rating'
             ],
-            raw: true 
+            raw: true
         });
 
         let results = restaurants;
@@ -214,5 +226,73 @@ router.get('/all', async (req, res) => {
     }
 });
 
+router.put('/rate', authenticate, async (req, res) => {
+    try {
+        const { rating, restaurant_id } = req.body;
+
+        if (!rating || !restaurant_id || isNaN(rating) || rating < 1 || rating > 5) {
+            return res.status(400).json({ error: 'Invalid rating or missing fields' });
+        }
+
+        const restaurant = await Restaurant.findOne({ where: { restaurant_id: restaurant_id } });
+        if (!restaurant) return res.status(404).json({ message: 'Restaurant not found for this user' });
+
+        const rating_count = restaurant.rating * restaurant.user_rating_count;
+        const new_user_count = restaurant.user_rating_count + 1;
+        const new_rating = (rating_count + rating) / new_user_count;
+
+        await Restaurant.update({
+            rating: new_rating,
+            user_rating_count: new_user_count
+        }, { where: { restaurant_id: restaurant_id } });
+
+        res.status(200).json({ message: "Rate Restaurant Berhasil", new_rating });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Failed to rate restaurant' });
+    }
+})
+
+router.get('/restaurant/transactions', authenticate, restaurantOnly, async (req, res) => {
+    try {
+        const restaurant_id = req.user.restaurant_id;
+
+        const transactions = await Transaction.findAll({
+            where: { restaurant_id },
+            include: [
+                {
+                    model: Food,
+                    as: 'food',
+                    attributes: ['name', 'type', 'photo', 'price']
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['name', 'email', 'phone']
+                }
+            ],
+            order: [['date', 'DESC']]
+        });
+
+        if (!transactions.length) {
+            return res.status(404).json({ message: 'No transactions found for this restaurant' });
+        }
+
+        const formatted = transactions.map(tx => ({
+            transaction_id: tx.transaction_id,
+            booking_code: tx.booking_code,
+            total: tx.total,
+            status: tx.status,
+            date: tx.date,
+            food: tx.food,
+            user: tx.user
+        }));
+
+        res.json({ transactions: formatted });
+    } catch (err) {
+        console.error('Fetch restaurant transactions error:', err);
+        res.status(500).json({ message: 'Failed to fetch transactions' });
+    }
+});
 
 module.exports = router;

@@ -36,6 +36,7 @@ async function seed() {
                 restaurant_type: faker.helpers.arrayElement(['Cafe', 'Resto', 'Warung', 'Kiosk']),
                 photo: faker.image.url(),
                 rating: faker.number.float({ min: 3, max: 5 }),
+                user_rating_count: faker.number.int({ min: 1, max: 100 }),
                 longitude: faker.location.longitude(),
                 latitude: faker.location.latitude()
             });
