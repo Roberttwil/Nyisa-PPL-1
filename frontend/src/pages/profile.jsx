@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getProfile, updateProfile } from "../services/UserService";
-import { uploadUserPhoto } from "../services/UploadService";
-import { Pencil, Check, Camera } from "lucide-react";
+import { uploadUserPhoto } from "../services/UploadService"; // Import uploadUserPhoto
+import { Pencil, Check, Camera, X } from "lucide-react";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+// import { dataURLtoBlob } from "../utils/dataURLtoBlob";
+
 
 const Profile = () => {
   const [profile, setProfile] = useState({});

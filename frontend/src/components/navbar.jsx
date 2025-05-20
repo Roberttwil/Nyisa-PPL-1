@@ -162,7 +162,9 @@ function Navbar() {
         {isLoggedIn && userProfile ? (
           <button
             onClick={handleProfileClick}
+
             className="flex items-center gap-2 px-2 py-1 sm:px-3 sm:py-2 rounded-full hover:bg-gray-100 transition text-xs sm:text-sm md:text-base cursor-pointer"
+
           >
             <img
               src={
