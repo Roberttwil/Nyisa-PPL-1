@@ -58,8 +58,6 @@ const Owner = () => {
           console.error("Failed to load owner profile:", err);
           showPopup("error", "Failed to load owner profile");
         }
-      } else {
-        showPopup("error", "Username or token not found");
       }
     };
     fetchProfile();

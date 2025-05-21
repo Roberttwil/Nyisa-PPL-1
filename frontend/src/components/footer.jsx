@@ -6,8 +6,7 @@ const Footer = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Cek status login dari localStorage
-    const token = localStorage.getItem("token"); // ganti "token" kalau nama token kamu beda
+    const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
 
@@ -37,13 +36,19 @@ const Footer = () => {
       <div className="bg-[#bfc1b4] mt-8 px-6 md:px-12 py-4 flex flex-col md:flex-row justify-between items-center text-sm text-green-900 font-medium gap-4">
         <span className="md:ml-2">© 2025 Nyisa</span>
         <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4">
-          <span className="hover:underline hover:text-[#54986a] cursor-pointer">
+          <Link
+            to="/terms-conditions"
+            className="hover:underline hover:text-green-800 cursor-pointer"
+          >
             Terms & Conditions
-          </span>
+          </Link>
           <span className="text-xl text-green-700">•</span>
-          <span className="hover:underline hover:text-[#54986a] cursor-pointer">
+          <Link
+            to="/privacy-policy"
+            className="hover:underline hover:text-green-800 cursor-pointer"
+          >
             Privacy Policy
-          </span>
+          </Link>
         </div>
       </div>
     </footer>

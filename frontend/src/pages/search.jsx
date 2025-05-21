@@ -42,6 +42,7 @@ function Search() {
           const recResponse = await axios.get(
             `http://localhost:8000/api/foods/recommend/${foodId}`
           );
+          console.log("Recommendation response:", recResponse.data);
           setRecommendations(recResponse.data);
         }
       } catch (err) {
@@ -137,10 +138,12 @@ function Search() {
     );
   };
 
-  const currentRecommendations = recommendations.slice(
-    recommendationPage * itemsPerPage,
-    recommendationPage * itemsPerPage + itemsPerPage
-  );
+  const currentRecommendations = Array.isArray(recommendations)
+  ? recommendations.slice(
+      recommendationPage * itemsPerPage,
+      recommendationPage * itemsPerPage + itemsPerPage
+    )
+  : [];
 
   return (
     <div className="flex flex-col my-10">
