@@ -229,7 +229,7 @@ const Profile = () => {
         <div className="mt-10">
           <button
             onClick={() => setConfirmLogout(true)}
-            className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-800 transition cursor-pointer"
+            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-800 transition cursor-pointer"
           >
             Sign Out
           </button>

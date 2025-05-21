@@ -9,14 +9,12 @@ const Owner = () => {
     name: "",
     type: "",
     price: "",
-    promo_price: "", // Added promoPrice field
+    promo_price: "",
     quantity: "",
   });
   const [foodPhoto, setFoodPhoto] = useState(null);
   const [foodIdToUpdate, setFoodIdToUpdate] = useState(null);
   const [photo, setPhoto] = useState(null);
-  const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [menu, setMenu] = useState([]);
   const [profile, setProfile] = useState({
     name: "",
@@ -30,6 +28,19 @@ const Owner = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const profilePhotoRef = useRef(null);
   const addFoodRef = useRef(null);
+
+  // Modal states
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
+  const [confirmAction, setConfirmAction] = useState({
+    show: false,
+    type: null, // "delete", "update", "add", "logout"
+    message: "",
+    onConfirm: null,
+  });
 
   const token = localStorage.getItem("token");
   const username = localStorage.getItem("username");
@@ -45,10 +56,10 @@ const Owner = () => {
           console.log("Fetched profile:", result);
         } catch (err) {
           console.error("Failed to load owner profile:", err);
-          showError("Failed to load owner profile");
+          showPopup("error", "Failed to load owner profile");
         }
       } else {
-        showError("Username or token not found");
+        showPopup("error", "Username or token not found");
       }
     };
     fetchProfile();
@@ -75,7 +86,7 @@ const Owner = () => {
         console.log("Menu set to:", result.data);
       } catch (err) {
         console.error("Failed to load menu:", err);
-        showError("Failed to load menu items");
+        showPopup("error", "Failed to load menu items");
       }
     } else {
       console.log("Profile data is not complete:", profile);
@@ -123,7 +134,7 @@ const Owner = () => {
 
       const result = await RestoService.updateOwnerProfile(updateData, token);
 
-      // Update lokal state real-time
+      // Update local state real-time
       setProfile((prev) => {
         const updated = { ...prev };
 
@@ -149,10 +160,10 @@ const Owner = () => {
       });
 
       setEditField(null);
-      showSuccess(`Profile updated: ${result.message || "Success"}`);
+      showPopup("success", `Profile updated: ${result.message || "Success"}`);
     } catch (err) {
       console.error("Error updating profile:", err);
-      showError(err?.response?.data?.message || "Failed to update profile");
+      showPopup("error", err?.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -162,7 +173,7 @@ const Owner = () => {
 
       // File size validation (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        showError("Photo size must be less than 2MB");
+        showPopup("error", "Photo size must be less than 2MB");
         e.target.value = null; // Reset file input
         return;
       }
@@ -183,7 +194,7 @@ const Owner = () => {
 
   const handleUploadProfilePhoto = async () => {
     if (!profilePhoto) {
-      showError("Please select a photo to upload");
+      showPopup("error", "Please select a photo to upload");
       return;
     }
 
@@ -192,7 +203,7 @@ const Owner = () => {
       const result = await uploadRestaurantPhoto(profilePhoto, token);
 
       if (result && result.message) {
-        showSuccess("Restaurant photo updated successfully");
+        showPopup("success", "Restaurant photo updated successfully");
 
         // Update local state with new photo URL if returned by API
         if (result.photo) {
@@ -227,7 +238,7 @@ const Owner = () => {
         console.error("Response data:", err.response.data);
       }
 
-      showError(err?.message || "Failed to update restaurant photo");
+      showPopup("error", err?.message || "Failed to update restaurant photo");
     }
   };
 
@@ -247,48 +258,47 @@ const Owner = () => {
     }));
   };
 
-  // Success message function
-  const showSuccess = (msg) => {
-    setMessage(msg);
-    setErrorMessage("");
-    setTimeout(() => setMessage(""), 5000);
+  // Popup message function
+  const showPopup = (type, msg) => {
+    setPopup({
+      show: true,
+      type: type,
+      message: msg
+    });
   };
 
-  // Error message function
-  const showError = (msg) => {
-    setErrorMessage(msg);
-    setMessage("");
-    setTimeout(() => setErrorMessage(""), 5000);
-  };
-
-  const handleAddFood = async (e) => {
-    e.preventDefault();
-
-    // Reset messages
-    setMessage("");
-    setErrorMessage("");
-
-    // Validate input
+  const validateFoodData = () => {
     const missingFields = [];
     if (!foodData.name) missingFields.push("Food Name");
     if (!foodData.type) missingFields.push("Food Type");
     if (!foodData.price) missingFields.push("Price");
     if (!foodData.quantity) missingFields.push("Quantity");
-    if (!foodPhoto) missingFields.push("Food Photo");
+    if (!foodIdToUpdate && !foodPhoto) missingFields.push("Food Photo");
 
     if (missingFields.length > 0) {
-      showError(
-        `Please fill in the following fields: ${missingFields.join(", ")}`
-      );
-      return;
+      showPopup("error", `Please fill in the following fields: ${missingFields.join(", ")}`);
+      return false;
     }
+    return true;
+  };
 
+  const handleAddFoodClick = (e) => {
+    e.preventDefault();
+    if (validateFoodData()) {
+      setConfirmAction({
+        show: true,
+        type: "add",
+        message: `Are you sure you want to add "${foodData.name}" to the menu?`,
+        onConfirm: handleAddFood
+      });
+    }
+  };
+
+  const handleAddFood = async () => {
     try {
       // Check for restaurant ID
       if (!profile?.owner?.restaurant?.id) {
-        showError(
-          "Restaurant ID not found. Please make sure your profile is loaded."
-        );
+        showPopup("error", "Restaurant ID not found. Please make sure your profile is loaded.");
         return;
       }
 
@@ -313,7 +323,7 @@ const Owner = () => {
       console.log("Server response:", response);
 
       if (response && response.food) {
-        showSuccess(`${foodData.name} successfully added to menu!`);
+        showPopup("success", `${foodData.name} successfully added to menu!`);
 
         // Reset form
         setFoodData({
@@ -329,7 +339,7 @@ const Owner = () => {
         // Refresh menu
         await loadMenu();
       } else {
-        showError("Error adding food: Unexpected response");
+        showPopup("error", "Error adding food: Unexpected response");
       }
     } catch (error) {
       console.error("Error adding food:", error);
@@ -339,39 +349,23 @@ const Owner = () => {
         console.error("Response data:", error.response.data);
       }
 
-      showError(
-        error?.response?.data?.message || "Failed to add food. Server error."
-      );
+      showPopup("error", error?.response?.data?.message || "Failed to add food. Server error.");
     }
   };
 
-  const handleUpdateFoodWithConfirmation = (e) => {
+  const handleUpdateFoodClick = (e) => {
     e.preventDefault();
-    const confirmed = window.confirm(
-      "Are you sure you want to update this food?"
-    );
-    if (confirmed) {
-      handleUpdateFood(e);
+    if (validateFoodData()) {
+      setConfirmAction({
+        show: true,
+        type: "update",
+        message: `Are you sure you want to update "${foodData.name}"?`,
+        onConfirm: handleUpdateFood
+      });
     }
   };
 
-  const handleUpdateFood = async (e) => {
-    e.preventDefault();
-
-    // Validate input
-    const missingFields = [];
-    if (!foodData.name) missingFields.push("Food Name");
-    if (!foodData.type) missingFields.push("Food Type");
-    if (!foodData.price) missingFields.push("Price");
-    if (!foodData.quantity) missingFields.push("Quantity");
-
-    if (missingFields.length > 0) {
-      showError(
-        `Please fill in the following fields: ${missingFields.join(", ")}`
-      );
-      return;
-    }
-
+  const handleUpdateFood = async () => {
     try {
       // Prepare food data
       const foodDataToSend = {
@@ -393,7 +387,7 @@ const Owner = () => {
         photo
       );
 
-      showSuccess(`Food updated: ${result.message || "Success"}`);
+      showPopup("success", `Food updated: ${result.message || "Success"}`);
       setFoodData({
         name: "",
         type: "",
@@ -415,29 +409,49 @@ const Owner = () => {
         console.error("Response data:", err.response.data);
       }
 
-      showError(err?.response?.data?.message || "Failed to update food");
+      showPopup("error", err?.response?.data?.message || "Failed to update food");
     }
   };
 
+  const handleDeleteFoodClick = (foodId, foodName) => {
+    setConfirmAction({
+      show: true,
+      type: "delete",
+      message: `Are you sure you want to delete "${foodName}" from the menu?`,
+      onConfirm: () => handleDeleteFood(foodId)
+    });
+  };
+
   const handleDeleteFood = async (foodId) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      try {
-        const result = await foodService.deleteFood(foodId);
-        showSuccess(`Food deleted: ${result.message || "Success"}`);
+    try {
+      const result = await foodService.deleteFood(foodId);
+      showPopup("success", `Food deleted: ${result.message || "Success"}`);
 
-        // Refresh menu
-        await loadMenu();
-      } catch (err) {
-        console.error("Error deleting food:", err);
+      // Refresh menu
+      await loadMenu();
+    } catch (err) {
+      console.error("Error deleting food:", err);
 
-        if (err.response) {
-          console.error("Response status:", err.response.status);
-          console.error("Response data:", err.response.data);
-        }
-
-        showError(err?.response?.data?.message || "Failed to delete food");
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
       }
+
+      showPopup("error", err?.response?.data?.message || "Failed to delete food");
     }
+  };
+
+  const handleConfirmLogout = () => {
+    setConfirmAction({
+      show: true,
+      type: "logout",
+      message: "Are you sure you want to sign out?",
+      onConfirm: () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role"); // Remove role also
+        window.location.href = "/";
+      }
+    });
   };
 
   const handleEditFood = (food) => {
@@ -458,6 +472,7 @@ const Owner = () => {
 
     addFoodRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+  
   // Reset file input after submit
   const resetFileInput = () => {
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -532,20 +547,6 @@ const Owner = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white space-y-8">
-      {/* Success Alert */}
-      {message && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-          <span className="block sm:inline">{message}</span>
-        </div>
-      )}
-
-      {/* Error Alert */}
-      {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          <span className="block sm:inline">{errorMessage}</span>
-        </div>
-      )}
-
       {/* Profile Section */}
       {profile && profile.owner ? (
         <div className="w-full flex justify-center items-start my-10 px-4">
@@ -633,7 +634,7 @@ const Owner = () => {
         </h2>
         <form
           onSubmit={
-            foodIdToUpdate ? handleUpdateFoodWithConfirmation : handleAddFood
+            foodIdToUpdate ? handleUpdateFoodClick : handleAddFoodClick
           }
           className="space-y-4"
         >
@@ -777,15 +778,6 @@ const Owner = () => {
       {/* Manage Menu Section */}
       <div>
         <h2 className="text-2xl font-semibold mb-4">Manage Menu</h2>
-        <div className="flex justify-between items-center mb-4">
-          <span>{menu.length} items found</span>
-          <button
-            onClick={loadMenu}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Refresh Menu
-          </button>
-        </div>
 
         {/* Menu Items as Cards */}
         {menu.length === 0 ? (
@@ -853,7 +845,7 @@ const Owner = () => {
                       <span>Edit</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteFood(food.id)}
+                      onClick={() => handleDeleteFoodClick(food.id, food.name)}
                       className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center"
                       title="Delete"
                     >
@@ -872,16 +864,61 @@ const Owner = () => {
       <div className="mt-8 flex justify-center">
         <button
           type="button"
-          onClick={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("role"); // Hapus role juga
-            window.location.href = "/";
-          }}
+          onClick={handleConfirmLogout}
           className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-800 transition cursor-pointer"
         >
           Sign Out
         </button>
       </div>
+
+      {/* Popup modal for success/error messages */}
+      {popup.show && (
+        <div className="fixed inset-0 bg-gray-600/30 flex justify-center items-center z-50">
+          <div className={`bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center border ${popup.type === 'success' ? 'border-green-500' : 'border-red-500'}`}>
+            <h2 className={`text-2xl font-bold mb-4 ${popup.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {popup.type === 'success' ? 'Success!' : 'Error!'}
+            </h2>
+            <p className="mb-4">{popup.message}</p>
+            <button
+              onClick={() => setPopup({ ...popup, show: false })}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation modal */}
+      {confirmAction.show && (
+        <div className="fixed inset-0 bg-gray-600/50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-medium mb-4">Confirm Action</h3>
+            <p className="mb-6">{confirmAction.message}</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setConfirmAction({ ...confirmAction, show: false })}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmAction.onConfirm();
+                  setConfirmAction({ ...confirmAction, show: false });
+                }}
+                className={`px-4 py-2 text-white rounded ${
+                  confirmAction.type === "delete" || confirmAction.type === "logout"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

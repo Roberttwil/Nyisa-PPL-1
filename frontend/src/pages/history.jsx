@@ -337,12 +337,18 @@ const History = () => {
                               <td className="py-3 px-4">{index + 1}</td>
                               <td className="py-3 px-4">{item.booking_code}</td>
                               <td className="py-3 px-4 flex items-center gap-2">
-                                <img
-                                  src={item.food.photo}
-                                  alt={item.food.name}
-                                  className="w-10 h-10 object-cover rounded"
-                                />
-                                <span>{item.food.name}</span>
+                                {item.food && item.food.photo ? (
+                                  <img
+                                    src={item.food.photo}
+                                    alt={item.food ? item.food.name : "Food"}
+                                    className="w-10 h-10 object-cover rounded"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                                    <span className="text-xs text-gray-500">No image</span>
+                                  </div>
+                                )}
+                                <span>{item.food ? item.food.name : "Unknown food"}</span>
                               </td>
                               <td className="py-3 px-4">
                                 Rp {item.total.toLocaleString("id-ID")}
@@ -372,7 +378,7 @@ const History = () => {
                     <h2 className="text-xl font-semibold mb-4">
                       Waiting to be verified
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {status0.map((item, index) => (
                         <div
                           key={index}
@@ -381,11 +387,17 @@ const History = () => {
                           <h3 className="font-bold text-lg truncate">
                             {item.name}
                           </h3>
-                          <img
-                            src={item.food.photo}
-                            alt={item.food.name}
-                            className="w-full h-40 object-cover rounded-lg mt-2"
-                          />
+                          {item.food && item.food.photo ? (
+                            <img
+                              src={item.food.photo}
+                              alt={item.food.name}
+                              className="w-full h-40 object-cover rounded-lg mt-2"
+                            />
+                          ) : (
+                            <div className="w-full h-40 bg-gray-200 rounded-lg mt-2 flex items-center justify-center">
+                              <span className="text-gray-500">No image available</span>
+                            </div>
+                          )}
                           <p className="mt-2">
                             Total: Rp {item.total.toLocaleString("id-ID")}
                           </p>
@@ -405,7 +417,7 @@ const History = () => {
                     <h2 className="text-xl font-semibold mb-4 text-black">
                       Please give us your rating
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                       {status1.map((item, index) => (
                         <div
                           key={index}
@@ -414,11 +426,17 @@ const History = () => {
                           <h3 className="font-bold text-lg truncate">
                             {item.name}
                           </h3>
-                          <img
-                            src={item.food.photo}
-                            alt={item.food.name}
-                            className="w-full h-40 object-cover rounded-lg mt-2"
-                          />
+                          {item.food && item.food.photo ? (
+                            <img
+                              src={item.food.photo}
+                              alt={item.food.name}
+                              className="w-full h-40 object-cover rounded-lg mt-2"
+                            />
+                          ) : (
+                            <div className="w-full h-40 bg-gray-200 rounded-lg mt-2 flex items-center justify-center">
+                              <span className="text-gray-500">No image available</span>
+                            </div>
+                          )}
                           <p className="mt-2">
                             Total: Rp {item.total.toLocaleString("id-ID")}
                           </p>
@@ -436,11 +454,18 @@ const History = () => {
                             <button
                               onClick={() =>
                                 initiateRatingSubmission(
-                                  item.restaurant.restaurant_id,
+                                  item.restaurant && item.restaurant.restaurant_id 
+                                    ? item.restaurant.restaurant_id 
+                                    : null,
                                   item.transaction_id
                                 )
                               }
-                              className="mt-2 w-full bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 cursor-pointer transition-colors flex items-center justify-center"
+                              disabled={!item.restaurant || !item.restaurant.restaurant_id}
+                              className={`mt-2 w-full ${
+                                !item.restaurant || !item.restaurant.restaurant_id
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-green-600 hover:bg-green-700 cursor-pointer" 
+                              } text-white px-3 py-2 rounded transition-colors flex items-center justify-center`}
                             >
                               <svg
                                 className="w-4 h-4 mr-1"
@@ -468,7 +493,7 @@ const History = () => {
                   <h2 className="text-xl font-semibold mb-4 text-black">
                     Completed Transactions
                   </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                     {completedTransactions.map((item, index) => (
                       <div
                         key={index}
@@ -493,11 +518,17 @@ const History = () => {
                             Completed
                           </span>
                         </div>
-                        <img
-                          src={item.food.photo}
-                          alt={item.food.name}
-                          className="w-full h-40 object-cover rounded-lg my-2"
-                        />
+                        {item.food && item.food.photo ? (
+                          <img
+                            src={item.food.photo}
+                            alt={item.food.name}
+                            className="w-full h-40 object-cover rounded-lg my-2"
+                          />
+                        ) : (
+                          <div className="w-full h-40 bg-gray-200 rounded-lg my-2 flex items-center justify-center">
+                            <span className="text-gray-500">No image available</span>
+                          </div>
+                        )}
                         <p className="mt-2 text-green-700 font-medium">
                           Total: Rp {item.total.toLocaleString("id-ID")}
                         </p>
