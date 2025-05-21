@@ -581,7 +581,7 @@ const Owner = () => {
               <button
                 type="button"
                 onClick={handleUploadProfilePhoto}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
               >
                 Upload New Photo
               </button>
@@ -781,7 +781,7 @@ const Owner = () => {
           <span>{menu.length} items found</span>
           <button
             onClick={loadMenu}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             Refresh Menu
           </button>
@@ -846,7 +846,7 @@ const Owner = () => {
                   <div className="mt-4 flex justify-end space-x-2">
                     <button
                       onClick={() => handleEditFood(food)}
-                      className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
+                      className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center"
                       title="Edit"
                     >
                       <Edit size={16} className="mr-1" />
