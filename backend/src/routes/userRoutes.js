@@ -50,7 +50,7 @@ router.get('/profile', authenticate, async (req, res) => {
 
 router.get('/transactions', authenticate, async (req, res) => {
     try {
-        console.log('req.user:', req.user); 
+        console.log('req.user:', req.user);
         const user_id = req.user.user_id;
 
         const transactions = await Transaction.findAll({
@@ -98,6 +98,13 @@ router.get('/last-transaction-food', authenticate, async (req, res) => {
 
         const lastTransaction = await Transaction.findOne({
             where: { user_id },
+            include: [
+                {
+                    model: Food,
+                    as: 'food',
+                    attributes: ['food_id', 'name', 'photo', 'type', 'price']
+                }
+            ],
             order: [['date', 'DESC']]
         });
 
@@ -105,11 +112,15 @@ router.get('/last-transaction-food', authenticate, async (req, res) => {
             return res.status(404).json({ error: 'No transactions found.' });
         }
 
-        res.json({ food_id: lastTransaction.food_id });
+        res.json({
+            food_id: lastTransaction.food_id,
+            food: lastTransaction.food
+        });
     } catch (error) {
         console.error('Error fetching last transaction:', error);
         res.status(500).json({ error: 'Failed to get last transaction' });
     }
 });
+
 
 module.exports = router;
