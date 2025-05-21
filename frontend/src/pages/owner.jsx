@@ -678,7 +678,7 @@ const Owner = () => {
                 placeholder="Price"
                 value={foodData.price}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
               />
             </div>
@@ -693,7 +693,7 @@ const Owner = () => {
                 placeholder="Promo Price (optional)"
                 value={foodData.promo_price}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
             <div>
@@ -706,11 +706,12 @@ const Owner = () => {
                 placeholder="Quantity"
                 value={foodData.quantity}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
               />
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Food Photo
@@ -873,6 +874,7 @@ const Owner = () => {
           type="button"
           onClick={() => {
             localStorage.removeItem("token");
+            localStorage.removeItem("role"); // Hapus role juga
             window.location.href = "/";
           }}
           className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-800 transition cursor-pointer"

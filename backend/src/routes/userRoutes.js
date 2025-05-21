@@ -76,6 +76,7 @@ router.get('/transactions', authenticate, async (req, res) => {
 
         const formatted = transactions.map(tx => ({
             transaction_id: tx.transaction_id,
+            food_id: tx.food_id,
             booking_code: tx.booking_code,
             total: tx.total,
             status: tx.status,
@@ -88,6 +89,26 @@ router.get('/transactions', authenticate, async (req, res) => {
     } catch (err) {
         console.error('Fetch transactions error:', err);
         res.status(500).json({ message: 'Failed to fetch transactions' });
+    }
+});
+
+router.get('/last-transaction-food', authenticate, async (req, res) => {
+    try {
+        const user_id = req.user.user_id;
+
+        const lastTransaction = await Transaction.findOne({
+            where: { user_id },
+            order: [['date', 'DESC']]
+        });
+
+        if (!lastTransaction) {
+            return res.status(404).json({ error: 'No transactions found.' });
+        }
+
+        res.json({ food_id: lastTransaction.food_id });
+    } catch (error) {
+        console.error('Error fetching last transaction:', error);
+        res.status(500).json({ error: 'Failed to get last transaction' });
     }
 });
 

@@ -82,7 +82,7 @@ const Profile = () => {
     try {
       // Get token from localStorage
       const token = localStorage.getItem("token");
-      
+
       // Use the UploadService to upload the photo
       const result = await uploadUserPhoto(profilePhoto, token);
 
@@ -197,6 +197,7 @@ const Profile = () => {
           <button
             onClick={() => {
               localStorage.removeItem("token");
+              localStorage.removeItem("role"); // Hapus role juga
               window.location.href = "/";
             }}
             className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-800 transition cursor-pointer"

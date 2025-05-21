@@ -35,3 +35,14 @@ export const getTransactionHistory = async () => {
     throw error;
   }
 };
+
+export const getLastTransactionFood = async () => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_URL}/last-transaction-food`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data.food_id;
+};
+

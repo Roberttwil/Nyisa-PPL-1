@@ -93,8 +93,22 @@ router.post('/login', async (req, res) => {
 
         const role = profile.status === 1 ? 'restaurant' : 'user';
 
+        let restaurant_id = null;
+
+        if (role === 'restaurant') {
+            const resto = await Restaurant.findOne({ where: { email: profile.email } });
+            if (resto) {
+                restaurant_id = resto.restaurant_id;
+            }
+        }
+
         const token = jwt.sign(
-            { username: user.username, user_id: profile.user_id, role },
+            {
+                username: user.username,
+                user_id: profile.user_id,
+                role,
+                restaurant_id
+            },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );

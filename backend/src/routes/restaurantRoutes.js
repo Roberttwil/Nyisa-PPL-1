@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const { Op, where } = require('sequelize');
-const { Restaurant, User, Transaction } = require('../models');
+const { Food, Restaurant, User, Transaction } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
 

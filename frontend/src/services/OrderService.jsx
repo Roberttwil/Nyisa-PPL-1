@@ -123,6 +123,22 @@ const OrderService = {
       throw error;
     }
   },
+
+  verifyTransaction: async (transactionId) => {
+    const token = localStorage.getItem("token");
+
+    const response = await axios.patch(
+      `${API_URL}/verify/${transactionId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  },
 };
 
 export default OrderService;

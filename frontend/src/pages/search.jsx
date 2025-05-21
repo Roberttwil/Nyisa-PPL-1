@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -15,23 +15,24 @@ function Search() {
   const [loading, setLoading] = useState(true);
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationPage, setRecommendationPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(3);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [search, setSearch] = useState("");
   const [minRating, setMinRating] = useState("");
   const [type, setType] = useState("");
-
   const [role, setRole] = useState("");
-  const itemsPerPage = 3;
 
   useEffect(() => {
     const storedRole = localStorage.getItem("role");
-    setRole(storedRole || "user");
+    setRole(storedRole || "");
+    setIsLoggedIn(storedRole === "user");
   }, []);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        if (role === "user") {
+        if (isLoggedIn) {
           const data = await RecommendationService.getRecommendations(1);
           setRecommendations(data);
         }
@@ -41,7 +42,40 @@ function Search() {
     };
 
     fetchRecommendations();
-  }, [role]);
+  }, [isLoggedIn]);
+
+  const getItemsPerPage = () => {
+    if (window.innerWidth < 640) return 1;
+    if (window.innerWidth < 768) return 2;
+    return 3;
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      const newItemsPerPage = getItemsPerPage();
+      setItemsPerPage(newItemsPerPage);
+      setRecommendationPage(0);
+      setCurrentPage(1);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const maxPage = Math.ceil(recommendations.length / itemsPerPage);
+    if (recommendationPage >= maxPage) {
+      setRecommendationPage(0);
+    }
+  }, [itemsPerPage, recommendations]);
+
+  useEffect(() => {
+    const maxPage = totalPages;
+    if (currentPage > maxPage) {
+      setCurrentPage(1);
+    }
+  }, [itemsPerPage, totalPages, currentPage]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -51,7 +85,7 @@ function Search() {
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [recommendations]);
+  }, [recommendations, itemsPerPage]);
 
   const fetchRestaurants = async () => {
     setLoading(true);
@@ -62,7 +96,11 @@ function Search() {
         type: type ? [type] : [],
       };
 
-      const result = await RestoService.getRestaurants(currentPage, 3, filters);
+      const result = await RestoService.getRestaurants(
+        currentPage,
+        itemsPerPage,
+        filters
+      );
       setRestaurants(result.data || []);
       setTotalPages(result.totalPages || 1);
     } catch (error) {
@@ -74,7 +112,7 @@ function Search() {
 
   useEffect(() => {
     fetchRestaurants();
-  }, [currentPage, minRating, search]);
+  }, [currentPage, minRating, search, itemsPerPage]);
 
   const handleNextRecommendation = () => {
     setRecommendationPage(
@@ -97,6 +135,7 @@ function Search() {
 
   return (
     <div className="flex flex-col my-10">
+      {/* Posters */}
       <div className="flex flex-wrap gap-10 w-full justify-center mb-12">
         {[poster2, poster1, poster3].map((poster, index) => (
           <motion.div
@@ -111,7 +150,8 @@ function Search() {
         ))}
       </div>
 
-      {role === "user" && recommendations.length > 0 && (
+      {/* Recommendations */}
+      {isLoggedIn && recommendations.length > 0 && (
         <div className="flex flex-col items-center">
           <div className="flex flex-row items-center justify-between w-full max-w-6xl px-4 font-semibold text-[#0D3B2E] text-lg mb-4">
             <p>Today's Recommendation</p>
@@ -123,7 +163,7 @@ function Search() {
                 onClick={handlePrevRecommendation}
                 className="absolute left-0 z-10 p-2 bg-gray-200 rounded-full hover:bg-gray-300 cursor-pointer"
               >
-                <ChevronLeft />
+                <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
 
               <div className="overflow-hidden w-full">
@@ -134,12 +174,12 @@ function Search() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     transition={{ duration: 0.5 }}
-                    className="flex gap-6 justify-center px-4 py-6"
+                    className="flex flex-wrap gap-6 justify-center px-4 py-6"
                   >
                     {currentRecommendations.map((item) => (
                       <div
                         key={item.id || item.name}
-                        className="flex-shrink-0 w-[280px] bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-5"
+                        className="flex-shrink-0 w-full sm:w-[48%] md:w-[30%] bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-5"
                       >
                         <div className="mb-3">
                           <h3 className="text-xl font-bold text-gray-800 truncate">
@@ -173,7 +213,7 @@ function Search() {
                 onClick={handleNextRecommendation}
                 className="absolute right-0 z-10 p-2 bg-gray-200 rounded-full hover:bg-gray-300 cursor-pointer"
               >
-                <ChevronRight />
+                <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
             </div>
 
@@ -185,7 +225,9 @@ function Search() {
                 <div
                   key={idx}
                   className={`w-3 h-3 rounded-full ${
-                    idx === recommendationPage ? "bg-green-600" : "bg-gray-300"
+                    idx === recommendationPage
+                      ? "bg-green-600"
+                      : "bg-gray-300"
                   }`}
                 ></div>
               ))}

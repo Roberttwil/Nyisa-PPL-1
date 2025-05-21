@@ -91,6 +91,8 @@ const RestoService = {
           Authorization: `Bearer ${token}`
         }
       });
+
+      console.log("token:", token);
       return response.data.transactions;
     } catch (error) {
       console.error('Failed to fetch transaction history:', error);
