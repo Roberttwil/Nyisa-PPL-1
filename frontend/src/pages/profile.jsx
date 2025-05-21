@@ -9,7 +9,12 @@ const Profile = () => {
   const [form, setForm] = useState({});
   const [profilePhoto, setProfilePhoto] = useState(null);
   const profilePhotoRef = useRef(null);
-
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -41,10 +46,18 @@ const Profile = () => {
       const updated = await updateProfile({ ...profile, [field]: form[field] });
       setProfile(updated.profile);
       setEditField(null);
-      alert("Profile updated!");
+      setPopup({
+        show: true,
+        type: 'success',
+        message: 'Profile updated successfully!',
+      });
     } catch (err) {
       console.error("Update error:", err.message);
-      alert("Failed to update");
+      setPopup({
+        show: true,
+        type: 'error',
+        message: 'Failed to update profile. Please try again.',
+      });
     }
   };
 
@@ -54,7 +67,11 @@ const Profile = () => {
 
       // File size validation (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        alert("Photo size must be less than 2MB");
+        setPopup({
+          show: true,
+          type: "error",
+          message: "Photo size must be less than 2MB",
+        });
         e.target.value = null; // Reset file input
         return;
       }
@@ -75,7 +92,11 @@ const Profile = () => {
 
   const handleUploadProfilePhoto = async () => {
     if (!profilePhoto) {
-      alert("Please select a photo to upload");
+      setPopup({
+        show: true,
+        type: "error",
+        message: "Please select a photo to upload",
+      });;
       return;
     }
 
@@ -89,12 +110,20 @@ const Profile = () => {
       if (result && result.photo) {
         // Update local state with new photo URL if returned by API
         setProfile((prev) => ({ ...prev, photo: result.photo }));
-        alert("Profile photo updated successfully!");
+        setPopup({
+          show: true,
+          type: 'success',
+          message: 'Profile photo updated successfully!',
+        });
       } else {
         // If no photo URL is returned, refresh the profile to get the latest data
         const updatedProfile = await getProfile();
         setProfile(updatedProfile);
-        alert("Profile photo updated!");
+        setPopup({
+          show: true,
+          type: 'success',
+          message: 'Profile photo updated',
+        });
       }
 
       // Reset file input and state
@@ -111,7 +140,11 @@ const Profile = () => {
         console.error("Response data:", err.response.data);
       }
 
-      alert(err?.message || "Failed to update profile photo");
+      setPopup({
+        show: true,
+        type: 'error',
+        message: err?.message || 'Failed to update profile photo.',
+      });;
     }
   };
 
@@ -195,19 +228,62 @@ const Profile = () => {
 
         <div className="mt-10">
           <button
-            onClick={() => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("role"); // Hapus role juga
-              window.location.href = "/";
-            }}
+            onClick={() => setConfirmLogout(true)}
             className="px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-800 transition cursor-pointer"
           >
             Sign Out
           </button>
         </div>
       </div>
+      {popup.show && (
+        <div className="fixed inset-0 bg-gray-600/30 flex justify-center items-center z-50">
+          <div className={`bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center border ${popup.type === 'success' ? 'border-green-500' : 'border-red-500'}`}>
+            <h2 className={`text-2xl font-bold mb-4 ${popup.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {popup.type === 'success' ? 'Success!' : 'Error!'}
+            </h2>
+            <p className="mb-4">{popup.message}</p>
+            <button
+              onClick={() => setPopup({ ...popup, show: false })}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {confirmLogout && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black opacity-50"
+            onClick={() => setConfirmLogout(false)}
+          ></div>
+          <div className="relative bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center border border-red-500">
+            <h2 className="text-xl font-semibold mb-2 text-red-600">Confirm Logout</h2>
+            <p className="mb-4">Are you sure you want to sign out?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                onClick={() => setConfirmLogout(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("role");
+                  window.location.href = "/";
+                }}
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+
 };
 
 export default Profile;
