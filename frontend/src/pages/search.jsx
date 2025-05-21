@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -7,6 +8,7 @@ import poster2 from "../assets/poster2.svg";
 import poster1 from "../assets/poster1.svg";
 import RestoService from "../services/RestoService";
 import RecommendationService from "../services/RecommendationService";
+import { getLastTransactionFood } from "../services/UserService";
 
 function Search() {
   const [restaurants, setRestaurants] = useState([]);
@@ -30,19 +32,25 @@ function Search() {
   }, []);
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
+    const fetchRecommendation = async () => {
       try {
-        if (isLoggedIn) {
-          const data = await RecommendationService.getRecommendations(1);
-          setRecommendations(data);
+        const role = localStorage.getItem("role");
+        if (role === "user") {
+          const last = await getLastTransactionFood();
+          const foodId = last.food_id;
+
+          const recResponse = await axios.get(
+            `http://localhost:8000/api/foods/recommend/${foodId}`
+          );
+          setRecommendations(recResponse.data);
         }
       } catch (err) {
-        console.error("Failed to fetch recommendations:", err);
+        console.error("Failed to fetch recommendation:", err);
       }
     };
 
-    fetchRecommendations();
-  }, [isLoggedIn]);
+    fetchRecommendation();
+  }, []);
 
   const getItemsPerPage = () => {
     if (window.innerWidth < 640) return 1;
@@ -86,6 +94,7 @@ function Search() {
 
     return () => clearInterval(timer);
   }, [recommendations, itemsPerPage]);
+
 
   const fetchRestaurants = async () => {
     setLoading(true);
@@ -224,11 +233,10 @@ function Search() {
               }).map((_, idx) => (
                 <div
                   key={idx}
-                  className={`w-3 h-3 rounded-full ${
-                    idx === recommendationPage
-                      ? "bg-green-600"
-                      : "bg-gray-300"
-                  }`}
+                  className={`w-3 h-3 rounded-full ${idx === recommendationPage
+                    ? "bg-green-600"
+                    : "bg-gray-300"
+                    }`}
                 ></div>
               ))}
             </div>
