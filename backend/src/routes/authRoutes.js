@@ -56,7 +56,8 @@ router.post('/register', async (req, res) => {
             phone,
             email,
             address: '',     // placeholder, update later
-            status: 0        // default status 0 is for normal user, while 1 is for restaurant owner
+            status: 0,        // default status 0 is for normal user, while 1 is for restaurant owner
+            photo: 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/2f07d3bc-30f6-4a48-99bd-fb7b3dc75cb3.jpeg',
         });
 
         // await sendOTP(email, otp);
@@ -326,7 +327,8 @@ router.post('/register-restaurant', async (req, res) => {
             phone,
             email,
             address,
-            status: 1
+            status: 1,
+            photo: 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/2f07d3bc-30f6-4a48-99bd-fb7b3dc75cb3.jpeg',
         });
 
         await Restaurant.create({
@@ -335,7 +337,7 @@ router.post('/register-restaurant', async (req, res) => {
             email,
             address,
             restaurant_type: restaurantType,
-            photo: '',      // Bisa diset default di model
+            photo: 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/2f07d3bc-30f6-4a48-99bd-fb7b3dc75cb3.jpeg',      // default
             rating: 0,      // Bisa diset default di model
             latitude: lat,
             longitude: lng
