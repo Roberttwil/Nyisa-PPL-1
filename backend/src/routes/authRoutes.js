@@ -27,14 +27,16 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Username is already taken' });
         }
 
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
         // If user exists but not verified → resend OTP and update password
         if (existing && !existing.is_verified) {
-            existing.password = password;
+            existing.password = hashedPassword;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
 
-            await sendOTP(email, otp);
+            // await sendOTP(email, otp);
 
             return res.status(200).json({
                 message: "You already registered but haven't verified. A new OTP has been sent to your email."
@@ -44,7 +46,7 @@ router.post('/register', async (req, res) => {
         // New user registration
         await Users.create({
             username,
-            password,
+            password: hashedPassword,
             otp,
             otp_expires_at: otpExpires,
             is_verified: false
@@ -59,7 +61,7 @@ router.post('/register', async (req, res) => {
             status: 0        // default status 0 is for normal user, while 1 is for restaurant owner
         });
 
-        await sendOTP(email, otp);
+        // await sendOTP(email, otp);
 
         res.status(201).json({
             message: 'OTP sent to your email. Please verify to complete registration.'
@@ -296,7 +298,7 @@ router.post('/register-restaurant', async (req, res) => {
             }
 
             // Update user not verified
-            existing.password = password;
+            existing.password = hashedPassword;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -314,7 +316,7 @@ router.post('/register-restaurant', async (req, res) => {
         // Start Registration Process
         await Users.create({
             username,
-            password,
+            password: hashedPassword,
             otp,
             otp_expires_at: otpExpires,
             is_verified: false
