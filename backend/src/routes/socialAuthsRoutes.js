@@ -36,7 +36,8 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
                     phone: '',
                     email: email,
                     address: '',
-                    status: 0
+                    status: 0,
+                    photo:'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/2f07d3bc-30f6-4a48-99bd-fb7b3dc75cb3.jpeg',
                 });
             }
 
