@@ -27,11 +27,9 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Username is already taken' });
         }
 
-        const hashedPassword = bcrypt.hashSync(password, 10);
-
         // If user exists but not verified → resend OTP and update password
         if (existing && !existing.is_verified) {
-            existing.password = hashedPassword;
+            existing.password = password;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -46,7 +44,7 @@ router.post('/register', async (req, res) => {
         // New user registration
         await Users.create({
             username,
-            password: hashedPassword,
+            password: password,
             otp,
             otp_expires_at: otpExpires,
             is_verified: false
@@ -253,7 +251,7 @@ router.post('/reset-password', verifyResetToken, async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
-        user.password = hashedPassword;
+        user.password = password;
         user.otp = null;
         user.otp_expires_at = null;
         await user.save();
@@ -298,7 +296,7 @@ router.post('/register-restaurant', async (req, res) => {
             }
 
             // Update user not verified
-            existing.password = hashedPassword;
+            existing.password = password;
             existing.otp = otp;
             existing.otp_expires_at = otpExpires;
             await existing.save();
@@ -316,7 +314,7 @@ router.post('/register-restaurant', async (req, res) => {
         // Start Registration Process
         await Users.create({
             username,
-            password: hashedPassword,
+            password: password,
             otp,
             otp_expires_at: otpExpires,
             is_verified: false
