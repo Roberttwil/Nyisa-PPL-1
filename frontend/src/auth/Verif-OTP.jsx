@@ -112,8 +112,8 @@ const OTP = () => {
           OTP Verify
         </h2>
         <p className="text-sm text-green-900 mb-6">
-          We have sent an OTP code to <span className="font-bold">{email}</span>
-          . Please enter your 6-digit OTP code.
+          We have sent an OTP code to your email. 
+          Please check your email and enter your 6-digit OTP code.
         </p>
 
         <form onSubmit={handleSubmit}>

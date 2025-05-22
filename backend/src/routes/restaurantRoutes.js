@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const { Op, where } = require('sequelize');
-const { Restaurant, User } = require('../models');
+const { Food, Restaurant, User, Transaction } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
 
@@ -73,26 +73,26 @@ router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), asy
         const restaurant = await Restaurant.findOne({ where: { email: user.email } });
         if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
 
-        const {
-            name, type, address, phone,
-            email, rating
-        } = req.body;
+        const { name, type, phone, email, address, rating } = req.body;
 
-        // Optional photo upload
+        console.log('Incoming data:', req.body);
+
+        // Handle photo upload
         if (req.file) {
             const photoUrl = await resizeAndUpload(req.file, 'restaurant');
             restaurant.photo = photoUrl;
         }
 
-        // Convert address to lat/lng (if address is provided)
+        // Update location if address provided
         if (address) {
             restaurant.address = address;
+            user.address = address;
 
             const geoRes = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
                 params: {
                     address,
-                    key: process.env.GOOGLE_MAPS_API_KEY
-                }
+                    key: process.env.GOOGLE_MAPS_API_KEY,
+                },
             });
 
             const geoData = geoRes.data;
@@ -105,12 +105,25 @@ router.put('/profile', authenticate, restaurantOnly, upload.single('photo'), asy
             }
         }
 
-        if (name) restaurant.name = name;
+        if (name) {
+            restaurant.name = name;
+            user.name = name;
+        }
         if (type) restaurant.restaurant_type = type;
-        if (phone) restaurant.phone = phone;
-        if (email) restaurant.email = email;
+
+        if (phone) {
+            restaurant.phone = phone;
+            user.phone = phone;
+        }
+
+        if (email) {
+            restaurant.email = email;
+            user.email = email;
+        }
+
         if (rating) restaurant.rating = rating;
 
+        await user.save();
         await restaurant.save();
 
         res.json({ message: 'Restaurant profile updated successfully', restaurant });

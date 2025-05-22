@@ -57,8 +57,12 @@ const FoodList = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("You must be logged in to add items to the cart.");
-      navigate("/login");
+      setModal({
+        show: true,
+        type: "error",
+        message: "You must be logged in to add items to the cart.",
+      });
+      setTimeout(() => navigate("/login"), 1000);
       return;
     }
 
@@ -66,13 +70,19 @@ const FoodList = () => {
       setLoading(true);
 
       // Ambil booking code untuk restoran ini
-      const allCodes = JSON.parse(localStorage.getItem("bookingCodesPerResto")) || {};
-      const userBookingCodes = JSON.parse(localStorage.getItem("userBookingCodes")) || {};
+      const allCodes =
+        JSON.parse(localStorage.getItem("bookingCodesPerResto")) || {};
+      const userBookingCodes =
+        JSON.parse(localStorage.getItem("userBookingCodes")) || {};
       const userBookingCode = userBookingCodes[userId]?.[restoId];
 
       if (!userBookingCode) {
-        alert("Booking code not found for this restaurant. Please refresh the page.");
-        return;
+        setModal({
+          show: true,
+          type: "error",
+          message:
+            "Booking code not found for this restaurant. Please refresh the page.",
+        });
       }
 
       const itemsToAdd = Object.entries(quantities).filter(
@@ -88,19 +98,35 @@ const FoodList = () => {
         });
       }
 
-      alert("All items have been successfully added to the cart!");
+      setModal({
+        show: true,
+        type: "success",
+        message: "All items have been successfully added to the cart!",
+      });
     } catch (error) {
       console.error("Failed to add items to the cart:", error);
-      alert("An error occurred while adding items to the cart.");
+      setModal({
+        show: true,
+        type: "error",
+        message: "An error occurred while adding items to the cart.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const [modal, setModal] = useState({
+    show: false,
+    type: "success", // atau "error"
+    message: "",
+  });
+
   const fetchBookingCode = async () => {
     const userId = localStorage.getItem("user_id");
-    const allCodes = JSON.parse(localStorage.getItem("bookingCodesPerResto")) || {};
-    const userBookingCodes = JSON.parse(localStorage.getItem("userBookingCodes")) || {};
+    const allCodes =
+      JSON.parse(localStorage.getItem("bookingCodesPerResto")) || {};
+    const userBookingCodes =
+      JSON.parse(localStorage.getItem("userBookingCodes")) || {};
 
     if (!userBookingCodes[userId]) {
       userBookingCodes[userId] = {};
@@ -111,8 +137,17 @@ const FoodList = () => {
         const response = await OrderService.generateBookingCode();
         const bookingCode = response.bookingCode;
         userBookingCodes[userId][restoId] = bookingCode;
-        localStorage.setItem("userBookingCodes", JSON.stringify(userBookingCodes));
-        console.log("Generated new booking code for user:", userId, "restaurant:", restoId, bookingCode);
+        localStorage.setItem(
+          "userBookingCodes",
+          JSON.stringify(userBookingCodes)
+        );
+        console.log(
+          "Generated new booking code for user:",
+          userId,
+          "restaurant:",
+          restoId,
+          bookingCode
+        );
       } catch (error) {
         console.error("Failed to generate booking code:", error);
       }
@@ -180,8 +215,12 @@ const FoodList = () => {
                   <p>Type: {food.type}</p>
                   {food.promo_price ? (
                     <p>
-                      <span className="line-through text-gray-500 mr-2">Rp{food.price}</span>
-                      <span className="text-green-700 font-bold">Rp{food.promo_price}</span>
+                      <span className="line-through text-gray-500 mr-2">
+                        Rp{food.price}
+                      </span>
+                      <span className="text-green-700 font-bold">
+                        Rp{food.promo_price}
+                      </span>
                     </p>
                   ) : (
                     <p>Price: Rp{food.price}</p>
@@ -222,10 +261,34 @@ const FoodList = () => {
         <div className="sticky bottom-0 bg-white py-4 mt-10 flex justify-center z-20">
           <button
             onClick={handleAddAllToCart}
-            className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition w-[90%] sm:w-auto md:w-full text-center cursor-pointer"
+            className="bg-[#D9E1D0] text-[#0D3B2E] px-6 py-3 rounded-full font-semibold hover:bg-[#0D3B2E] hover:text-[#D9E1D0] transition w-[90%] sm:w-auto md:w-full text-center cursor-pointer"
           >
-            Add Selected Items to Cart
+            Add to Cart
           </button>
+        </div>
+      )}
+      {modal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black opacity-50"
+            onClick={() => setModal({ ...modal, show: false })}
+          ></div>
+          <div
+            className={`relative bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center border-2 ${
+              modal.type === "success" ? "border-green-500" : "border-red-500"
+            }`}
+          >
+            <h2 className="text-xl font-semibold mb-2">
+              {modal.type === "success" ? "Success" : "Error"}
+            </h2>
+            <p className="mb-4">{modal.message}</p>
+            <button
+              onClick={() => setModal({ ...modal, show: false })}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>

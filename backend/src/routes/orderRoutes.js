@@ -199,5 +199,4 @@ router.patch('/verify/:transaction_id', authenticate, restaurantOnly, async (req
     }
 });
 
-
 module.exports = router

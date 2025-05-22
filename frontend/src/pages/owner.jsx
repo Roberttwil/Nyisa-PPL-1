@@ -9,13 +9,12 @@ const Owner = () => {
     name: "",
     type: "",
     price: "",
+    promo_price: "",
     quantity: "",
   });
   const [foodPhoto, setFoodPhoto] = useState(null);
   const [foodIdToUpdate, setFoodIdToUpdate] = useState(null);
   const [photo, setPhoto] = useState(null);
-  const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [menu, setMenu] = useState([]);
   const [profile, setProfile] = useState({
     name: "",
@@ -25,9 +24,23 @@ const Owner = () => {
     photo: "",
   });
   const [editField, setEditField] = useState(null);
+  const [formData, setFormData] = useState({});
   const [profilePhoto, setProfilePhoto] = useState(null);
   const profilePhotoRef = useRef(null);
   const addFoodRef = useRef(null);
+
+  // Modal states
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
+  const [confirmAction, setConfirmAction] = useState({
+    show: false,
+    type: null, // "delete", "update", "add", "logout"
+    message: "",
+    onConfirm: null,
+  });
 
   const token = localStorage.getItem("token");
   const username = localStorage.getItem("username");
@@ -39,13 +52,12 @@ const Owner = () => {
         try {
           const result = await RestoService.getOwnerProfile(token);
           setProfile(result);
+          setFormData(result); // Initialize form data with profile
           console.log("Fetched profile:", result);
         } catch (err) {
           console.error("Failed to load owner profile:", err);
-          showError("Failed to load owner profile");
+          showPopup("error", "Failed to load owner profile");
         }
-      } else {
-        showError("Username or token not found");
       }
     };
     fetchProfile();
@@ -72,48 +84,84 @@ const Owner = () => {
         console.log("Menu set to:", result.data);
       } catch (err) {
         console.error("Failed to load menu:", err);
-        showError("Failed to load menu items");
+        showPopup("error", "Failed to load menu items");
       }
     } else {
       console.log("Profile data is not complete:", profile);
     }
   };
 
+  // Handle input changes for both owner and restaurant fields
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
+    setFormData((prev) => {
+      const newFormData = { ...prev };
 
-    // If changing restaurant name
-    if (name === "restaurantName") {
-      setProfile((prev) => ({
-        ...prev,
-        owner: {
-          ...prev.owner,
-          restaurant: {
-            ...prev.owner.restaurant,
-            name: value,
-          },
-        },
-      }));
+      // Create nested structure if it doesn't exist
+      if (!newFormData.owner) newFormData.owner = {};
+      if (!newFormData.owner.restaurant) newFormData.owner.restaurant = {};
+
+      // Handle special fields
+      if (name === "restaurantName") {
+        newFormData.owner.restaurant.name = value;
+      } else {
+        newFormData.owner[name] = value;
+      }
+
+      return newFormData;
+    });
+  };
+
+  const handleEditToggle = (field) => {
+    if (editField === field) {
+      handleUpdateProfile(field);
+    } else {
+      setEditField(field);
     }
-    // If changing owner name
-    else if (name === "ownerName") {
-      setProfile((prev) => ({
-        ...prev,
-        owner: {
-          ...prev.owner,
-          name: value,
-        },
-      }));
-    }
-    // If changing other owner fields
-    else if (name in profile.owner) {
-      setProfile((prev) => ({
-        ...prev,
-        owner: {
-          ...prev.owner,
-          [name]: value,
-        },
-      }));
+  };
+
+  const handleUpdateProfile = async (field) => {
+    try {
+      let updateData = {};
+
+      if (field === "restaurantName") {
+        updateData = { name: profile.owner.restaurant.name };
+      } else {
+        updateData = { [field]: profile.owner[field] };
+      }
+
+      const result = await RestoService.updateOwnerProfile(updateData, token);
+
+      // Update local state real-time
+      setProfile((prev) => {
+        const updated = { ...prev };
+
+        if (field === "restaurantName") {
+          updated.owner.restaurant.name = profile.owner.restaurant.name;
+        } else {
+          updated.owner[field] = profile.owner[field];
+        }
+
+        return updated;
+      });
+
+      setFormData((prev) => {
+        const updated = { ...prev };
+
+        if (field === "restaurantName") {
+          updated.owner.restaurant.name = profile.owner.restaurant.name;
+        } else {
+          updated.owner[field] = profile.owner[field];
+        }
+
+        return updated;
+      });
+
+      setEditField(null);
+      showPopup("success", `Profile updated: ${result.message || "Success"}`);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      showPopup("error", err?.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -123,7 +171,7 @@ const Owner = () => {
 
       // File size validation (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        showError("Photo size must be less than 2MB");
+        showPopup("error", "Photo size must be less than 2MB");
         e.target.value = null; // Reset file input
         return;
       }
@@ -144,7 +192,7 @@ const Owner = () => {
 
   const handleUploadProfilePhoto = async () => {
     if (!profilePhoto) {
-      showError("Please select a photo to upload");
+      showPopup("error", "Please select a photo to upload");
       return;
     }
 
@@ -153,7 +201,7 @@ const Owner = () => {
       const result = await uploadRestaurantPhoto(profilePhoto, token);
 
       if (result && result.message) {
-        showSuccess("Restaurant photo updated successfully");
+        showPopup("success", "Restaurant photo updated successfully");
 
         // Update local state with new photo URL if returned by API
         if (result.photo) {
@@ -188,29 +236,7 @@ const Owner = () => {
         console.error("Response data:", err.response.data);
       }
 
-      showError(err?.message || "Failed to update restaurant photo");
-    }
-  };
-
-  const handleUpdateProfile = async () => {
-    try {
-      const { restaurant, ...ownerData } = profile.owner;
-
-      // Prepare data for update
-      const updateData = {
-        ...ownerData,
-        restaurantName: restaurant.name,
-      };
-
-      // Send update to backend
-      const result = await RestoService.updateOwnerProfile(updateData, token);
-      showSuccess(`Profile updated: ${result.message || "Success"}`);
-
-      // Reset edit field
-      setEditField(null);
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      showError(err?.response?.data?.message || "Failed to update profile");
+      showPopup("error", err?.message || "Failed to update restaurant photo");
     }
   };
 
@@ -230,48 +256,47 @@ const Owner = () => {
     }));
   };
 
-  // Success message function
-  const showSuccess = (msg) => {
-    setMessage(msg);
-    setErrorMessage("");
-    setTimeout(() => setMessage(""), 5000);
+  // Popup message function
+  const showPopup = (type, msg) => {
+    setPopup({
+      show: true,
+      type: type,
+      message: msg
+    });
   };
 
-  // Error message function
-  const showError = (msg) => {
-    setErrorMessage(msg);
-    setMessage("");
-    setTimeout(() => setErrorMessage(""), 5000);
-  };
-
-  const handleAddFood = async (e) => {
-    e.preventDefault();
-
-    // Reset messages
-    setMessage("");
-    setErrorMessage("");
-
-    // Validate input
+  const validateFoodData = () => {
     const missingFields = [];
     if (!foodData.name) missingFields.push("Food Name");
     if (!foodData.type) missingFields.push("Food Type");
     if (!foodData.price) missingFields.push("Price");
     if (!foodData.quantity) missingFields.push("Quantity");
-    if (!foodPhoto) missingFields.push("Food Photo");
+    if (!foodIdToUpdate && !foodPhoto) missingFields.push("Food Photo");
 
     if (missingFields.length > 0) {
-      showError(
-        `Please fill in the following fields: ${missingFields.join(", ")}`
-      );
-      return;
+      showPopup("error", `Please fill in the following fields: ${missingFields.join(", ")}`);
+      return false;
     }
+    return true;
+  };
 
+  const handleAddFoodClick = (e) => {
+    e.preventDefault();
+    if (validateFoodData()) {
+      setConfirmAction({
+        show: true,
+        type: "add",
+        message: `Are you sure you want to add "${foodData.name}" to the menu?`,
+        onConfirm: handleAddFood
+      });
+    }
+  };
+
+  const handleAddFood = async () => {
     try {
       // Check for restaurant ID
       if (!profile?.owner?.restaurant?.id) {
-        showError(
-          "Restaurant ID not found. Please make sure your profile is loaded."
-        );
+        showPopup("error", "Restaurant ID not found. Please make sure your profile is loaded.");
         return;
       }
 
@@ -283,6 +308,11 @@ const Owner = () => {
         quantity: parseInt(foodData.quantity),
       };
 
+      // Add promoPrice only if it's not empty
+      if (foodData.promo_price) {
+        foodDataToSend.promo_price = parseInt(foodData.promo_price);
+      }
+
       console.log("Sending food data:", foodDataToSend);
       console.log("With photo:", foodPhoto ? foodPhoto.name : "No photo");
 
@@ -291,17 +321,23 @@ const Owner = () => {
       console.log("Server response:", response);
 
       if (response && response.food) {
-        showSuccess(`${foodData.name} successfully added to menu!`);
+        showPopup("success", `${foodData.name} successfully added to menu!`);
 
         // Reset form
-        setFoodData({ name: "", type: "", price: "", quantity: "" });
+        setFoodData({
+          name: "",
+          type: "",
+          price: "",
+          promo_price: "",
+          quantity: "",
+        });
         setFoodPhoto(null);
         resetFileInput();
 
         // Refresh menu
         await loadMenu();
       } else {
-        showError("Error adding food: Unexpected response");
+        showPopup("error", "Error adding food: Unexpected response");
       }
     } catch (error) {
       console.error("Error adding food:", error);
@@ -311,39 +347,23 @@ const Owner = () => {
         console.error("Response data:", error.response.data);
       }
 
-      showError(
-        error?.response?.data?.message || "Failed to add food. Server error."
-      );
+      showPopup("error", error?.response?.data?.message || "Failed to add food. Server error.");
     }
   };
 
-  const handleUpdateFoodWithConfirmation = (e) => {
+  const handleUpdateFoodClick = (e) => {
     e.preventDefault();
-    const confirmed = window.confirm(
-      "Are you sure you want to update this food?"
-    );
-    if (confirmed) {
-      handleUpdateFood(e);
+    if (validateFoodData()) {
+      setConfirmAction({
+        show: true,
+        type: "update",
+        message: `Are you sure you want to update "${foodData.name}"?`,
+        onConfirm: handleUpdateFood
+      });
     }
   };
 
-  const handleUpdateFood = async (e) => {
-    e.preventDefault();
-
-    // Validate input
-    const missingFields = [];
-    if (!foodData.name) missingFields.push("Food Name");
-    if (!foodData.type) missingFields.push("Food Type");
-    if (!foodData.price) missingFields.push("Price");
-    if (!foodData.quantity) missingFields.push("Quantity");
-
-    if (missingFields.length > 0) {
-      showError(
-        `Please fill in the following fields: ${missingFields.join(", ")}`
-      );
-      return;
-    }
-
+  const handleUpdateFood = async () => {
     try {
       // Prepare food data
       const foodDataToSend = {
@@ -353,6 +373,11 @@ const Owner = () => {
         quantity: parseInt(foodData.quantity),
       };
 
+      // Add promoPrice only if it's not empty
+      if (foodData.promo_price) {
+        foodDataToSend.promo_price = parseFloat(foodData.promo_price);
+      }
+
       // Send to server
       const result = await foodService.updateFood(
         foodIdToUpdate,
@@ -360,8 +385,14 @@ const Owner = () => {
         photo
       );
 
-      showSuccess(`Food updated: ${result.message || "Success"}`);
-      setFoodData({ name: "", type: "", price: "", quantity: "" });
+      showPopup("success", `Food updated: ${result.message || "Success"}`);
+      setFoodData({
+        name: "",
+        type: "",
+        price: "",
+        promo_price: "",
+        quantity: "",
+      });
       setPhoto(null);
       setFoodIdToUpdate(null);
       resetFileInput();
@@ -376,52 +407,70 @@ const Owner = () => {
         console.error("Response data:", err.response.data);
       }
 
-      showError(err?.response?.data?.message || "Failed to update food");
+      showPopup("error", err?.response?.data?.message || "Failed to update food");
     }
+  };
+
+  const handleDeleteFoodClick = (foodId, foodName) => {
+    setConfirmAction({
+      show: true,
+      type: "delete",
+      message: `Are you sure you want to delete "${foodName}" from the menu?`,
+      onConfirm: () => handleDeleteFood(foodId)
+    });
   };
 
   const handleDeleteFood = async (foodId) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      try {
-        const result = await foodService.deleteFood(foodId);
-        showSuccess(`Food deleted: ${result.message || "Success"}`);
+    try {
+      const result = await foodService.deleteFood(foodId);
+      showPopup("success", `Food deleted: ${result.message || "Success"}`);
 
-        // Refresh menu
-        await loadMenu();
-      } catch (err) {
-        console.error("Error deleting food:", err);
+      // Refresh menu
+      await loadMenu();
+    } catch (err) {
+      console.error("Error deleting food:", err);
 
-        if (err.response) {
-          console.error("Response status:", err.response.status);
-          console.error("Response data:", err.response.data);
-        }
-
-        showError(err?.response?.data?.message || "Failed to delete food");
+      if (err.response) {
+        console.error("Response status:", err.response.status);
+        console.error("Response data:", err.response.data);
       }
+
+      showPopup("error", err?.response?.data?.message || "Failed to delete food");
     }
   };
 
+  const handleConfirmLogout = () => {
+    setConfirmAction({
+      show: true,
+      type: "logout",
+      message: "Are you sure you want to sign out?",
+      onConfirm: () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role"); // Remove role also
+        window.location.href = "/";
+      }
+    });
+  };
+
   const handleEditFood = (food) => {
+    // Debug: Check the actual structure of the food object
+    console.log("Food object for editing:", food);
+    console.log("promo_price value:", food.promo_price);
+    console.log("promoPrice value:", food.promoPrice);
+
     setFoodIdToUpdate(food.id);
     setFoodData({
       name: food.name,
       type: food.type,
       price: food.price,
+      // Check both possible field names for promo price
+      promo_price: food.promo_price || food.promoPrice || "",
       quantity: food.quantity,
     });
 
     addFoodRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  const handleEditToggle = (field) => {
-    if (editField === field) {
-      // Save changes when Check is pressed
-      handleUpdateProfile();
-    } else {
-      setEditField(field); // Activate edit mode
-    }
-  };
-
+  
   // Reset file input after submit
   const resetFileInput = () => {
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -437,22 +486,65 @@ const Owner = () => {
     }
   };
 
+  // Render a form field with editable capability
+  const renderField = (label, fieldPath, isRestaurantField = false) => {
+    // Extract field name for editField state management
+    const fieldName = fieldPath.split(".").pop();
+
+    // Different value handling for owner vs restaurant fields
+    const getValue = () => {
+      if (isRestaurantField) {
+        return profile?.owner?.restaurant?.[fieldName] || "";
+      }
+      return profile?.owner?.[fieldName] || "";
+    };
+
+    const getFormValue = () => {
+      if (isRestaurantField) {
+        return formData?.owner?.restaurant?.[fieldName] || "";
+      }
+      return formData?.owner?.[fieldName] || "";
+    };
+
+    // Input name based on field type
+    const inputName = isRestaurantField ? "restaurantName" : fieldName;
+
+    return (
+      <div className="py-3">
+        <label className="text-gray-600 font-semibold block mb-1">
+          {label}
+        </label>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {editField === fieldName ? (
+              <input
+                name={inputName}
+                value={getFormValue()}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
+              />
+            ) : (
+              <p className="text-lg text-gray-900">{getValue() || "Not set"}</p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => handleEditToggle(fieldName)}
+            className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
+          >
+            {editField === fieldName ? (
+              <Check size={20} />
+            ) : (
+              <Pencil size={20} />
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white space-y-8">
-      {/* Success Alert */}
-      {message && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-          <span className="block sm:inline">{message}</span>
-        </div>
-      )}
-
-      {/* Error Alert */}
-      {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          <span className="block sm:inline">{errorMessage}</span>
-        </div>
-      )}
-
       {/* Profile Section */}
       {profile && profile.owner ? (
         <div className="w-full flex justify-center items-start my-10 px-4">
@@ -488,7 +580,7 @@ const Owner = () => {
               <button
                 type="button"
                 onClick={handleUploadProfilePhoto}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
               >
                 Upload New Photo
               </button>
@@ -496,171 +588,17 @@ const Owner = () => {
 
             <div className="w-full mt-8 px-6">
               <form className="space-y-4">
-                {/* Owner Name */}
-                <div className="py-3">
-                  <label className="text-gray-600 font-semibold block mb-1">
-                    Owner Name
-                  </label>
-                  <div className="flex items-center">
-                    {editField === "name" ? (
-                      <input
-                        name="name"
-                        value={profile.owner.name || ""}
-                        onChange={handleProfileChange}
-                        className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                      />
-                    ) : (
-                      <p className="text-lg text-gray-900 w-full">
-                        {profile.owner.name || "Not set"}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleEditToggle("name")}
-                      className="ml-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                    >
-                      {editField === "name" ? (
-                        <Check size={20} />
-                      ) : (
-                        <Pencil size={20} />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                {/* Restaurant Name */}
+                {renderField("Restaurant Name", "owner.restaurant.name")}
 
                 {/* Email */}
-                <div className="py-3 flex items-center justify-between">
-                  <div className="w-full">
-                    <label className="text-gray-600 font-semibold block mb-1">
-                      Email
-                    </label>
-                    <div className="flex items-center">
-                      {editField === "email" ? (
-                        <input
-                          name="email"
-                          value={profile.owner.email || ""}
-                          onChange={handleProfileChange}
-                          className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                        />
-                      ) : (
-                        <p className="text-lg text-gray-900 w-full">
-                          {profile.owner.email || "Not set"}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEditToggle("email")}
-                        className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
-                      >
-                        {editField === "email" ? (
-                          <Check size={20} />
-                        ) : (
-                          <Pencil size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Restaurant Name */}
-                <div className="py-3">
-                  <label className="text-gray-600 font-semibold block mb-1">
-                    Restaurant Name
-                  </label>
-                  <div className="flex items-center">
-                    {editField === "restaurantName" ? (
-                      <input
-                        name="restaurantName"
-                        value={profile.owner.restaurant.name || ""}
-                        onChange={handleProfileChange}
-                        className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                      />
-                    ) : (
-                      <p className="text-lg text-gray-900 w-full">
-                        {profile.owner.restaurant.name || "Not set"}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleEditToggle("restaurantName")}
-                      className="ml-2 text-gray-600 hover:text-gray-900 cursor-pointer"
-                    >
-                      {editField === "restaurantName" ? (
-                        <Check size={20} />
-                      ) : (
-                        <Pencil size={20} />
-                      )}
-                    </button>
-                  </div>
-                </div>
+                {renderField("Email", "owner.email")}
 
                 {/* Phone */}
-                <div className="py-3 flex items-center justify-between">
-                  <div className="w-full">
-                    <label className="text-gray-600 font-semibold block mb-1">
-                      Phone
-                    </label>
-                    <div className="flex items-center">
-                      {editField === "phone" ? (
-                        <input
-                          name="phone"
-                          value={profile.owner.phone || ""}
-                          onChange={handleProfileChange}
-                          className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                        />
-                      ) : (
-                        <p className="text-lg text-gray-900 w-full">
-                          {profile.owner.phone || "Not set"}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEditToggle("phone")}
-                        className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
-                      >
-                        {editField === "phone" ? (
-                          <Check size={20} />
-                        ) : (
-                          <Pencil size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {renderField("Phone", "owner.phone")}
 
                 {/* Address */}
-                <div className="py-3 flex items-center justify-between">
-                  <div className="w-full">
-                    <label className="text-gray-600 font-semibold block mb-1">
-                      Address
-                    </label>
-                    <div className="flex items-center">
-                      {editField === "address" ? (
-                        <input
-                          name="address"
-                          value={profile.owner.address || ""}
-                          onChange={handleProfileChange}
-                          className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
-                        />
-                      ) : (
-                        <p className="text-lg text-gray-900 w-full">
-                          {profile.owner.address || "Not set"}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEditToggle("address")}
-                        className="ml-4 text-gray-600 hover:text-gray-900 cursor-pointer"
-                      >
-                        {editField === "address" ? (
-                          <Check size={20} />
-                        ) : (
-                          <Pencil size={20} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {renderField("Address", "owner.address")}
 
                 {/* Rating - Read Only */}
                 <div className="py-3">
@@ -693,8 +631,10 @@ const Owner = () => {
           {foodIdToUpdate ? "Edit Food" : "Add Food"}
         </h2>
         <form
-          onSubmit={foodIdToUpdate ? handleUpdateFoodWithConfirmation : handleAddFood}
-    className="space-y-4"
+          onSubmit={
+            foodIdToUpdate ? handleUpdateFoodClick : handleAddFoodClick
+          }
+          className="space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -726,7 +666,7 @@ const Owner = () => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Price
@@ -737,8 +677,22 @@ const Owner = () => {
                 placeholder="Price"
                 value={foodData.price}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Promo Price{" "}
+                <span className="text-xs text-gray-500">(Optional)</span>
+              </label>
+              <input
+                type="number"
+                name="promo_price"
+                placeholder="Promo Price (optional)"
+                value={foodData.promo_price}
+                onChange={handleInputChange}
+                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
             <div>
@@ -751,11 +705,12 @@ const Owner = () => {
                 placeholder="Quantity"
                 value={foodData.quantity}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
               />
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Food Photo
@@ -802,6 +757,7 @@ const Owner = () => {
                       name: "",
                       type: "",
                       price: "",
+                      promo_price: "",
                       quantity: "",
                     });
                     setPhoto(null);
@@ -820,15 +776,6 @@ const Owner = () => {
       {/* Manage Menu Section */}
       <div>
         <h2 className="text-2xl font-semibold mb-4">Manage Menu</h2>
-        <div className="flex justify-between items-center mb-4">
-          <span>{menu.length} items found</span>
-          <button
-            onClick={loadMenu}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Refresh Menu
-          </button>
-        </div>
 
         {/* Menu Items as Cards */}
         {menu.length === 0 ? (
@@ -860,10 +807,27 @@ const Owner = () => {
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Type:</span> {food.type}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Price:</span> Rp{" "}
-                      {food.price.toLocaleString()}
-                    </p>
+
+                    {/* Updated promo price display with both field name variations */}
+                    {(() => {
+                      const promoPrice = food.promo_price || food.promoPrice;
+                      return promoPrice ? (
+                        <p>
+                          <span className="line-through text-gray-500 mr-2">
+                            Rp {food.price.toLocaleString()}
+                          </span>
+                          <span className="text-green-700 font-bold">
+                            Rp {promoPrice.toLocaleString()}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Price:</span> Rp{" "}
+                          {food.price.toLocaleString()}
+                        </p>
+                      );
+                    })()}
+
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Quantity:</span>{" "}
                       {food.quantity} pcs
@@ -872,14 +836,14 @@ const Owner = () => {
                   <div className="mt-4 flex justify-end space-x-2">
                     <button
                       onClick={() => handleEditFood(food)}
-                      className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
+                      className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center"
                       title="Edit"
                     >
                       <Edit size={16} className="mr-1" />
                       <span>Edit</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteFood(food.id)}
+                      onClick={() => handleDeleteFoodClick(food.id, food.name)}
                       className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center"
                       title="Delete"
                     >
@@ -898,15 +862,61 @@ const Owner = () => {
       <div className="mt-8 flex justify-center">
         <button
           type="button"
-          onClick={() => {
-            localStorage.removeItem("token");
-            window.location.href = "/";
-          }}
+          onClick={handleConfirmLogout}
           className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-800 transition cursor-pointer"
         >
           Sign Out
         </button>
       </div>
+
+      {/* Popup modal for success/error messages */}
+      {popup.show && (
+        <div className="fixed inset-0 bg-gray-600/30 flex justify-center items-center z-50">
+          <div className={`bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center border ${popup.type === 'success' ? 'border-green-500' : 'border-red-500'}`}>
+            <h2 className={`text-2xl font-bold mb-4 ${popup.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {popup.type === 'success' ? 'Success!' : 'Error!'}
+            </h2>
+            <p className="mb-4">{popup.message}</p>
+            <button
+              onClick={() => setPopup({ ...popup, show: false })}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation modal */}
+      {confirmAction.show && (
+        <div className="fixed inset-0 bg-gray-600/50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-medium mb-4">Confirm Action</h3>
+            <p className="mb-6">{confirmAction.message}</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setConfirmAction({ ...confirmAction, show: false })}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmAction.onConfirm();
+                  setConfirmAction({ ...confirmAction, show: false });
+                }}
+                className={`px-4 py-2 text-white rounded ${
+                  confirmAction.type === "delete" || confirmAction.type === "logout"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

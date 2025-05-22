@@ -19,11 +19,13 @@ import RestoOTP from "./auth/Resto-OTP";
 import Owner from "./pages/owner";
 import Location from "./pages/location"
 import SocialAuthSuccess from "./auth/socialAuthSucess";
+import TermsConditions from "./pages/termsConditions"
+import PrivacyPolicy from "./pages/privacyPolicy";
 
 function App() {
   const location = useLocation();
-  const noNavbar = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/social-auth-success"];
-  const noFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/location",  "/social-auth-success"];
+  const noNavbar = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/social-auth-success", "/terms-conditions", "/privacy-policy"];
+  const noFooter = ["/login", "/register", "/forgot", "/otp", "/verif-otp", "/reset", "/partner", "/reset-otp", "/resto-otp", "/location",  "/social-auth-success", "/terms-conditions", "/privacy-policy"];
 
 
   return (
@@ -49,6 +51,8 @@ function App() {
           <Route path="/owner" element={<Owner />} />
           <Route path="/location" element={<Location />} />
           <Route path="/social-auth-success" element={<SocialAuthSuccess />} />
+          <Route path="/terms-conditions" element={<TermsConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </div>
 
