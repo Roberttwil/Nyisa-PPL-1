@@ -4,6 +4,7 @@ const { Food, Restaurant, User } = require('../models');
 const { authenticate, restaurantOnly } = require('../middleware/authMiddleware');
 const { upload, resizeAndUpload } = require('../utils/s3SharpUploader');
 const axios = require('axios');
+const sequelize = require('../config/db')
 
 const router = express.Router();
 
@@ -107,6 +108,31 @@ router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (re
             restaurant_id
         });
 
+        const restaurant = await Restaurant.findOne({ where: { restaurant_id } });
+
+        if (restaurant) {
+            await sequelize.query(`
+                INSERT INTO recommendation_data (
+                    food_id, name, type, price,
+                    restaurant, restaurant_type,
+                    rating, longitude, latitude
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE name = VALUES(name)
+            `, {
+                replacements: [
+                    newFood.food_id,
+                    newFood.name,
+                    newFood.type,
+                    newFood.promo_price,
+                    restaurant.name,
+                    restaurant.restaurant_type,
+                    restaurant.rating,
+                    restaurant.longitude,
+                    restaurant.latitude
+                ]
+            });
+        }
+
         res.status(201).json({ message: 'Food added successfully', food: newFood });
     } catch (err) {
         console.error('Add food error:', err);
@@ -138,6 +164,39 @@ router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (
 
         await food.save();
 
+        const restaurant = await Restaurant.findOne({ where: { restaurant_id } });
+
+        if (restaurant) {
+            await Food.sequelize.query(`
+                INSERT INTO recommendation_data (
+                    food_id, name, type, price,
+                    restaurant, restaurant_type,
+                    rating, longitude, latitude
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                type = VALUES(type),
+                price = VALUES(price),
+                restaurant = VALUES(restaurant),
+                restaurant_type = VALUES(restaurant_type),
+                rating = VALUES(rating),
+                longitude = VALUES(longitude),
+                latitude = VALUES(latitude)
+            `, {
+                replacements: [
+                food.food_id,
+                food.name,
+                food.type,
+                food.promo_price,
+                restaurant.name,
+                restaurant.restaurant_type,
+                restaurant.rating,
+                restaurant.longitude,
+                restaurant.latitude
+                ]
+            });
+        }
+
         res.json({ message: 'Food updated successfully', food });
     } catch (err) {
         console.error('Update food error:', err);
@@ -155,6 +214,12 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
         if (!food) return res.status(404).json({ message: 'Food not found' });
 
         await food.destroy();
+        
+        await Food.sequelize.query(
+            'DELETE FROM recommendation_data WHERE food_id = ?',
+            { replacements: [food.food_id] }
+        );
+
         res.json({ message: 'Food deleted successfully' });
     } catch (err) {
         console.error('Delete food error:', err);
