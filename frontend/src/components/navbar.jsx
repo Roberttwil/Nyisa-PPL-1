@@ -12,7 +12,6 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Scroll to top with smooth on route change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
@@ -21,33 +20,23 @@ function Navbar() {
     const token = localStorage.getItem("token");
     const storedRole = localStorage.getItem("role");
 
-    console.log("Token:", token);
-    console.log("Stored Role:", storedRole);
-
     if (token) {
       setIsLoggedIn(true);
 
       if (storedRole === "restaurant") {
         RestoService.getOwnerProfile(token)
           .then((data) => {
-            console.log("Restaurant Profile Data:", data);
             if (data) {
               setUserProfile({ ...data, role: storedRole });
-            } else {
-              console.error("No data received for restaurant profile");
             }
           })
-          .catch((err) => {
-            console.error("Owner profile error:", err);
-          });
+          .catch(() => {});
       } else {
         getProfile()
           .then((data) => {
-            console.log("User Profile Data:", data);
             setUserProfile({ ...data, role: storedRole });
           })
-          .catch((err) => {
-            console.error("User profile error:", err.message);
+          .catch(() => {
             setIsLoggedIn(false);
           });
       }
@@ -70,15 +59,10 @@ function Navbar() {
     if (isProfileActive) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      if (isRestaurant) {
-        navigate("/owner");
-      } else {
-        navigate("/profile");
-      }
+      navigate(isRestaurant ? "/owner" : "/profile");
     }
   };
 
-  // Handle navigation link clicks with scroll smooth if current path
   const handleNavClick = (path) => {
     if (isActive(path)) {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -90,11 +74,7 @@ function Navbar() {
 
   return (
     <nav className="sticky top-0 bg-white z-50 h-20 flex items-center justify-between px-4 sm:px-8 md:px-10">
-      <Link
-        to="/"
-        onClick={() => handleNavClick("/")}
-        className="cursor-pointer"
-      >
+      <Link to="/" onClick={() => handleNavClick("/")} className="cursor-pointer">
         <img
           src={nyisaLogo}
           alt="Nyisa Logo"
@@ -113,44 +93,42 @@ function Navbar() {
         <div className="bg-[#D9E1D0] rounded-full px-4 py-2 flex space-x-4 items-center text-[#0D3B2E] font-medium text-sm md:text-base">
           <button
             onClick={() => handleNavClick("/")}
-            className={`flex items-center gap-1 hover:underline cursor-pointer ${
-              isActive("/") ? "font-extrabold" : ""
+            className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
+              isActive("/") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
             }`}
           >
             <Home size={16} /> Home
           </button>
           <button
             onClick={() => handleNavClick("/search")}
-            className={`flex items-center gap-1 hover:underline cursor-pointer ${
-              isActive("/search") ? "font-extrabold" : ""
+            className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
+              isActive("/search") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
             }`}
           >
             <Search size={16} /> Search
           </button>
           <button
             onClick={() => handleNavClick("/location")}
-            className={`flex items-center gap-1 hover:underline cursor-pointer ${
-              isActive("/location") ? "font-extrabold" : ""
+            className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
+              isActive("/location") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
             }`}
           >
             <Map size={16} /> Location
           </button>
-
           {!isRestaurant && (
             <button
               onClick={() => handleNavClick("/cart")}
-              className={`flex items-center gap-1 hover:underline cursor-pointer ${
-                isActive("/cart") ? "font-extrabold" : ""
+              className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
+                isActive("/cart") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
               }`}
             >
               <ShoppingCart size={16} /> Cart
             </button>
           )}
-
           <button
             onClick={() => handleNavClick("/history")}
-            className={`flex items-center gap-1 hover:underline cursor-pointer ${
-              isActive("/history") ? "font-extrabold" : ""
+            className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
+              isActive("/history") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
             }`}
           >
             <History size={16} /> History
@@ -216,7 +194,6 @@ function Navbar() {
             >
               <Map size={16} className="mr-2" /> Location
             </button>
-
             {!isRestaurant && (
               <button
                 onClick={() => handleNavClick("/cart")}
@@ -227,7 +204,6 @@ function Navbar() {
                 <ShoppingCart size={16} className="mr-2" /> Cart
               </button>
             )}
-
             <button
               onClick={() => handleNavClick("/history")}
               className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${

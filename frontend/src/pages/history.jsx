@@ -64,11 +64,6 @@ const History = () => {
       setCompletedTransactions(rated);
     } catch (error) {
       console.error("Error fetching transaction history:", error);
-      setPopup({
-        show: true,
-        type: "error",
-        message: "Unable to load transaction history. Please try again later.",
-      });
     } finally {
       setLoading(false);
     }
