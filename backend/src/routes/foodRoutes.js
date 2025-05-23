@@ -123,7 +123,7 @@ router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (re
                     newFood.food_id,
                     newFood.name,
                     newFood.type,
-                    newFood.promo_price,
+                    newFood.promo_price ?? newFood.price,
                     restaurant.name,
                     restaurant.restaurant_type,
                     restaurant.rating,
@@ -165,6 +165,7 @@ router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (
         await food.save();
 
         const restaurant = await Restaurant.findOne({ where: { restaurant_id } });
+        const priceValue = newFood.promo_price ?? newFood.price;
 
         if (restaurant) {
             await Food.sequelize.query(`
@@ -184,15 +185,15 @@ router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (
                 latitude = VALUES(latitude)
             `, {
                 replacements: [
-                food.food_id,
-                food.name,
-                food.type,
-                food.promo_price,
-                restaurant.name,
-                restaurant.restaurant_type,
-                restaurant.rating,
-                restaurant.longitude,
-                restaurant.latitude
+                    food.food_id,
+                    food.name,
+                    food.type,
+                    food.promo_price ?? food.price,
+                    restaurant.name,
+                    restaurant.restaurant_type,
+                    restaurant.rating,
+                    restaurant.longitude,
+                    restaurant.latitude
                 ]
             });
         }
@@ -214,7 +215,7 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
         if (!food) return res.status(404).json({ message: 'Food not found' });
 
         await food.destroy();
-        
+
         await Food.sequelize.query(
             'DELETE FROM recommendation_data WHERE food_id = ?',
             { replacements: [food.food_id] }
