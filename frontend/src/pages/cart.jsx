@@ -4,17 +4,18 @@ import OrderService from "../services/OrderService";
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false); // ⬅️ New state
   const [error, setError] = useState(null);
   const [popup, setPopup] = useState({
     show: false,
-    type: 'success', // atau 'error'
+    type: 'success',
     message: '',
   });
   const [confirmModal, setConfirmModal] = useState({
-  show: false,
-  foodId: null,
-  foodName: "",
-});
+    show: false,
+    foodId: null,
+    foodName: "",
+  });
 
   const userId = localStorage.getItem("user_id");
   const activeRestoId = localStorage.getItem("activeRestoId");
@@ -31,21 +32,15 @@ const Cart = () => {
           );
         }
 
-        // Fetch cart based on the user's booking code
         const data = await OrderService.getCart(bookingCode);
-        console.log("Cart API response:", data);
-
         const items = Array.isArray(data)
           ? data
           : Array.isArray(data.cart)
-            ? data.cart
-            : null;
+          ? data.cart
+          : null;
 
-        if (!items) {
-          throw new Error("Invalid cart data.");
-        }
+        if (!items) throw new Error("Invalid cart data.");
 
-        // Grouping items with the same food_id
         const groupedItems = items.reduce((acc, item) => {
           const existingItem = acc.find((i) => i.food_id === item.food_id);
           if (existingItem) {
@@ -81,26 +76,21 @@ const Cart = () => {
   };
 
   const handleBooking = async () => {
+    setBookingLoading(true); // ⬅️ Start loading
     try {
       await OrderService.bookOrder(bookingCode);
 
-      // Save purchase history to localStorage with restaurant ID and other details
       const purchaseHistory = cartItems.map((item) => ({
         name: item.food_name,
         photo: item.food_photo,
         total: (item.promo_price ?? item.food_price) * item.quantity,
         date: new Date().toLocaleDateString(),
-        restaurantId: activeRestoId, // Storing the restaurant ID
-        foodId: item.food_id,       // Storing the food ID
+        restaurantId: activeRestoId,
+        foodId: item.food_id,
       }));
 
-      // Get existing history from localStorage
       const existingHistory = JSON.parse(localStorage.getItem("purchaseHistory")) || [];
-
-      // Add new history to existing data
       const updatedHistory = [...existingHistory, ...purchaseHistory];
-
-      // Store the updated history
       localStorage.setItem("purchaseHistory", JSON.stringify(updatedHistory));
 
       setPopup({
@@ -116,6 +106,8 @@ const Cart = () => {
         type: 'error',
         message: 'Failed to book your order. Please try again later.',
       });
+    } finally {
+      setBookingLoading(false); // ⬅️ Stop loading
     }
   };
 
@@ -124,62 +116,60 @@ const Cart = () => {
     return sum + effectivePrice * item.quantity;
   }, 0);
 
-
   if (loading) return <p>Loading cart...</p>;
 
   return (
     <div className="flex flex-col min-h-screen max-w-6xl mx-auto px-4 py-8">
       {popup.show && (
-          <div className="fixed inset-0 bg-gray-600/30 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center
-              ${popup.type === 'success' ? 'border-green-500' : 'border-red-500'}">
-              <h2 className={`text-2xl font-bold mb-4 ${popup.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                {popup.type === 'success' ? 'Success!' : 'Error!'}
-              </h2>
-              <p className="mb-4">{popup.message}</p>
+        <div className="fixed inset-0 bg-gray-600/30 flex justify-center items-center z-50">
+          <div className={`bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center border-2 ${popup.type === 'success' ? 'border-green-500' : 'border-red-500'}`}>
+            <h2 className={`text-2xl font-bold mb-4 ${popup.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {popup.type === 'success' ? 'Success!' : 'Error!'}
+            </h2>
+            <p className="mb-4">{popup.message}</p>
+            <button
+              onClick={() => setPopup({ ...popup, show: false })}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmModal.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black opacity-50"
+            onClick={() => setConfirmModal({ show: false, foodId: null, foodName: "" })}
+          ></div>
+          <div className="relative bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center border border-red-500">
+            <h2 className="text-xl font-semibold mb-2 text-red-600">Confirm Removal</h2>
+            <p className="mb-4">
+              Are you sure you want to remove{" "}
+              <span className="font-bold">{confirmModal.foodName}</span> from your cart?
+            </p>
+            <div className="flex justify-center gap-4">
               <button
-                onClick={() => setPopup({ ...popup, show: false })}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                onClick={() => setConfirmModal({ show: false, foodId: null, foodName: "" })}
               >
-                Close
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={async () => {
+                  await handleRemove(confirmModal.foodId);
+                  setConfirmModal({ show: false, foodId: null, foodName: "" });
+                }}
+              >
+                Yes, Remove
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {confirmModal.show && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-black opacity-50"
-              onClick={() => setConfirmModal({ show: false, foodId: null, foodName: "" })}
-            ></div>
-            <div className="relative bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center border border-red-500">
-              <h2 className="text-xl font-semibold mb-2 text-red-600">Confirm Removal</h2>
-              <p className="mb-4">
-                Are you sure you want to remove{" "}
-                <span className="font-bold">{confirmModal.foodName}</span> from your cart?
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                  onClick={() => setConfirmModal({ show: false, foodId: null, foodName: "" })}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  onClick={async () => {
-                    await handleRemove(confirmModal.foodId);
-                    setConfirmModal({ show: false, foodId: null, foodName: "" });
-                  }}
-                >
-                  Yes, Remove
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      {/* Header Section */}
       <div className="flex flex-row items-center justify-between w-full mb-6">
         <h1 className="text-2xl md:text-2xl font-bold">Your Cart</h1>
         {cartItems.length > 0 && (
@@ -189,7 +179,6 @@ const Cart = () => {
         )}
       </div>
 
-      {/* Cart Items or Empty State */}
       <div className="flex flex-grow flex-col">
         {cartItems.length === 0 ? (
           <div>
@@ -221,7 +210,7 @@ const Cart = () => {
                         </span>
                       </>
                     ) : (
-                      <span className="font-bold ">
+                      <span className="font-bold">
                         Rp {item.food_price?.toLocaleString("id-ID")}
                       </span>
                     )}
@@ -231,12 +220,12 @@ const Cart = () => {
                 <div className="flex justify-between items-center p-4">
                   <button
                     onClick={() =>
-                    setConfirmModal({
-                      show: true,
-                      foodId: item.food_id,
-                      foodName: item.food_name,
-                    })
-                  }
+                      setConfirmModal({
+                        show: true,
+                        foodId: item.food_id,
+                        foodName: item.food_name,
+                      })
+                    }
                     className="bg-red-500 text-white px-4 font-medium py-2 rounded-lg hover:bg-red-600 cursor-pointer"
                   >
                     Remove
@@ -248,15 +237,24 @@ const Cart = () => {
         )}
       </div>
 
-      {/* Total and Booking Button */}
       {cartItems.length > 0 && (
         <div className="mt-6 flex justify-between items-center">
           <h3 className="text-xl font-bold">Total: Rp {total.toLocaleString("id-ID")}</h3>
           <button
             onClick={handleBooking}
-            className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer font-medium"
+            disabled={bookingLoading}
+            className={`flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-600 transition duration-200 ${
+              bookingLoading ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
-            Book Now
+            {bookingLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Booking...
+              </>
+            ) : (
+              "Book Now"
+            )}
           </button>
         </div>
       )}

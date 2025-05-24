@@ -7,33 +7,27 @@ const Partner = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    
+
     restaurantName: "",
     email: "",
     phone: "",
     address: "",
     genre: "",
-    photo: null,
   });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    // Mengubah formData ketika ada perubahan input
-    if (e.target.name === "photo") {
-      setFormData({ ...formData, photo: e.target.files[0] });
-    } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  
+
   const handleRegister = async (e) => {
     e.preventDefault();
-  
+
     // Log the address to verify its format
     console.log("Address to geocode:", formData.address);
-  
+
     // Cek apakah semua field telah diisi
     if (
       !formData.username ||
@@ -47,7 +41,7 @@ const Partner = () => {
       setMessage("All fields are required!");
       return;
     }
-  
+
     setLoading(true);
     setMessage("");
     try {
@@ -58,11 +52,7 @@ const Partner = () => {
       formDataToSend.append("phone", formData.phone);
       formDataToSend.append("address", formData.address);
       formDataToSend.append("genre", formData.genre);
-  
-      if (formData.photo) {
-        formDataToSend.append("photo", formData.photo);
-      }
-  
+
       // Lakukan request untuk registrasi restoran
       const response = await registerRestaurant({
         username: formData.username,
@@ -73,15 +63,22 @@ const Partner = () => {
         restaurantType: formData.genre,
         address: formData.address,
       });
-  
+
       // Cek jika registrasi berhasil berdasarkan response message
-      if (response.message && response.message.includes("OTP sent to your email")) {
+      if (
+        response.message &&
+        response.message.includes("OTP sent to your email")
+      ) {
         setMessage(response.message);
-  
+
         // Navigasi ke halaman OTP setelah registrasi berhasil
-        setTimeout(() => navigate("/resto-otp"), 2000, { state: { email: formData.email } });
+        setTimeout(() => navigate("/resto-otp"), 2000, {
+          state: { email: formData.email },
+        });
       } else {
-        setMessage(response.message || "Registration failed. Please try again.");
+        setMessage(
+          response.message || "Registration failed. Please try again."
+        );
       }
     } catch (error) {
       const errorMessage =
@@ -91,7 +88,6 @@ const Partner = () => {
       setLoading(false);
     }
   };
-  
 
   return (
     <div
@@ -187,18 +183,6 @@ const Partner = () => {
               className="w-full px-4 py-2 border border-green-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               placeholder="Enter restaurant genre"
               value={formData.genre}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="mb-4 text-left">
-            <label className="block text-green-900 font-medium">
-              Upload Restaurant Photo
-            </label>
-            <input
-              type="file"
-              name="photo"
-              accept="image/*"
-              className="w-full px-4 py-2 border border-green-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               onChange={handleChange}
             />
           </div>

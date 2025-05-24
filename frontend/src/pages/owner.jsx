@@ -28,6 +28,7 @@ const Owner = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const profilePhotoRef = useRef(null);
   const addFoodRef = useRef(null);
+  const [isPromoDisabled, setIsPromoDisabled] = useState(false);
 
   // Modal states
   const [popup, setPopup] = useState({
@@ -161,7 +162,10 @@ const Owner = () => {
       showPopup("success", `Profile updated: ${result.message || "Success"}`);
     } catch (err) {
       console.error("Error updating profile:", err);
-      showPopup("error", err?.response?.data?.message || "Failed to update profile");
+      showPopup(
+        "error",
+        err?.response?.data?.message || "Failed to update profile"
+      );
     }
   };
 
@@ -261,7 +265,7 @@ const Owner = () => {
     setPopup({
       show: true,
       type: type,
-      message: msg
+      message: msg,
     });
   };
 
@@ -274,7 +278,10 @@ const Owner = () => {
     if (!foodIdToUpdate && !foodPhoto) missingFields.push("Food Photo");
 
     if (missingFields.length > 0) {
-      showPopup("error", `Please fill in the following fields: ${missingFields.join(", ")}`);
+      showPopup(
+        "error",
+        `Please fill in the following fields: ${missingFields.join(", ")}`
+      );
       return false;
     }
     return true;
@@ -287,7 +294,7 @@ const Owner = () => {
         show: true,
         type: "add",
         message: `Are you sure you want to add "${foodData.name}" to the menu?`,
-        onConfirm: handleAddFood
+        onConfirm: handleAddFood,
       });
     }
   };
@@ -296,7 +303,10 @@ const Owner = () => {
     try {
       // Check for restaurant ID
       if (!profile?.owner?.restaurant?.id) {
-        showPopup("error", "Restaurant ID not found. Please make sure your profile is loaded.");
+        showPopup(
+          "error",
+          "Restaurant ID not found. Please make sure your profile is loaded."
+        );
         return;
       }
 
@@ -347,7 +357,10 @@ const Owner = () => {
         console.error("Response data:", error.response.data);
       }
 
-      showPopup("error", error?.response?.data?.message || "Failed to add food. Server error.");
+      showPopup(
+        "error",
+        error?.response?.data?.message || "Failed to add food. Server error."
+      );
     }
   };
 
@@ -358,7 +371,7 @@ const Owner = () => {
         show: true,
         type: "update",
         message: `Are you sure you want to update "${foodData.name}"?`,
-        onConfirm: handleUpdateFood
+        onConfirm: handleUpdateFood,
       });
     }
   };
@@ -407,7 +420,10 @@ const Owner = () => {
         console.error("Response data:", err.response.data);
       }
 
-      showPopup("error", err?.response?.data?.message || "Failed to update food");
+      showPopup(
+        "error",
+        err?.response?.data?.message || "Failed to update food"
+      );
     }
   };
 
@@ -416,7 +432,7 @@ const Owner = () => {
       show: true,
       type: "delete",
       message: `Are you sure you want to delete "${foodName}" from the menu?`,
-      onConfirm: () => handleDeleteFood(foodId)
+      onConfirm: () => handleDeleteFood(foodId),
     });
   };
 
@@ -435,7 +451,10 @@ const Owner = () => {
         console.error("Response data:", err.response.data);
       }
 
-      showPopup("error", err?.response?.data?.message || "Failed to delete food");
+      showPopup(
+        "error",
+        err?.response?.data?.message || "Failed to delete food"
+      );
     }
   };
 
@@ -448,7 +467,7 @@ const Owner = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role"); // Remove role also
         window.location.href = "/";
-      }
+      },
     });
   };
 
@@ -470,7 +489,7 @@ const Owner = () => {
 
     addFoodRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-  
+
   // Reset file input after submit
   const resetFileInput = () => {
     const fileInputs = document.querySelectorAll('input[type="file"]');
@@ -631,9 +650,7 @@ const Owner = () => {
           {foodIdToUpdate ? "Edit Food" : "Add Food"}
         </h2>
         <form
-          onSubmit={
-            foodIdToUpdate ? handleUpdateFoodClick : handleAddFoodClick
-          }
+          onSubmit={foodIdToUpdate ? handleUpdateFoodClick : handleAddFoodClick}
           className="space-y-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -677,24 +694,46 @@ const Owner = () => {
                 placeholder="Price"
                 value={foodData.price}
                 onChange={handleInputChange}
+                onInput={(e) => (e.target.value = Math.max(0, e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
+                min="0"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Promo Price{" "}
-                <span className="text-xs text-gray-500">(Optional)</span>
+              <label className="flex items-center gap-2 mb-1 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={isPromoDisabled}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsPromoDisabled(checked);
+                    if (checked) {
+                      setFoodData((prevData) => ({
+                        ...prevData,
+                        promo_price: null, // set null saat dicentang
+                      }));
+                    }
+                  }}
+                />
+                Disable Promo Price
               </label>
+
               <input
                 type="number"
                 name="promo_price"
                 placeholder="Promo Price (optional)"
-                value={foodData.promo_price}
+                value={isPromoDisabled ? "" : foodData.promo_price || ""}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                onInput={(e) => (e.target.value = Math.max(0, e.target.value))}
+                disabled={isPromoDisabled}
+                className={`w-full p-2 border border-gray-300 rounded-lg appearance-none ${
+                  isPromoDisabled ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
+                min="0"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Quantity
@@ -705,8 +744,10 @@ const Owner = () => {
                 placeholder="Quantity"
                 value={foodData.quantity}
                 onChange={handleInputChange}
+                onInput={(e) => (e.target.value = Math.max(0, e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 required
+                min="0"
               />
             </div>
           </div>
@@ -872,9 +913,17 @@ const Owner = () => {
       {/* Popup modal for success/error messages */}
       {popup.show && (
         <div className="fixed inset-0 bg-gray-600/30 flex justify-center items-center z-50">
-          <div className={`bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center border ${popup.type === 'success' ? 'border-green-500' : 'border-red-500'}`}>
-            <h2 className={`text-2xl font-bold mb-4 ${popup.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-              {popup.type === 'success' ? 'Success!' : 'Error!'}
+          <div
+            className={`bg-white p-6 rounded-xl shadow-lg max-w-md w-full text-center border ${
+              popup.type === "success" ? "border-green-500" : "border-red-500"
+            }`}
+          >
+            <h2
+              className={`text-2xl font-bold mb-4 ${
+                popup.type === "success" ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {popup.type === "success" ? "Success!" : "Error!"}
             </h2>
             <p className="mb-4">{popup.message}</p>
             <button
@@ -895,7 +944,9 @@ const Owner = () => {
             <p className="mb-6">{confirmAction.message}</p>
             <div className="flex justify-end space-x-3">
               <button
-                onClick={() => setConfirmAction({ ...confirmAction, show: false })}
+                onClick={() =>
+                  setConfirmAction({ ...confirmAction, show: false })
+                }
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
               >
                 Cancel
@@ -906,7 +957,8 @@ const Owner = () => {
                   setConfirmAction({ ...confirmAction, show: false });
                 }}
                 className={`px-4 py-2 text-white rounded ${
-                  confirmAction.type === "delete" || confirmAction.type === "logout"
+                  confirmAction.type === "delete" ||
+                  confirmAction.type === "logout"
                     ? "bg-red-500 hover:bg-red-600"
                     : "bg-green-500 hover:bg-green-600"
                 }`}

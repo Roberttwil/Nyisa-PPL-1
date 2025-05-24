@@ -74,7 +74,11 @@ function Navbar() {
 
   return (
     <nav className="sticky top-0 bg-white z-50 h-20 flex items-center justify-between px-4 sm:px-8 md:px-10">
-      <Link to="/" onClick={() => handleNavClick("/")} className="cursor-pointer">
+      <Link
+        to="/"
+        onClick={() => handleNavClick("/")}
+        className="cursor-pointer"
+      >
         <img
           src={nyisaLogo}
           alt="Nyisa Logo"
@@ -94,7 +98,7 @@ function Navbar() {
           <button
             onClick={() => handleNavClick("/")}
             className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
-              isActive("/") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
+              isActive("/") ? "font-bold bg-[#0D3B2E] text-white" : ""
             }`}
           >
             <Home size={16} /> Home
@@ -102,7 +106,9 @@ function Navbar() {
           <button
             onClick={() => handleNavClick("/search")}
             className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
-              isActive("/search") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
+              isActive("/search")
+                ? "font-bold bg-[#0D3B2E] text-white"
+                : ""
             }`}
           >
             <Search size={16} /> Search
@@ -110,7 +116,9 @@ function Navbar() {
           <button
             onClick={() => handleNavClick("/location")}
             className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
-              isActive("/location") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
+              isActive("/location")
+                ? "font-bold bg-[#0D3B2E] text-white"
+                : ""
             }`}
           >
             <Map size={16} /> Location
@@ -119,20 +127,26 @@ function Navbar() {
             <button
               onClick={() => handleNavClick("/cart")}
               className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
-                isActive("/cart") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
+                isActive("/cart")
+                  ? "font-bold bg-[#0D3B2E] text-white"
+                  : ""
               }`}
             >
               <ShoppingCart size={16} /> Cart
             </button>
           )}
-          <button
-            onClick={() => handleNavClick("/history")}
-            className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
-              isActive("/history") ? "font-extrabold bg-[#0D3B2E] text-white" : ""
-            }`}
-          >
-            <History size={16} /> History
-          </button>
+          {isLoggedIn && (
+            <button
+              onClick={() => handleNavClick("/history")}
+              className={`flex items-center gap-1 transition-all duration-200 hover:text-white hover:bg-[#0D3B2E] px-3 py-1 rounded-full ${
+                isActive("/history")
+                  ? "font-bold bg-[#0D3B2E] text-white"
+                  : ""
+              }`}
+            >
+              <History size={16} /> History
+            </button>
+          )}
         </div>
       </div>
 
@@ -173,7 +187,7 @@ function Navbar() {
             <button
               onClick={() => handleNavClick("/")}
               className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${
-                isActive("/") ? "font-extrabold" : ""
+                isActive("/") ? "font-bold" : ""
               }`}
             >
               <Home size={16} className="mr-2" /> Home
@@ -181,7 +195,7 @@ function Navbar() {
             <button
               onClick={() => handleNavClick("/search")}
               className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${
-                isActive("/search") ? "font-extrabold" : ""
+                isActive("/search") ? "font-bold" : ""
               }`}
             >
               <Search size={16} className="mr-2" /> Search
@@ -189,7 +203,7 @@ function Navbar() {
             <button
               onClick={() => handleNavClick("/location")}
               className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${
-                isActive("/location") ? "font-extrabold" : ""
+                isActive("/location") ? "font-bold" : ""
               }`}
             >
               <Map size={16} className="mr-2" /> Location
@@ -198,20 +212,22 @@ function Navbar() {
               <button
                 onClick={() => handleNavClick("/cart")}
                 className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${
-                  isActive("/cart") ? "font-extrabold" : ""
+                  isActive("/cart") ? "font-bold" : ""
                 }`}
               >
                 <ShoppingCart size={16} className="mr-2" /> Cart
               </button>
             )}
-            <button
-              onClick={() => handleNavClick("/history")}
-              className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${
-                isActive("/history") ? "font-extrabold" : ""
-              }`}
-            >
-              <History size={16} className="mr-2" /> History
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={() => handleNavClick("/history")}
+                className={`w-full flex items-center justify-center py-1.5 hover:bg-gray-200 cursor-pointer ${
+                  isActive("/history") ? "font-bold" : ""
+                }`}
+              >
+                <History size={16} className="mr-2" /> History
+              </button>
+            )}
           </div>
         </div>
       )}
