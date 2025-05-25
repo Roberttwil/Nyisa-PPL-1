@@ -133,6 +133,12 @@ router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (re
             });
         }
 
+        await axios.post(`http://127.0.0.1:8000/api/foods/recommend/refresh`, {}, {
+            headers: {
+                Authorization: `Bearer ${process.env.RECSYS_SECRET}`
+            }
+        });
+
         res.status(201).json({ message: 'Food added successfully', food: newFood });
     } catch (err) {
         console.error('Add food error:', err);
@@ -197,6 +203,12 @@ router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (
             });
         }
 
+        await axios.post(`http://127.0.0.1:8000/api/foods/recommend/refresh`, {}, {
+            headers: {
+                Authorization: `Bearer ${process.env.RECSYS_SECRET}`
+            }
+        });
+
         res.json({ message: 'Food updated successfully', food });
     } catch (err) {
         console.error('Update food error:', err);
@@ -220,6 +232,12 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
             { replacements: [food.food_id] }
         );
 
+        await axios.post(`http://127.0.0.1:8000/api/foods/recommend/refresh`, {}, {
+            headers: {
+                Authorization: `Bearer ${process.env.RECSYS_SECRET}`
+            }
+        });
+
         res.json({ message: 'Food deleted successfully' });
     } catch (err) {
         console.error('Delete food error:', err);
@@ -227,7 +245,7 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
     }
 });
 
-router.get('/recommend/:id', async (req, res) => {
+router.get('/recommend/:id', authenticate, async (req, res) => {
     const { id } = req.params;
 
     try {

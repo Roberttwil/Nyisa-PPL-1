@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
@@ -9,8 +9,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 app = FastAPI() 
+RECSYS_TOKEN = os.getenv("RECSYS_SECRET")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,7 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DATABASE_URL = "mysql+aiomysql://root@localhost:3307/db_nyisa"
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+DB_PORT = os.getenv("DB_PORT")
+
+DATABASE_URL = f"mysql+aiomysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 Base = declarative_base()
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -43,8 +53,7 @@ class FoodRecommendation(Base):
 df = None
 similarity = None
 
-@app.on_event("startup")
-async def load_data():
+async def build_recommendation_model():
     global df, similarity
     async with async_session() as session:
         result = await session.execute(select(FoodRecommendation))
@@ -62,6 +71,22 @@ async def load_data():
         tfidf_matrix = TfidfVectorizer(stop_words='english').fit_transform(df['combined_features'])
         similarity = cosine_similarity(tfidf_matrix)
 
+@app.on_event("startup")
+async def on_startup():
+    await build_recommendation_model()
+    
+@app.post("/api/foods/recommend/refresh")
+async def refresh_data(authorization: str = Header(None)):
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or Invalid Header")
+    
+    token = authorization.split(" ")[1]
+    if token != RECSYS_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    await build_recommendation_model()
+    return {"message": "Recommendation Data Refreshed!"}
+
 @app.get("/")
 def root():
     return {"message": "HALO API FROM MICROSEVICE!"}
@@ -70,12 +95,14 @@ def root():
 async def recommend(id: int):
     global df, similarity
     
-    if id >= len(df):
-        return {"error": "Invalid ID"}
+    if id not in df['food_id'].values:
+        return {"error": "Invalid food_id"}
     
-    sim_scores = list(enumerate(similarity[id]))
+    food_id = df.index[df['food_id'] == id].tolist()[0]
     
-    sim_scores = [i for i in sim_scores if i[0] != id]
+    sim_scores = list(enumerate(similarity[food_id]))
+    
+    sim_scores = [i for i in sim_scores if i[0] != food_id]
     top_indices = [i[0] for i in sim_scores[:10]]
     
     recommendations = df.iloc[top_indices][[
