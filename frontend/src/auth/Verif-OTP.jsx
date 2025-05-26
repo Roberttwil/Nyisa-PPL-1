@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import nyisaLogo from "../assets/nyisaLogo.png";
 import { verifyOtp, resendOtp } from "../services/AuthService";
+import daun from "../assets/Union.svg";
+import star from "../assets/starGeo.svg";
+import circleH from "../assets/circleHalf.svg";
 
 const OTP = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -18,7 +21,8 @@ const OTP = () => {
     const params = new URLSearchParams(window.location.search);
     const fromQuery = params.get("username");
 
-    const storedUsername = fromQuery || localStorage.getItem("registeredUsername");
+    const storedUsername =
+      fromQuery || localStorage.getItem("registeredUsername");
     const storedEmail = localStorage.getItem("registeredEmail");
 
     if (storedUsername) setUsername(storedUsername);
@@ -26,7 +30,7 @@ const OTP = () => {
     if (storedEmail) {
       setEmail(storedEmail);
     } else if (fromQuery && fromQuery.includes("@")) {
-      setEmail(fromQuery); // fallback: anggap username = email
+      setEmail(fromQuery);
     }
 
     if (!storedUsername || (!storedEmail && !fromQuery.includes("@"))) {
@@ -42,6 +46,10 @@ const OTP = () => {
       return () => clearInterval(timer);
     }
   }, [resendTimer]);
+
+  useEffect(() => {
+    document.getElementById("otp-0")?.focus();
+  }, []);
 
   const handleChange = (index, value) => {
     if (/^[0-9]?$/.test(value)) {
@@ -105,14 +113,49 @@ const OTP = () => {
   };
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen" style={{ backgroundImage: 'linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)' }}>
-      <div className="max-w-md w-full p-8 text-center">
-        <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
-        <h2 className="text-2xl font-semibold text-green-900 mb-6">
-          OTP Verify
-        </h2>
+    <div className="flex flex-wrap justify-center items-center min-h-screen px-4 relative">
+      {/* Nyisa Logo - Adjusted for responsiveness, identical to Login */}
+      <img
+        src={nyisaLogo}
+        alt="Logo"
+        className="hidden md:block absolute top-0 left-0 w-35"
+      />
+
+      {/* Logo untuk layar kecil (di atas "Sign In") */}
+      <img
+        src={nyisaLogo}
+        alt="Logo"
+        className="block md:hidden mx-auto w-26"
+      />
+
+      {/* Decorative Images */}
+      <img
+        src={circleH}
+        alt="circle"
+        className="absolute w-20 sm:w-28 right-0 bottom-0 z-0"
+      />
+      <img
+        src={daun}
+        alt="daun"
+        className="absolute w-16 sm:w-24 left-0 top-20 sm:top-32 z-0"
+      />
+      <img
+        src={star}
+        alt="star"
+        className="absolute w-6 sm:w-12 top-24 right-12 sm:top-28 sm:right-60"
+      />
+
+      <img
+        src={star}
+        alt="star"
+        className="absolute w-6 sm:w-9 bottom-24 left-12 sm:bottom-28 sm:left-70"
+      />
+
+      {/* Form Card */}
+      <div className="relative z-10 w-full max-w-md bg-[#D6E9A6] rounded-3xl shadow-lg p-8 text-center">
+        <h2 className="text-2xl font-bold text-green-900 mb-2">OTP Verify</h2>
         <p className="text-sm text-green-900 mb-6">
-          We have sent an OTP code to your email. 
+          We have sent an OTP code to your email. <br />
           Please check your email and enter your 6-digit OTP code.
         </p>
 
@@ -124,7 +167,8 @@ const OTP = () => {
                 id={`otp-${index}`}
                 type="text"
                 maxLength="1"
-                className="w-14 h-14 text-xl text-center border-2 border-green-900 rounded-lg focus:outline-none focus:border-green-700 focus:ring-2 focus:ring-green-300"
+                inputMode="numeric"
+                className="w-14 h-14 text-xl text-center border-2 border-green-900 rounded-lg focus:outline-none focus:border-green-700 focus:ring-2 focus:ring-green-300 bg-white"
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
@@ -156,8 +200,8 @@ const OTP = () => {
             {resendLoading
               ? "Resending..."
               : resendTimer > 0
-                ? `Resend in ${resendTimer}s`
-                : "Resend OTP"}
+              ? `Resend in ${resendTimer}s`
+              : "Resend OTP"}
           </button>
         </form>
       </div>

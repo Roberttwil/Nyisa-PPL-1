@@ -223,7 +223,6 @@ router.post('/verify-reset-otp', async (req, res) => {
             return res.status(400).json({ message: 'OTP expired' });
         }
 
-
         user.otp = null;
         user.otp_expires_at = null;
         await user.save();
@@ -252,7 +251,7 @@ router.post('/reset-password', verifyResetToken, async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
-        user.password = password;
+        user.password = hashedPassword;
         user.otp = null;
         user.otp_expires_at = null;
         await user.save();
@@ -338,7 +337,7 @@ router.post('/register-restaurant', async (req, res) => {
             address,
             restaurant_type: restaurantType,
             photo: 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/2f07d3bc-30f6-4a48-99bd-fb7b3dc75cb3.jpeg',      // default
-            rating: 0,      // Bisa diset default di model
+            rating: 0,     
             latitude: lat,
             longitude: lng
         });

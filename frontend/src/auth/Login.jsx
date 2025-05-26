@@ -14,13 +14,36 @@ const Login = () => {
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
 
   const [popup, setPopup] = useState({
     show: false,
-    type: "error", // Can be 'success' or 'error'
+    type: "error",
     message: "",
   });
+
+  // Password validation function
+  const validatePassword = (password) => {
+    if (!password) {
+      return "Password cannot be empty";
+    }
+    if (password.length < 6) {
+      return "Password must be at least 6 characters";
+    }
+    if (password.length > 12) {
+      return "Password must be at most 12 characters";
+    }
+    
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    
+    if (!hasLetter || !hasNumber) {
+      return "Password must contain both letters and numbers";
+    }
+    
+    return "";
+  };
 
   // Load username and rememberMe from localStorage if it exists
   useEffect(() => {
@@ -33,10 +56,18 @@ const Login = () => {
     }
   }, []);
 
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    
+    // Real-time password validation
+    const error = validatePassword(newPassword);
+    setPasswordError(error);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // setError(""); // Remove this line
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 2500));
@@ -128,10 +159,14 @@ const Login = () => {
             </label>
             <input
               type={showPassword ? "text" : "password"}
-              className="w-full px-4 py-2 border border-[#103B28] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#103B28]"
+              className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 ${
+                passwordError 
+                  ? "border-red-500 focus:ring-red-500" 
+                  : "border-[#103B28] focus:ring-[#103B28]"
+              }`}
               placeholder="Enter your password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={handlePasswordChange}
             />
             <span
               className="absolute top-8 right-4 cursor-pointer text-green-700"
@@ -139,6 +174,9 @@ const Login = () => {
             >
               {showPassword ? "👁" : "👁‍🗨"}
             </span>
+            {passwordError && (
+              <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+            )}
           </div>
           <div className="flex justify-between text-sm text-green-900 mb-4 flex-wrap gap-2">
             <label className="flex items-center">
@@ -156,23 +194,25 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-green-900 text-white py-2 rounded-lg hover:bg-green-800 transition duration-200 cursor-pointer"
-            disabled={loading}
+            className="w-full bg-green-900 text-white py-2 rounded-lg hover:bg-green-800 transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || passwordError}
           >
             {loading ? "Logging in..." : "Sign In"}
           </button>
         </form>
 
         <div className="my-4 text-green-900 font-medium">Or Sign In With</div>
-        <div className="flex gap-3 justify-center">
+
+        <div className="flex justify-center w-full">
           <button
             onClick={handleGoogleLogin}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100 cursor-pointer"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-white rounded-lg shadow-md hover:bg-gray-100"
           >
-            <img src={googleLogo} alt="Google" className="w-5" />
+            <img src={googleLogo} alt="Google" className="w-5 h-5" />
             <span className="text-md font-medium text-gray-800">Google</span>
           </button>
         </div>
+
         <p className="mt-4 text-green-900 text-sm">
           Don't have an account?{" "}
           <Link to="/register" className="font-semibold hover:underline">
@@ -192,8 +232,17 @@ const Login = () => {
         alt="daun"
         className="absolute w-16 sm:w-24 left-0 top-20 sm:top-32"
       />
-      <img src={star} alt="star" className="absolute w-8 top-10 right-10" />
-      <img src={star} alt="star" className="absolute w-8 bottom-10 left-10" />
+      <img
+        src={star}
+        alt="star"
+        className="absolute w-6 sm:w-12 top-24 right-12 sm:top-28 sm:right-60"
+      />
+
+      <img
+        src={star}
+        alt="star"
+        className="absolute w-6 sm:w-9 bottom-24 left-12 sm:bottom-28 sm:left-70"
+      />
 
       {/* Popup modal for error messages */}
       {popup.show && (

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import nyisaLogo from "../assets/nyisaLogo.png";
 import { forgotPassword } from "../services/AuthService";
+import daun from "../assets/Union.svg";
+import star from "../assets/starGeo.svg";
+import circleH from "../assets/circleHalf.svg";
 
 const ForgotPassword = () => {
   const [username, setUsername] = useState("");
@@ -36,16 +39,21 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div
-      className="relative flex justify-center items-center min-h-screen"
-      style={{
-        backgroundImage:
-          "linear-gradient(to bottom,rgb(220, 235, 226) 50%, #68D391 80%)",
-      }}
-    >
-      <div className="max-w-md w-full p-8 text-center">
-        <img src={nyisaLogo} alt="Logo" className="mb-5 w-30 mx-auto" />
+    <div className="flex flex-wrap justify-center items-center min-h-screen px-4 relative">
+      {/* Nyisa Logo - Adjusted for responsiveness, identical to Login */}
+      <img
+        src={nyisaLogo}
+        alt="Logo"
+        className="hidden md:block absolute top-0 left-0 w-35"
+      />
 
+      {/* Logo untuk layar kecil (di atas "Sign In") */}
+      <img
+        src={nyisaLogo}
+        alt="Logo"
+        className="block md:hidden mx-auto w-26"
+      />
+      <div className="w-full max-w-md p-8 text-center bg-[#D6E9A6] rounded-3xl z-10">
         <h2 className="text-2xl font-semibold text-green-900 mb-5">
           Forgot password
         </h2>
@@ -98,6 +106,27 @@ const ForgotPassword = () => {
           <p className="text-green-600 mt-4 font-semibold">{message}</p>
         )}
       </div>
+      <img
+        src={circleH}
+        alt="circle"
+        className="absolute w-20 sm:w-28 right-0 bottom-0"
+      />
+      <img
+        src={daun}
+        alt="daun"
+        className="absolute w-16 sm:w-24 left-0 top-20 sm:top-32"
+      />
+      <img
+        src={star}
+        alt="star"
+        className="absolute w-6 sm:w-12 top-24 right-12 sm:top-28 sm:right-60"
+      />
+
+      <img
+        src={star}
+        alt="star"
+        className="absolute w-6 sm:w-9 bottom-24 left-12 sm:bottom-28 sm:left-70"
+      />
     </div>
   );
 };
