@@ -15,12 +15,13 @@ const Profile = () => {
     type: "success",
     message: "",
   });
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const data = await getProfile();
         setProfile(data);
-        setForm(data);
+        setForm(data); // Initialize form with fetched profile data
       } catch (err) {
         console.error("Fetch profile error:", err.message);
       }
@@ -35,9 +36,24 @@ const Profile = () => {
 
   const handleEditToggle = (field) => {
     if (editField === field) {
+      // **Validation Check:**
+      // Get the current value from the form state for the field being edited.
+      const fieldValue = form[field];
+
+      // Check if the field is empty or contains only whitespace
+      if (!fieldValue || String(fieldValue).trim() === "") {
+        setPopup({
+          show: true,
+          type: "error",
+          message: `${field.charAt(0).toUpperCase() + field.slice(1)} cannot be empty. Please enter a value.`,
+        });
+        return; // Stop the update process if the field is empty
+      }
       handleUpdate(field);
     } else {
       setEditField(field);
+      // When entering edit mode, ensure form data is in sync with current profile
+      setForm(profile);
     }
   };
 
@@ -65,20 +81,18 @@ const Profile = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
 
-      // File size validation (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         setPopup({
           show: true,
           type: "error",
           message: "Photo size must be less than 2MB",
         });
-        e.target.value = null; // Reset file input
+        e.target.value = null;
         return;
       }
 
       setProfilePhoto(file);
 
-      // Show preview
       const reader = new FileReader();
       reader.onload = (e) => {
         const previewImg = document.getElementById("profile-preview");
@@ -96,19 +110,15 @@ const Profile = () => {
         show: true,
         type: "error",
         message: "Please select a photo to upload",
-      });;
+      });
       return;
     }
 
     try {
-      // Get token from localStorage
       const token = localStorage.getItem("token");
-
-      // Use the UploadService to upload the photo
       const result = await uploadUserPhoto(profilePhoto, token);
 
       if (result && result.photo) {
-        // Update local state with new photo URL if returned by API
         setProfile((prev) => ({ ...prev, photo: result.photo }));
         setPopup({
           show: true,
@@ -116,7 +126,6 @@ const Profile = () => {
           message: 'Profile photo updated successfully!',
         });
       } else {
-        // If no photo URL is returned, refresh the profile to get the latest data
         const updatedProfile = await getProfile();
         setProfile(updatedProfile);
         setPopup({
@@ -126,7 +135,6 @@ const Profile = () => {
         });
       }
 
-      // Reset file input and state
       setProfilePhoto(null);
       if (profilePhotoRef.current) {
         profilePhotoRef.current.value = "";
@@ -134,7 +142,6 @@ const Profile = () => {
     } catch (err) {
       console.error("Error updating profile photo:", err);
 
-      // More detailed error logging
       if (err.response) {
         console.error("Response status:", err.response.status);
         console.error("Response data:", err.response.data);
@@ -144,11 +151,10 @@ const Profile = () => {
         show: true,
         type: 'error',
         message: err?.message || 'Failed to update profile photo.',
-      });;
+      });
     }
   };
 
-  // Function to trigger profile photo file input
   const triggerProfilePhotoUpload = () => {
     if (profilePhotoRef.current) {
       profilePhotoRef.current.click();
@@ -163,7 +169,7 @@ const Profile = () => {
           {editField === field ? (
             <input
               name={field}
-              value={form[field] || ""}
+              value={form[field] || ""} // Ensure controlled input
               onChange={handleChange}
               className="w-full px-3 py-2 rounded bg-gray-100 text-gray-900"
             />
@@ -208,7 +214,6 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* Show upload button when photo is selected */}
         {profilePhoto && (
           <button
             type="button"
@@ -283,7 +288,6 @@ const Profile = () => {
       )}
     </div>
   );
-
 };
 
 export default Profile;

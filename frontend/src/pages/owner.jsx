@@ -95,14 +95,13 @@ const Owner = () => {
   // Handle input changes for both owner and restaurant fields
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
+
     setFormData((prev) => {
       const newFormData = { ...prev };
 
-      // Create nested structure if it doesn't exist
       if (!newFormData.owner) newFormData.owner = {};
       if (!newFormData.owner.restaurant) newFormData.owner.restaurant = {};
 
-      // Handle special fields
       if (name === "restaurantName") {
         newFormData.owner.restaurant.name = value;
       } else {
@@ -115,9 +114,23 @@ const Owner = () => {
 
   const handleEditToggle = (field) => {
     if (editField === field) {
+      // Before attempting to update, check if the field is empty
+      let currentValue;
+      if (field === "restaurantName") {
+        currentValue = formData.owner?.restaurant?.name;
+      } else {
+        currentValue = formData.owner?.[field];
+      }
+
+      if (!currentValue || currentValue.trim() === "") {
+        showPopup("error", `${field} cannot be empty. Please enter a value.`);
+        return; // Prevent update if empty
+      }
       handleUpdateProfile(field);
     } else {
       setEditField(field);
+      // Ensure formData is in sync when starting an edit
+      setFormData(profile);
     }
   };
 
@@ -254,10 +267,24 @@ const Owner = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFoodData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFoodData((prev) => {
+      const newData = { ...prev, [name]: value };
+
+      // Validate promo_price against price immediately
+      if (name === "promo_price" || name === "price") {
+        const price = parseFloat(newData.price);
+        const promoPrice = parseFloat(newData.promo_price);
+
+        if (promoPrice && price && promoPrice > price) {
+          showPopup(
+            "error",
+            "Promo price cannot be greater than the regular price."
+          );
+          return prev; // Revert to previous state if invalid
+        }
+      }
+      return newData;
+    });
   };
 
   // Popup message function
@@ -284,6 +311,19 @@ const Owner = () => {
       );
       return false;
     }
+
+    // New: Promo Price vs. Price validation before submission
+    const price = parseFloat(foodData.price);
+    const promoPrice = parseFloat(foodData.promo_price);
+
+    if (promoPrice && price && promoPrice > price) {
+      showPopup(
+        "error",
+        "Promo price cannot be greater than the regular price."
+      );
+      return false;
+    }
+
     return true;
   };
 
@@ -727,7 +767,7 @@ const Owner = () => {
                 onChange={handleInputChange}
                 onInput={(e) => (e.target.value = Math.max(0, e.target.value))}
                 disabled={isPromoDisabled}
-                className={`w-full p-2 border border-gray-300 rounded-lg appearance-none ${
+                className={`w-full p-2 border border-gray-300 rounded-lg appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
                   isPromoDisabled ? "bg-gray-100 cursor-not-allowed" : ""
                 }`}
                 min="0"

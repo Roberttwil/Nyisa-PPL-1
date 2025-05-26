@@ -112,6 +112,10 @@ router.get('/last-transaction-food', authenticate, async (req, res) => {
             return res.status(404).json({ error: 'No transactions found.' });
         }
 
+        // Tambahkan console log di sini
+        console.log('Last Transaction Food ID:', lastTransaction.food_id);
+        console.log('Food object:', lastTransaction.food);
+
         res.json({
             food_id: lastTransaction.food_id,
             food: lastTransaction.food

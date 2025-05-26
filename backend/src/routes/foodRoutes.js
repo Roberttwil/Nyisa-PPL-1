@@ -131,8 +131,13 @@ router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (re
                     restaurant.latitude
                 ]
             });
+            console.log('Recommendation data updated successfully');
         }
-
+        await axios.post(`http://127.0.0.1:8000/api/foods/recommend/refresh`, {}, {
+            headers: {
+                Authorization: `Bearer ${process.env.RECSYS_SECRET}`
+            }
+        });
         res.status(201).json({ message: 'Food added successfully', food: newFood });
     } catch (err) {
         console.error('Add food error:', err);
@@ -143,64 +148,107 @@ router.post('/', authenticate, restaurantOnly, upload.single('photo'), async (re
 // PUT /api/foods/:id -> update food
 router.put('/:id', authenticate, restaurantOnly, upload.single('photo'), async (req, res) => {
     try {
+        console.log('=== UPDATE FOOD DEBUG ===');
+        console.log('Food ID:', req.params.id);
+        console.log('Request body:', req.body);
+        console.log('Uploaded file:', req.file);
+        
         const { id } = req.params;
         const restaurant_id = await getRestaurantId(req.user.username);
+        
+        console.log('Restaurant ID:', restaurant_id);
+        
         const food = await Food.findOne({ where: { food_id: id, restaurant_id } });
 
-        if (!food) return res.status(404).json({ message: 'Food not found' });
+        if (!food) {
+            console.log('Food not found');
+            return res.status(404).json({ message: 'Food not found' });
+        }
+
+        console.log('Current food data:', food.toJSON());
 
         const { name, type, price, quantity, promo_price } = req.body;
 
-        if (name) food.name = name;
-        if (type) food.type = type;
-        if (price) food.price = price;
-        if (promo_price !== undefined) food.promo_price = promo_price;
-        if (quantity) food.quantity = quantity;
+        // Update fields only if they are provided
+        if (name !== undefined && name !== '') food.name = name;
+        if (type !== undefined && type !== '') food.type = type;
+        if (price !== undefined && price !== '') food.price = parseFloat(price);
+        if (quantity !== undefined && quantity !== '') food.quantity = parseInt(quantity);
+        if (promo_price !== undefined) {
+            food.promo_price = promo_price === '' ? null : parseFloat(promo_price);
+        }
 
+        // Handle photo upload
         if (req.file) {
-            const photoUrl = await resizeAndUpload(req.file, 'foods');
-            food.photo = photoUrl;
+            console.log('Processing new photo upload...');
+            try {
+                const photoUrl = await resizeAndUpload(req.file, 'foods');
+                food.photo = photoUrl;
+                console.log('New photo URL:', photoUrl);
+            } catch (uploadError) {
+                console.error('Photo upload error:', uploadError);
+                return res.status(500).json({ message: 'Failed to upload photo' });
+            }
         }
 
+        // Save the updated food
         await food.save();
+        console.log('Food saved successfully');
 
-        const restaurant = await Restaurant.findOne({ where: { restaurant_id } });
-        const priceValue = newFood.promo_price ?? newFood.price;
-
-        if (restaurant) {
-            await Food.sequelize.query(`
-                INSERT INTO recommendation_data (
-                    food_id, name, type, price,
-                    restaurant, restaurant_type,
-                    rating, longitude, latitude
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                name = VALUES(name),
-                type = VALUES(type),
-                price = VALUES(price),
-                restaurant = VALUES(restaurant),
-                restaurant_type = VALUES(restaurant_type),
-                rating = VALUES(rating),
-                longitude = VALUES(longitude),
-                latitude = VALUES(latitude)
-            `, {
-                replacements: [
-                    food.food_id,
-                    food.name,
-                    food.type,
-                    food.promo_price ?? food.price,
-                    restaurant.name,
-                    restaurant.restaurant_type,
-                    restaurant.rating,
-                    restaurant.longitude,
-                    restaurant.latitude
-                ]
-            });
+        // Update recommendation data
+        try {
+            const restaurant = await Restaurant.findOne({ where: { restaurant_id } });
+            
+            if (restaurant) {
+                console.log('Updating recommendation data...');
+                
+                await sequelize.query(`
+                    INSERT INTO recommendation_data (
+                        food_id, name, type, price,
+                        restaurant, restaurant_type,
+                        rating, longitude, latitude
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                    name = VALUES(name),
+                    type = VALUES(type),
+                    price = VALUES(price),
+                    restaurant = VALUES(restaurant),
+                    restaurant_type = VALUES(restaurant_type),
+                    rating = VALUES(rating),
+                    longitude = VALUES(longitude),
+                    latitude = VALUES(latitude)
+                `, {
+                    replacements: [
+                        food.food_id,
+                        food.name,
+                        food.type,
+                        food.promo_price ?? food.price,
+                        restaurant.name,
+                        restaurant.restaurant_type,
+                        restaurant.rating,
+                        restaurant.longitude,
+                        restaurant.latitude
+                    ]
+                });
+                
+                console.log('Recommendation data updated successfully');
+            }
+        } catch (recommendationError) {
+            console.error('Recommendation update error:', recommendationError);
+            // Don't fail the whole request if recommendation update fails
         }
-
-        res.json({ message: 'Food updated successfully', food });
+        await axios.post(`http://127.0.0.1:8000/api/foods/recommend/refresh`, {}, {
+            headers: {
+                Authorization: `Bearer ${process.env.RECSYS_SECRET}`
+            }
+        });
+        console.log('Food updated successfully');
+        res.json({ message: 'Food updated successfully', food: food.toJSON() });
+        
     } catch (err) {
-        console.error('Update food error:', err);
+        console.error('=== UPDATE FOOD ERROR ===');
+        console.error('Error details:', err);
+        console.error('Stack trace:', err.stack);
         res.status(500).json({ message: 'Failed to update food' });
     }
 });
@@ -220,7 +268,11 @@ router.delete('/:id', authenticate, restaurantOnly, async (req, res) => {
             'DELETE FROM recommendation_data WHERE food_id = ?',
             { replacements: [food.food_id] }
         );
-
+        await axios.post(`http://127.0.0.1:8000/api/foods/recommend/refresh`, {}, {
+            headers: {
+                Authorization: `Bearer ${process.env.RECSYS_SECRET}`
+            }
+        });
         res.json({ message: 'Food deleted successfully' });
     } catch (err) {
         console.error('Delete food error:', err);

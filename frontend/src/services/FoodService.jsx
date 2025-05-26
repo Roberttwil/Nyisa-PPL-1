@@ -60,24 +60,44 @@ const addFood = async (foodData, photoFile = null) => {
 };
 
 // Update food
+// Updated updateFood method in FoodService.jsx
 const updateFood = async (foodId, foodData, photoFile) => {
   try {
     const token = localStorage.getItem("token");
 
+    // Validate required data
+    if (!foodId) {
+      throw new Error("Food ID is required for update");
+    }
+
     // Create FormData object for update with file upload
     const formData = new FormData();
-    formData.append("name", foodData.name);
-    formData.append("type", foodData.type);
-    formData.append("price", foodData.price);
-    // Only add promoPrice if it has a value
-    if (foodData.promo_price && foodData.promo_price !== "") {
-      formData.append("promo_price", foodData.promo_price);
+    
+    // Ensure consistent data types (same as addFood)
+    formData.append("name", String(foodData.name).trim());
+    formData.append("type", String(foodData.type).trim());
+    formData.append("price", parseInt(foodData.price)); // Changed from parseFloat to parseInt
+    formData.append("quantity", parseInt(foodData.quantity));
+    
+    // Handle promo_price consistently
+    if (foodData.promo_price && foodData.promo_price !== "" && foodData.promo_price !== null) {
+      formData.append("promo_price", parseInt(foodData.promo_price)); // Changed from parseFloat to parseInt
     }
-    formData.append("quantity", foodData.quantity);
 
-    // Only add photo if it exists
-    if (photoFile) {
+    // Only add photo if it exists and is a valid File object
+    if (photoFile && photoFile instanceof File) {
+      // Validate file size (max 2MB)
+      if (photoFile.size > 2 * 1024 * 1024) {
+        throw new Error("Photo size must be less than 2MB");
+      }
       formData.append("photo", photoFile);
+    }
+
+    // Log the data being sent for debugging
+    console.log("Updating food with ID:", foodId);
+    console.log("FormData contents:");
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
     }
 
     const response = await axios.put(`${API_URL}/${foodId}`, formData, {
@@ -90,6 +110,18 @@ const updateFood = async (foodId, foodData, photoFile) => {
     return response.data;
   } catch (error) {
     console.error("Error updating food:", error);
+    
+    // Enhanced error logging
+    if (error.response) {
+      console.error("Response status:", error.response.status);
+      console.error("Response data:", error.response.data);
+      console.error("Response headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("Request made but no response:", error.request);
+    } else {
+      console.error("Error setting up request:", error.message);
+    }
+    
     throw error;
   }
 };

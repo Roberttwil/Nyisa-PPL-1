@@ -82,7 +82,7 @@ function Navbar() {
         <img
           src={nyisaLogo}
           alt="Nyisa Logo"
-          className="h-30 sm:h-30 md:h-32 -ml-3"
+          className="h-27 sm:h-30 md:h-32 -ml-3"
         />
       </Link>
 
@@ -163,7 +163,7 @@ function Navbar() {
                   : userProfile.photo || "https://via.placeholder.com/40"
               }
               alt="Profile"
-              className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover bg-black"
+              className="w-9 h-9 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover bg-black"
             />
             <span className="hidden lg:inline font-semibold text-gray-800 truncate max-w-[100px] lg:max-w-none">
               {userProfile.owner

@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
             existing.otp_expires_at = otpExpires;
             await existing.save();
 
-            // await sendOTP(email, otp);
+            await sendOTP(email, otp);
 
             return res.status(200).json({
                 message: "You already registered but haven't verified. A new OTP has been sent to your email."
@@ -52,15 +52,15 @@ router.post('/register', async (req, res) => {
 
         await User.create({
             username,
-            name: username,  // autofill name
+            name: username,
             phone,
             email,
-            address: '',     // placeholder, update later
-            status: 0,        // default status 0 is for normal user, while 1 is for restaurant owner
+            address: '', 
+            status: 0,  
             photo: 'https://ppl1-nyisa-website.s3.ap-southeast-1.amazonaws.com/users/2f07d3bc-30f6-4a48-99bd-fb7b3dc75cb3.jpeg',
         });
 
-        // await sendOTP(email, otp);
+        await sendOTP(email, otp);
 
         res.status(201).json({
             message: 'OTP sent to your email. Please verify to complete registration.'

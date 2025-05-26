@@ -33,24 +33,26 @@ const Footer = () => {
       </div>
 
       {/* Bottom Section */}
-      <div className="bg-[#bfc1b4] mt-8 px-6 md:px-12 py-4 flex flex-col md:flex-row justify-between items-center text-sm text-green-900 font-medium gap-4">
-        <span className="md:ml-2">© 2025 Nyisa</span>
-        <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4">
-          <Link
-            to="/terms-conditions"
-            className="hover:underline hover:text-green-800 cursor-pointer"
-          >
-            Terms & Conditions
-          </Link>
-          <span className="text-xl text-green-700">•</span>
-          <Link
-            to="/privacy-policy"
-            className="hover:underline hover:text-green-800 cursor-pointer"
-          >
-            Privacy Policy
-          </Link>
-        </div>
-      </div>
+<div className="bg-[#bfc1b4] mt-8 px-6 md:px-12 py-4 flex flex-col md:flex-row justify-between items-center text-sm text-green-900 font-medium gap-4">
+  <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 order-1 md:order-2">
+    <Link
+      to="/terms-conditions"
+      className="hover:underline hover:text-green-800 cursor-pointer"
+    >
+      Terms & Conditions
+    </Link>
+    <span className="text-xl text-green-700">•</span>
+    <Link
+      to="/privacy-policy"
+      className="hover:underline hover:text-green-800 cursor-pointer"
+    >
+      Privacy Policy
+    </Link>
+  </div>
+
+  <span className="md:ml-2 order-2 md:order-1">© 2025 Nyisa</span>
+</div>
+
     </footer>
   );
 };
