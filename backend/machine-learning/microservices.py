@@ -30,7 +30,9 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = os.getenv("DB_PORT")
 
-DATABASE_URL = "mysql+aiomysql://root@localhost:3307/db_nyisa"
+DATABASE_URL = (
+    f"mysql+aiomysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 Base = declarative_base()
 engine = create_async_engine(DATABASE_URL, echo=True)
