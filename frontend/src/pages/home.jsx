@@ -122,9 +122,9 @@ export default function Home() {
       >
         <p className="text-center font-semibold text-[#0D3B2E] text-sm sm:text-lg md:text-xl lg:text-2xl">
           Enjoy{" "}
-          <span className="text-[#B2E2EC] font-bold">perfectly edible</span>{" "}
+          <span className="text-blue-600 font-bold">perfectly edible</span>{" "}
           surplus meals at{" "}
-          <span className="text-[#ADD34C] font-bold">lower prices</span> while
+          <span className="text-green-600 font-bold">lower prices</span> while
           helping
         </p>
         <p className="text-center font-semibold text-[#0D3B2E] text-sm sm:text-lg md:text-xl lg:text-2xl">
